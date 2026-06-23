@@ -21,8 +21,9 @@ export const I18N = {
     tab_tourist: '観光客チャット', tab_staff: 'スタッフ・分析', tab_image: 'AI画像生成',
     title_tourist: '🌿 観光AIアシスタント', title_staff: '📊 観光AI 会話分析アシスタント', title_image: '🎨 観光ポスター生成AI',
     online: 'オンライン', ig_text_mode: '✏️ テキストから生成', ig_photo_mode: '🖼 画像から生成',
-    ig_text_hint: 'スタイルをクリックするだけで、観光ポスターを自動生成します。', ig_photo_hint: '画像URLを貼り、スタイルをクリックすると変換します。',
-    ig_input_ph: 'https://… 公開されている画像のURL', ig_loading: '生成中… 10〜40秒ほどお待ちください', ig_need_url: '先に元になる画像のURLを入力してください。',
+    ig_text_hint: 'スタイルをクリックするだけで、観光ポスターを自動生成します。', ig_photo_hint: 'サンプル写真を選ぶ（またはURLを貼り付け）、スタイルを選ぶと、その写真から観光ポスターを生成します。',
+    ig_samples: 'サンプル写真:',
+    ig_input_ph: 'https://… 公開されている画像のURL', ig_loading: '生成中… 10〜40秒ほどお待ちください', ig_need_url: '先にサンプル写真を選ぶか、画像URLを入力してください。',
   },
   en: {
     brand: 'Tourism AI Assistant', nav_feat: 'Features', nav_season: 'Seasons', nav_chat: 'Ask AI', nav_cta: 'Start chat',
@@ -44,8 +45,9 @@ export const I18N = {
     tab_tourist: 'Tourist Chat', tab_staff: 'Staff & Analytics', tab_image: 'AI Image',
     title_tourist: '🌿 Tourism AI Assistant', title_staff: '📊 Conversation Analytics AI', title_image: '🎨 AI Poster Generator',
     online: 'Online', ig_text_mode: '✏️ From text', ig_photo_mode: '🖼 From image',
-    ig_text_hint: 'Just click a style to auto-generate a travel poster.', ig_photo_hint: 'Paste an image URL, then click a style to transform it.',
-    ig_input_ph: 'https://… a public image URL', ig_loading: 'Generating… please wait 10–40 seconds', ig_need_url: 'Please enter a source image URL first.',
+    ig_text_hint: 'Just click a style to auto-generate a travel poster.', ig_photo_hint: 'Pick a sample photo (or paste a URL), then choose a style to turn it into a travel poster.',
+    ig_samples: 'Samples:',
+    ig_input_ph: 'https://… a public image URL', ig_loading: 'Generating… please wait 10–40 seconds', ig_need_url: 'Please pick a sample photo or enter an image URL first.',
   },
 }
 

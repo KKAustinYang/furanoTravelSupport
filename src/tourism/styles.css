@@ -194,6 +194,12 @@
   .ig-mode{display:none;flex-direction:column;gap:16px}
   .ig-mode.on{display:flex}
   .ig-hint{font-size:13px;color:#5b6577;text-align:center}
+  .ig-samples{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+  .ig-samples-label{font-size:12px;color:#8a93a3}
+  .ig-sample{padding:0;border:2px solid #dde3ec;border-radius:12px;background:#fff;cursor:pointer;overflow:hidden;line-height:0;transition:.2s}
+  .ig-sample img{width:64px;height:64px;object-fit:cover;display:block}
+  .ig-sample:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .ig-sample.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,158,143,.2)}
   .ig-input{width:100%;border:1px solid #dde3ec;border-radius:12px;padding:13px 15px;font:400 13px var(--sans);color:#1b2330;background:#fff}
   .ig-input:focus{outline:none;border-color:var(--accent)}
   .ig-preview{max-width:200px;border-radius:12px;border:1px solid #dde3ec;align-self:center}

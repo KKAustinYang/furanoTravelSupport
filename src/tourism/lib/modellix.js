@@ -21,12 +21,15 @@ export const TEXT_STYLES = [
   'A breathtaking cinematic photograph of a scenic Japanese travel destination in summer. Endless blooming flower fields in colorful rows, gentle green hills, distant mountains and a blue sky with soft clouds. Golden hour light, ultra photorealistic, vibrant natural colors, travel poster, 2:3 vertical.',
 ];
 
+// Each style turns the UPLOADED photo into a finished tourism promotional
+// poster (title + layout), not just a restyled photo. The real place in the
+// photo stays recognizable; only the medium and poster framing change.
 export const PHOTO_STYLES = [
-  'Transform this photo into a rich textured oil painting with visible brush strokes and vivid colors. Keep the original composition.',
-  'Transform this photo into a soft, delicate watercolor painting with paper texture and gentle washes. Keep the original composition.',
-  'Transform this photo into a Japanese ukiyo-e woodblock print style with flat colors and fine linework. Keep the original composition.',
-  'Transform this photo into a beautiful anime illustration with clean lines and soft cel shading. Keep the original composition.',
-  'Turn this photo into a vintage travel poster illustration with flat screen-print colors and bold shapes. Keep the original composition.',
+  'Design a premium tourism promotional poster based on the scene in the provided photo. Reimagine that exact place as a rich textured oil painting with visible brush strokes and vivid colors, keeping the landmark, scenery and composition clearly recognizable. Add a bold travel title at the top and a small Japanese subtitle, with a clean poster layout, margins and a subtle border. Vertical 2:3 travel poster, premium print quality.',
+  'Design an elegant tourism promotional poster based on the scene in the provided photo. Render that exact place as a soft, delicate watercolor painting with paper texture and gentle washes, keeping the landmark, scenery and composition clearly recognizable. Add a graceful handwritten-style travel title and a small Japanese subtitle, with airy negative space at the top for the title. Vertical 2:3 travel poster, premium print quality.',
+  'Design a tourism promotional poster based on the scene in the provided photo, in the Japanese ukiyo-e woodblock print style of Hokusai and Hiroshige. Reinterpret that exact place with flat traditional colors, fine linework and stylized clouds, keeping the landmark, scenery and composition clearly recognizable. Add a vertical brush-calligraphy title and a small subtitle. Vertical 2:3 travel poster, premium print quality.',
+  'Design a tourism promotional poster based on the scene in the provided photo, as a beautiful anime illustration with clean lines, soft cel shading and a bright sky, keeping the landmark, scenery and composition clearly recognizable. Add a cheerful rounded travel title and a small Japanese subtitle, with a clean poster layout. Vertical 2:3 travel poster, premium print quality.',
+  'Design a vintage 1950s railway travel promotional poster based on the scene in the provided photo. Reimagine that exact place with flat screen-print colors, bold shapes, art deco influence and crisp outlines, keeping the landmark, scenery and composition clearly recognizable. Add a large retro title at the top and a small Japanese subtitle. Vertical 2:3 travel poster, premium print quality.',
 ];
 
 async function submitTask(endpoint, payload) {
