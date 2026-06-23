@@ -23,6 +23,7 @@ const TEXT_CARDS = [
   { ico: '🎨', label: 'フラットイラスト', sub: 'Flat' },
   { ico: '💧', label: '水彩', sub: 'Watercolor' },
   { ico: '📷', label: '映画風', sub: 'Cinematic' },
+  { ico: '✂️', label: '切り絵風', sub: 'Papercut' },
 ];
 const PHOTO_CARDS = [
   { ico: '🖼', label: '油絵風', sub: 'Oil' },
@@ -30,6 +31,7 @@ const PHOTO_CARDS = [
   { ico: '🌊', label: '浮世絵風', sub: 'Ukiyo-e' },
   { ico: '✨', label: 'アニメ風', sub: 'Anime' },
   { ico: '🎞', label: 'レトロポスター風', sub: 'Poster' },
+  { ico: '✂️', label: '切り絵風', sub: 'Papercut' },
 ];
 
 export default function ChatSection() {
