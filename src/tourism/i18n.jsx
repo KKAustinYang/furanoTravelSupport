@@ -1,0 +1,53 @@
+import { createContext, useContext } from 'react'
+
+export const I18N = {
+  ja: {
+    brand: '観光AIアシスタント', nav_feat: 'できること', nav_season: '四季の旅', nav_chat: 'AIに相談', nav_cta: 'チャットを始める',
+    hero_eyebrow: 'TOURISM AI ・ 観光案内デモ', hero_title: 'この街の、<span class="accent">いちばん美しい瞬間</span>へ。',
+    hero_lead: '観光スポット・モデルコース・天気・宿泊、そして緊急時まで。多言語対応の観光AIアシスタントが、晴れの日も雪の日も、あなたの旅に寄り添います。',
+    hero_cta1: 'AIに話しかけてみる', hero_cta2: 'できることを見る',
+    ws_cap: '天気を切り替え', w_clear: '晴れ', w_sunset: '夕焼け', w_snow: '雪', w_night: '星空',
+    feat_kicker: 'WHAT AI CAN DO', feat_title: '旅のすべてを、ひとつのチャットで。', feat_sub: '知りたいことを話しかけるだけ。AIが観光地の魅力と、必要な情報をご案内します。',
+    spot_h: '観光スポット案内', spot_p: '人気の名所や絶景スポットなど、見頃や混雑状況を踏まえて、今いちばんおすすめの場所をご提案します。',
+    route_h: 'モデルコース提案', route_p: '滞在時間・移動手段・興味に合わせて、無理のない最適な周遊ルートをその場で組み立てます。',
+    weather_h: '天気と見頃情報', weather_p: '当日の天気や季節の見頃に応じて、服装や持ち物のアドバイスまでお伝えします。',
+    stay_h: '宿泊・グルメ', stay_p: '宿泊施設や地元グルメの情報を、エリアや予算に合わせてわかりやすくご紹介します。',
+    lang_h: '多言語サポート', lang_p: '日本語・英語・中国語・韓国語に対応。海外からのお客様も母国語で安心してご相談いただけます。',
+    sos_h: '緊急時の案内', sos_p: '体調不良やトラブルの際にも、最寄りの医療機関や連絡先を落ち着いてご案内します。',
+    season_kicker: 'ANY SEASON, ANY WEATHER', season_title: 'どんな天気でも、最高の一日に。', season_sub: 'その日の天気や季節に合わせて、AIが最適な過ごし方をご提案します。',
+    clear_h: '晴れの日', clear_s: 'Clear', sunset_h: '夕暮れ', sunset_s: 'Sunset', snow_h: '雪の日', snow_s: 'Snow', night_h: '星降る夜', night_s: 'Night',
+    f_home: 'ホーム',
+    chat_kicker: 'CHAT WITH AI', chat_title: '3つのAIが、旅と運用を支えます。', chat_sub: '用途に合わせて、下のタブから切り替えてください。',
+    tab_tourist: '観光客チャット', tab_staff: 'スタッフ・分析', tab_image: 'AI画像生成',
+    title_tourist: '🌿 観光AIアシスタント', title_staff: '📊 観光AI 会話分析アシスタント', title_image: '🎨 観光ポスター生成AI',
+    online: 'オンライン', ig_text_mode: '✏️ テキストから生成', ig_photo_mode: '🖼 画像から生成',
+    ig_text_hint: 'スタイルをクリックするだけで、観光ポスターを自動生成します。', ig_photo_hint: '画像URLを貼り、スタイルをクリックすると変換します。',
+    ig_input_ph: 'https://… 公開されている画像のURL', ig_loading: '生成中… 10〜40秒ほどお待ちください', ig_need_url: '先に元になる画像のURLを入力してください。',
+  },
+  en: {
+    brand: 'Tourism AI Assistant', nav_feat: 'Features', nav_season: 'Seasons', nav_chat: 'Ask AI', nav_cta: 'Start chat',
+    hero_eyebrow: 'TOURISM AI ・ INTERACTIVE DEMO', hero_title: 'Experience this town at its <span class="accent">most beautiful</span>.',
+    hero_lead: 'Spots, routes, weather, lodging — even emergencies. A multilingual tourism AI that travels with you, on sunny days and snowy ones alike.',
+    hero_cta1: 'Talk to the AI', hero_cta2: 'See what it can do',
+    ws_cap: 'Switch weather', w_clear: 'Clear', w_sunset: 'Sunset', w_snow: 'Snow', w_night: 'Night',
+    feat_kicker: 'WHAT AI CAN DO', feat_title: 'Your whole trip, in one chat.', feat_sub: 'Just ask. The AI guides you through the destination and everything you need to know.',
+    spot_h: 'Spot Guide', spot_p: 'Famous sights and hidden gems — recommended in real time based on best timing and crowd levels.',
+    route_h: 'Itinerary Planner', route_p: 'Builds the perfect route on the spot, matched to your time, transport and interests.',
+    weather_h: 'Weather & Timing', weather_p: 'Tells you what to wear and bring, based on the day’s weather and seasonal highlights.',
+    stay_h: 'Stay & Dining', stay_p: 'Clear recommendations for lodging and local food, matched to your area and budget.',
+    lang_h: 'Multilingual', lang_p: 'Japanese, English, Chinese and Korean — overseas guests can ask in their own language.',
+    sos_h: 'Emergency Help', sos_p: 'If anything goes wrong, calmly guides you to the nearest clinic or emergency contact.',
+    season_kicker: 'ANY SEASON, ANY WEATHER', season_title: 'A perfect day, in any weather.', season_sub: 'The AI suggests the best way to spend your day, matched to the weather and season.',
+    clear_h: 'Clear Day', clear_s: 'Clear', sunset_h: 'Golden Hour', sunset_s: 'Sunset', snow_h: 'Snowy Day', snow_s: 'Snow', night_h: 'Starry Night', night_s: 'Night',
+    f_home: 'Home',
+    chat_kicker: 'CHAT WITH AI', chat_title: 'Three AIs for your trip and operations.', chat_sub: 'Switch between them using the tabs below.',
+    tab_tourist: 'Tourist Chat', tab_staff: 'Staff & Analytics', tab_image: 'AI Image',
+    title_tourist: '🌿 Tourism AI Assistant', title_staff: '📊 Conversation Analytics AI', title_image: '🎨 AI Poster Generator',
+    online: 'Online', ig_text_mode: '✏️ From text', ig_photo_mode: '🖼 From image',
+    ig_text_hint: 'Just click a style to auto-generate a travel poster.', ig_photo_hint: 'Paste an image URL, then click a style to transform it.',
+    ig_input_ph: 'https://… a public image URL', ig_loading: 'Generating… please wait 10–40 seconds', ig_need_url: 'Please enter a source image URL first.',
+  },
+}
+
+export const TourCtx = createContext(null)
+export const useTour = () => useContext(TourCtx)
