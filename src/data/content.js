@@ -20,6 +20,7 @@ const ICONS={
 const TINT={ agent:'#8d9bff', engage:'#3fd6bd', model:'#b39bff' };
 const DEMOS=[
   {cat:'agent', icon:'chat', url:'/tourism.html', ja:{t:'観光AIガイド',d:'観光スポット・モデルコース・天気・宿泊から多言語対応・緊急時案内まで、旅に寄り添う観光AIアシスタントのライブデモ。'},en:{t:'Tourism AI Guide',d:'A multilingual tourism AI assistant — spots, routes, weather, lodging and more. Live interactive demo.'},tags:['GPTBots','観光','Live']},
+  {cat:'agent', icon:'support', url:'/d/nts-training/index.html', ja:{t:'応対力トレーニングAI（ロールプレイ研修）',d:'コールセンター向けの応対力トレーニング。AIロールプレイのお客様と実際に音声で対話し、評価レポートまで自動生成するデモ。'},en:{t:'Contact-Center Roleplay Training',d:'Agent-skills training for call centers — practice live voice roleplay with AI customers and get an auto-generated evaluation report.'},tags:['GPTBots','研修','Voice']},
   {cat:'agent', icon:'chart', ja:{t:'観光対話ログ分析アシスタント',d:'観光AIに寄せられた会話ログを分析し、統計レポートを自動作成するエージェント。'},en:{t:'Conversation Analytics Assistant',d:'Analyzes tourism chat logs and auto-generates statistical reports.'},tags:['GPTBots','Analytics']},
   {cat:'agent', icon:'spark', ja:{t:'顧客LTVスコアリングAI',d:'来店・客単価・利用データから顧客のLTVスコアを算出するデモAI。'},en:{t:'Customer LTV Scoring AI',d:'Predicts customer lifetime-value scores from visit and usage data.'},tags:['GPTBots','LTV']},
   {cat:'agent', icon:'globe', ja:{t:'多言語翻訳アシスタント',d:'日本語・英語・中国語・韓国語など、多言語間の翻訳を行うAIアシスタント。'},en:{t:'Multilingual Translation Assistant',d:'Translates across Japanese, English, Chinese, Korean and more.'},tags:['GPTBots','翻訳']},

@@ -3,9 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "workspaces": [
+    "demos/*"
+  ],
   "scripts": {
+    "predev": "npm run build:demos",
     "dev": "vite",
-    "build": "vite build",
+    "build:demos": "node build-demos.mjs",
+    "build:showcase": "vite build",
+    "build": "npm run build:demos && npm run build:showcase",
     "preview": "vite preview"
   },
   "dependencies": {

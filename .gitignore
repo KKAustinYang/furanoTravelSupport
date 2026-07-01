@@ -1,6 +1,9 @@
 node_modules
 dist
 dist-ssr
+# generated sub-demo builds (source lives in demos/*, built by build-demos.mjs)
+/public/d/
+vite.config.*.timestamp-*
 .DS_Store
 *.local
 .vercel
