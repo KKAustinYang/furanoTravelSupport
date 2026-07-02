@@ -8,6 +8,7 @@ import Call from './pages/Call.jsx'
 import Report from './pages/Report.jsx'
 import Records from './pages/Records.jsx'
 import Settings from './pages/Settings.jsx'
+import Evaluate from './pages/Evaluate.jsx'
 import { initialRecords } from './data.js'
 
 const titles = {
@@ -15,11 +16,12 @@ const titles = {
   roleplay: ['ロールプレイ', 'シナリオを選んで応対の練習を始めます'],
   setup: ['ロールプレイ', 'お客様と難易度を確認します'],
   call: ['対応中', 'AI のお客様とリアルタイムで応対します'],
+  evaluate: ['評価', '通話音声をアップロードして AI が評価します'],
   report: ['フィードバック', '今回の対応を項目別に振り返ります'],
   records: ['研修履歴', 'これまでの対応記録の一覧・クリックでレポート'],
   settings: ['Agent 設定', '各シナリオの対応 Agent を管理します'],
 }
-const navMap = { dashboard: 'dashboard', roleplay: 'roleplay', setup: 'roleplay', call: 'roleplay', report: 'records', records: 'records', settings: 'settings' }
+const navMap = { dashboard: 'dashboard', roleplay: 'roleplay', setup: 'roleplay', call: 'roleplay', evaluate: 'records', report: 'records', records: 'records', settings: 'settings' }
 const NAV = [
   { id: 'dashboard', label: 'ダッシュボード', icon: <><rect x="3" y="3" width="7" height="9" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="16" width="7" height="5" rx="1.5" /></> },
   { id: 'roleplay', label: 'ロールプレイ', icon: <><path d="M4 6a2 2 0 0 1 2-2h5v16H6a2 2 0 0 1-2-2z" /><path d="M13 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5z" /></> },
@@ -32,6 +34,7 @@ export default function App() {
   const [page, setPage] = useState('dashboard')
   const [curScn, setCurScn] = useState(null)
   const [repRec, setRepRec] = useState(null)
+  const [celebrate, setCelebrate] = useState(false) // 生成直後だけ🎉を出す
   const [records, setRecords] = useState(initialRecords)
   const [collapsed, setCollapsed] = useState(false)
   const [endOpen, setEndOpen] = useState(false)
@@ -43,14 +46,25 @@ export default function App() {
 
   const go = p => { setPage(p); window.scrollTo(0, 0) }
   const openScn = scn => { setCurScn(scn); go('setup') }
-  const openReport = rec => { setRepRec(rec); go('report') }
-  const endCall = () => {
-    const p = curScn.persona
-    const score = curScn.lvClass === 'h' ? 72 : curScn.lvClass === 'm' ? 80 : 88
-    const g = score >= 85 ? 'A' : score >= 75 ? 'B' : 'C'
-    const rec = { sc: curScn.name, cat: curScn.cat, pe: p.name, df: curScn.lv, dfc: curScn.lvClass, dsh: '07/01 14:2' + (records.length % 9), dur: fmt(pendingSec || 300), score, g, w: 300 + (score % 60), comp: '指摘 0 件', date: '2026/07/01 14:2' + (records.length % 9), isNew: true }
-    setRecords([rec, ...records]); setEndOpen(false); go('records')
+  const openReport = rec => { setCelebrate(false); setRepRec(rec); go('report') }
+  const baseRec = (extra = {}) => {
+    const p = curScn.persona, n = records.length % 9
+    return { sc: curScn.name, cat: curScn.cat, pe: p.name, df: curScn.lv, dfc: curScn.lvClass, dsh: '07/01 14:2' + n, date: '2026/07/01 14:2' + n, dur: fmt(pendingSec || 300), score: 82, g: 'A', w: 320, comp: '指摘 0 件', isNew: true, ...extra }
   }
+  const endCall = () => { setEndOpen(false); go('evaluate') }
+  const finishEval = (json) => {
+    const issues = ((json.compliance && json.compliance.checks) || []).filter(c => c.result === 'fail' || c.result === 'caution').length
+    const rec = baseRec({
+      score: json.score ?? json.overallScore ?? 82,
+      g: json.grade || 'A',
+      w: json.wordCount ?? 320,
+      dur: json.duration || fmt(pendingSec || 300),
+      comp: '指摘 ' + issues + ' 件',
+      evalData: json,
+    })
+    setRecords(r => [rec, ...r]); setRepRec(rec); setCelebrate(true); go('report')
+  }
+  const skipEval = () => { const rec = baseRec(); setRecords(r => [rec, ...r]); setRepRec(rec); setCelebrate(true); go('report') }
 
   const active = navMap[page]
   return (
@@ -91,7 +105,8 @@ export default function App() {
           {page === 'roleplay' && <Roleplay openScn={openScn} curCat={curCat} setCurCat={setCurCat} search={search} setSearch={setSearch} />}
           {page === 'setup' && curScn && <Setup scn={curScn} setScn={setCurScn} go={go} startCall={() => go('call')} />}
           {page === 'call' && curScn && <Call scn={curScn} onEndRequest={sec => { setPendingSec(sec); setEndOpen(true) }} />}
-          {page === 'report' && repRec && <Report rec={repRec} go={go} />}
+          {page === 'evaluate' && curScn && <Evaluate scn={curScn} onDone={finishEval} onSkip={skipEval} go={go} />}
+          {page === 'report' && repRec && <Report rec={repRec} go={go} celebrate={celebrate} />}
           {page === 'records' && <Records records={records} openReport={openReport} />}
           {page === 'settings' && <Settings />}
         </div>

@@ -6,15 +6,22 @@
   "description": "NTS 応対力トレーニング — インナーシグナル AIロールプレイ研修（デモ）",
   "scripts": {
     "dev": "vite",
+    "server": "node server.js",
+    "start": "concurrently -k -n SERVER,VITE -c green,cyan \"npm:server\" \"npm:dev\"",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.0.1",
     "vite": "^5.4.0"
   }
 }
