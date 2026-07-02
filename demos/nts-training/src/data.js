@@ -9,7 +9,7 @@ export const scenarios = [
     iframe:'https://stg-jp.gptbots.ai/widget/eec6z0wziwbxgfltefrynq2/chat.html',
     quote:'あら、はい。ちょうど乾燥が気になっていて…。',
     desc:'お試しセット購入者へ、定期コースをご案内するアウトバウンド。案内フローを覚え、成約体験を積みます。',
-    persona:{ name:'森 久子', age:'55歳', job:'主婦', init:'森', mood:'前向き' } },
+    persona:{ name:'星野 ひなた', age:'20歳', job:'女子大生', img:'persona_hinata.png', mood:'前向き' } },
 
   { id:'out-m', cat:'アウトバウンド', lv:'中級', lvClass:'m', role:'オペレーター（定期獲得）',
     time:'約6分', count:300, emo:'様子見', real:true, name:'定期コースのご案内 ・ 中級',
@@ -23,7 +23,7 @@ export const scenarios = [
     iframe:'https://stg-jp.gptbots.ai/widget/eermrpxidatcz0zolnb1bpe/chat.html',
     quote:'勧誘の電話ですか？今ちょっと忙しいんですけど。',
     desc:'多忙で警戒の強いお客様に、薬機法に配慮しつつ、クロージングと離脱防止まで実践します。',
-    persona:{ name:'三浦 彩', age:'42歳', job:'共働き', init:'三', mood:'警戒' } },
+    persona:{ name:'白鷺 玲奈', age:'25歳', job:'雑誌編集者', img:'persona_reina.png', mood:'警戒' } },
 
   // ── 業務B：インバウンド（解約引き止め）── 田中 由紀
   { id:'in-e', cat:'インバウンド', lv:'初級', lvClass:'e', role:'オペレーター（解約対応）',
@@ -31,7 +31,7 @@ export const scenarios = [
     iframe:'https://stg-jp.gptbots.ai/widget/eeoxrwg4yv2xyjcnnqlskao/chat.html',
     quote:'定期便を解約したくて。使い切れずに溜まっちゃって…。',
     desc:'「解約したい」というお申し出に、傾聴と代替提案で引き止め成功を体験します。',
-    persona:{ name:'高橋 節子', age:'58歳', job:'主婦', init:'高', mood:'申し訳なさ' } },
+    persona:{ name:'綾瀬 詩織', age:'23歳', job:'イラストレーター', img:'persona_shiori.png', mood:'申し訳なさ' } },
 
   { id:'in-m', cat:'インバウンド', lv:'中級', lvClass:'m', role:'オペレーター（解約対応）',
     time:'約6分', count:360, emo:'不満', real:true, name:'定期解約の引き止め ・ 中級',
@@ -45,7 +45,7 @@ export const scenarios = [
     iframe:'https://stg-jp.gptbots.ai/widget/ee86b0hnosay1l8dlzzf6s1/chat.html',
     quote:'もう解約って言ってますよね？何度も同じ説明は困ります。',
     desc:'強い解約意思・感情・コンプライアンスまで。解約意思を尊重しつつ、円満に着地させます。',
-    persona:{ name:'木村 玲子', age:'45歳', job:'クレーム傾向', init:'木', mood:'苛立ち' } },
+    persona:{ name:'夏川 あかり', age:'19歳', job:'体育大生', img:'persona_akari.png', mood:'苛立ち' } },
 ]
 
 export const bizList = [
@@ -80,8 +80,8 @@ export const moments = [
 export const initialRecords = [
   { sc:'定期解約の引き止め ・ 中級', cat:'インバウンド', pe:'田中 由紀', df:'中級', dfc:'m', dsh:'07/01 14:22', dur:'05:12', score:82, g:'A', w:342, comp:'指摘 0 件', date:'2026/07/01 14:22' },
   { sc:'定期コースのご案内 ・ 中級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'中級', dfc:'m', dsh:'06/30 11:05', dur:'06:40', score:76, g:'B', w:388, comp:'指摘 1 件', date:'2026/06/30 11:05' },
-  { sc:'定期解約の引き止め ・ 上級', cat:'インバウンド', pe:'木村 玲子', df:'上級', dfc:'h', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
-  { sc:'定期コースのご案内 ・ 初級', cat:'アウトバウンド', pe:'森 久子', df:'初級', dfc:'e', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
+  { sc:'定期解約の引き止め ・ 上級', cat:'インバウンド', pe:'夏川 あかり', df:'上級', dfc:'h', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
+  { sc:'定期コースのご案内 ・ 初級', cat:'アウトバウンド', pe:'星野 ひなた', df:'初級', dfc:'e', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
 ]
 
 export const leaders = [
