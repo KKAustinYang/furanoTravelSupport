@@ -1,12 +1,19 @@
+import { scenarios } from '../data.js'
+
 const diffText = {
   '初級': 'お客様は落ち着いており、案内・提案に前向きです。',
   '中級': '前向きだが慎重。1〜2の反論・確認に応える必要があります。',
   '上級': '警戒・感情が強く、薬機法やクロージングまで臨機応変が求められます。',
 }
 const diffEn = { '初級': 'BASIC', '中級': 'NORMAL', '上級': 'ADVANCED' }
+const LV_ORDER = ['e', 'm', 'h']
 
-export default function Setup({ scn, go, startCall }) {
+export default function Setup({ scn, setScn, go, startCall }) {
   const p = scn.persona
+  // 同じ業務（アウト/イン）の3難易度から選択できるようにする
+  const options = LV_ORDER
+    .map(lc => scenarios.find(s => s.cat === scn.cat && s.lvClass === lc))
+    .filter(Boolean)
   return (
     <>
       <button className="back" onClick={() => go('roleplay')}>‹ シナリオ一覧へ戻る</button>
@@ -30,15 +37,22 @@ export default function Setup({ scn, go, startCall }) {
               <div className="nm">{p.name}<span>{p.age} ・ {p.job}</span></div>
               <div className="ds">{scn.desc}</div>
             </div>
-            <span className="mood-tag">感情 · {p.mood}</span>
+            <span className="mood-tag">感情 · {scn.emo}</span>
           </div>
         </div>
         <div>
           <div className="card panel" style={{ marginBottom: 20 }}>
             <div className="opt-h"><span className="num">2</span>難易度</div>
-            <div className="diff-card">
-              <div className="top"><span className="cn">難易度 ・ {scn.lv}</span><span className={'lv ' + scn.lvClass}>{diffEn[scn.lv]}</span></div>
-              <div className="dd">{diffText[scn.lv]}</div>
+            <div className="diff-opts">
+              {options.map(o => (
+                <button
+                  key={o.id}
+                  className={'diff-opt ' + o.lvClass + (o.id === scn.id ? ' active' : '')}
+                  onClick={() => setScn({ ...o, persona: scn.persona })}>
+                  <div className="top"><span className="cn">難易度 ・ {o.lv}</span><span className={'lv ' + o.lvClass}>{diffEn[o.lv]}</span></div>
+                  <div className="dd">{diffText[o.lv]}</div>
+                </button>
+              ))}
             </div>
           </div>
           <div className="card start-box">

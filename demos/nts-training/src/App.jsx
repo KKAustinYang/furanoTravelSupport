@@ -89,7 +89,7 @@ export default function App() {
         <div className="content" key={page}>
           {page === 'dashboard' && <Dashboard go={go} openScn={openScn} records={records} />}
           {page === 'roleplay' && <Roleplay openScn={openScn} curCat={curCat} setCurCat={setCurCat} search={search} setSearch={setSearch} />}
-          {page === 'setup' && curScn && <Setup scn={curScn} go={go} startCall={() => go('call')} />}
+          {page === 'setup' && curScn && <Setup scn={curScn} setScn={setCurScn} go={go} startCall={() => go('call')} />}
           {page === 'call' && curScn && <Call scn={curScn} onEndRequest={sec => { setPendingSec(sec); setEndOpen(true) }} />}
           {page === 'report' && repRec && <Report rec={repRec} go={go} />}
           {page === 'records' && <Records records={records} openReport={openReport} />}

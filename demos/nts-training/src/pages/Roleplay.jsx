@@ -1,6 +1,7 @@
 import { scenarios, bizList, negEmo } from '../data.js'
 
 const cats = ['すべて', 'アウトバウンド', 'インバウンド']
+const LVN = { e: 1, m: 2, h: 3 } // 塗りつぶすレベルドット数
 
 export default function Roleplay({ openScn, curCat, setCurCat, search, setSearch }) {
   return (
@@ -39,7 +40,7 @@ export default function Roleplay({ openScn, curCat, setCurCat, search, setSearch
                       {p.img
                         ? <><img src={p.img} alt={p.name} /><div className="shade" /></>
                         : <><div className={'grad ' + b.theme}><span className="rp-init">{p.init}</span></div><div className="shade" /></>}
-                      <span className="rp-lv">{s.lv}</span>
+                      <span className={'rp-lv lv-' + s.lvClass}>{s.lv}<span className="lv-dots">{[0, 1, 2].map(k => <i key={k} className={k < LVN[s.lvClass] ? 'on' : ''} />)}</span></span>
                       <span className={'rp-emo' + (neg ? ' neg' : '')}>● {s.emo}</span>
                       <div className="rp-nm"><b>{p.name}</b><span>{p.age} ・ {p.job}</span></div>
                     </div>

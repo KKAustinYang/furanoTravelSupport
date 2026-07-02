@@ -1,44 +1,48 @@
 // ===== NTS 応対力トレーニング — インナーシグナル デモデータ =====
 
-// 実際に会話できる Audio Agent は 2 名（佐藤 美和子 / 田中 由紀）。
-// 残りの 4 名はプレースホルダ（頭文字アバター + テスト用データ）。
+// 全 6 シナリオに Audio Agent（GPTBots）を接続済み。
+// 難易度・業務ごとに専用 Agent を割り当て。
 export const scenarios = [
   // ── 業務A：アウトバウンド（定期案内）──
   { id:'out-e', cat:'アウトバウンド', lv:'初級', lvClass:'e', role:'オペレーター（定期獲得）',
-    time:'約5分', count:520, emo:'前向き', real:false, name:'定期コースのご案内 ・ 初級',
+    time:'約5分', count:520, emo:'前向き', real:true, name:'定期コースのご案内 ・ 初級',
+    iframe:'https://stg-jp.gptbots.ai/widget/eec6z0wziwbxgfltefrynq2/chat.html',
     quote:'あら、はい。ちょうど乾燥が気になっていて…。',
     desc:'お試しセット購入者へ、定期コースをご案内するアウトバウンド。案内フローを覚え、成約体験を積みます。',
     persona:{ name:'森 久子', age:'55歳', job:'主婦', init:'森', mood:'前向き' } },
 
   { id:'out-m', cat:'アウトバウンド', lv:'中級', lvClass:'m', role:'オペレーター（定期獲得）',
     time:'約6分', count:300, emo:'様子見', real:true, name:'定期コースのご案内 ・ 中級',
-    iframe:'https://stg.gptbots.ai/widget/eeewsarcgjue2z2gpmbdppm/chat.html',
+    iframe:'https://stg-jp.gptbots.ai/widget/eex9lwnpkxaggw1dfsmk74e/chat.html',
     quote:'今使ってる化粧品があるので、間に合ってるんですけど。',
     desc:'反論に応えながら、定期のメリットと「いつでも解約可」を伝えて成約に導きます。',
     persona:{ name:'佐藤 美和子', age:'45歳', job:'パート勤務', img:'persona_sato.png', mood:'様子見' } },
 
   { id:'out-h', cat:'アウトバウンド', lv:'上級', lvClass:'h', role:'オペレーター（定期獲得）',
-    time:'約7分', count:190, emo:'警戒', real:false, name:'定期コースのご案内 ・ 上級',
+    time:'約7分', count:190, emo:'警戒', real:true, name:'定期コースのご案内 ・ 上級',
+    iframe:'https://stg-jp.gptbots.ai/widget/eermrpxidatcz0zolnb1bpe/chat.html',
     quote:'勧誘の電話ですか？今ちょっと忙しいんですけど。',
     desc:'多忙で警戒の強いお客様に、薬機法に配慮しつつ、クロージングと離脱防止まで実践します。',
     persona:{ name:'三浦 彩', age:'42歳', job:'共働き', init:'三', mood:'警戒' } },
 
-  // ── 業務B：インバウンド（解約引き止め）──
+  // ── 業務B：インバウンド（解約引き止め）── 田中 由紀
   { id:'in-e', cat:'インバウンド', lv:'初級', lvClass:'e', role:'オペレーター（解約対応）',
-    time:'約5分', count:150, emo:'申し訳なさ', real:false, name:'定期解約の引き止め ・ 初級',
+    time:'約5分', count:150, emo:'申し訳なさ', real:true, name:'定期解約の引き止め ・ 初級',
+    iframe:'https://stg-jp.gptbots.ai/widget/eeoxrwg4yv2xyjcnnqlskao/chat.html',
     quote:'定期便を解約したくて。使い切れずに溜まっちゃって…。',
     desc:'「解約したい」というお申し出に、傾聴と代替提案で引き止め成功を体験します。',
     persona:{ name:'高橋 節子', age:'58歳', job:'主婦', init:'高', mood:'申し訳なさ' } },
 
   { id:'in-m', cat:'インバウンド', lv:'中級', lvClass:'m', role:'オペレーター（解約対応）',
     time:'約6分', count:360, emo:'不満', real:true, name:'定期解約の引き止め ・ 中級',
-    iframe:'https://stg.gptbots.ai/widget/eezohzlvrfoawvfryzarorp/chat.html',
+    iframe:'https://stg-jp.gptbots.ai/widget/eevpdnh5syllaicx5sl38ou/chat.html',
     quote:'定期便を解約したいんです。効果も感じないし、高いので。',
     desc:'解約理由に丁寧に向き合い、的確な提案で継続・休止に導く力を鍛えます。',
     persona:{ name:'田中 由紀', age:'38歳', job:'共働き', img:'persona_tanaka.png', mood:'不満' } },
 
   { id:'in-h', cat:'インバウンド', lv:'上級', lvClass:'h', role:'オペレーター（解約対応）',
-    time:'約7分', count:210, emo:'苛立ち', real:false, name:'定期解約の引き止め ・ 上級',
+    time:'約7分', count:210, emo:'苛立ち', real:true, name:'定期解約の引き止め ・ 上級',
+    iframe:'https://stg-jp.gptbots.ai/widget/ee86b0hnosay1l8dlzzf6s1/chat.html',
     quote:'もう解約って言ってますよね？何度も同じ説明は困ります。',
     desc:'強い解約意思・感情・コンプライアンスまで。解約意思を尊重しつつ、円満に着地させます。',
     persona:{ name:'木村 玲子', age:'45歳', job:'クレーム傾向', init:'木', mood:'苛立ち' } },
