@@ -1,7 +1,6 @@
-import { scenarios, bizList, negEmo } from '../data.js'
+import { scenarios, bizList } from '../data.js'
 
 const cats = ['すべて', 'アウトバウンド', 'インバウンド']
-const LVN = { e: 1, m: 2, h: 3 } // 塗りつぶすレベルドット数
 
 export default function Roleplay({ openScn, curCat, setCurCat, search, setSearch }) {
   return (
@@ -33,15 +32,14 @@ export default function Roleplay({ openScn, curCat, setCurCat, search, setSearch
             </div>
             <div className="rp-cards">
               {cards.map(s => {
-                const p = s.persona, neg = negEmo.includes(s.emo)
+                const p = s.persona
                 return (
                   <div className={'rp-card ' + b.theme} key={s.id} onClick={() => openScn(s)}>
                     <div className="rp-photo">
                       {p.img
                         ? <><img src={p.img} alt={p.name} /><div className="shade" /></>
                         : <><div className={'grad ' + b.theme}><span className="rp-init">{p.init}</span></div><div className="shade" /></>}
-                      <span className={'rp-lv lv-' + s.lvClass}>{s.lv}<span className="lv-dots">{[0, 1, 2].map(k => <i key={k} className={k < LVN[s.lvClass] ? 'on' : ''} />)}</span></span>
-                      <span className={'rp-emo' + (neg ? ' neg' : '')}>● {s.emo}</span>
+                      {p.type && <span className="rp-type">{p.type}</span>}
                       <div className="rp-nm"><b>{p.name}</b><span>{p.age} ・ {p.job}</span></div>
                     </div>
                     <div className="rp-body">

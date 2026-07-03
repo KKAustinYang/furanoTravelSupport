@@ -214,15 +214,9 @@ img{display:block}
 .grad.in{background:linear-gradient(150deg,#12a08f,#0a4a43)}
 .rp-init{font-family:var(--serif);font-size:76px;font-weight:700;color:rgba(255,255,255,.92)}
 .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(35,36,31,.26) 0%,transparent 32%,rgba(35,36,31,.78) 100%)}
-.rp-lv{position:absolute;top:13px;left:13px;z-index:2;display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#fff;padding:5px 12px;border-radius:9px;box-shadow:0 3px 10px rgba(0,0,0,.22)}
-.rp-lv.lv-e{background:linear-gradient(135deg,#34b06a,#1f8f57)}
-.rp-lv.lv-m{background:linear-gradient(135deg,#cf9f4e,#a2761f)}
-.rp-lv.lv-h{background:linear-gradient(135deg,#d5633e,#b23a30)}
-.rp-lv .lv-dots{display:inline-flex;gap:3px}
-.rp-lv .lv-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.42)}
-.rp-lv .lv-dots i.on{background:#fff}
-.rp-emo{position:absolute;top:13px;right:13px;z-index:2;font-size:11px;font-weight:700;color:#fff;background:rgba(35,36,31,.52);backdrop-filter:blur(4px);padding:5px 12px;border-radius:999px}
-.rp-emo.neg{background:var(--accent)}
+/* 外部カードは「顧客タイプ(性格)」で分類。難易度は Setup 側でのみ選ぶ */
+.rp-type{position:absolute;top:13px;left:13px;z-index:2;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.3px;color:#fff;background:rgba(28,28,22,.5);backdrop-filter:blur(5px);padding:5px 12px;border-radius:9px;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.rp-type::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
 .rp-nm{position:absolute;left:16px;bottom:14px;z-index:2;color:#fff}
 .rp-nm b{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:.5px}
 .rp-nm span{font-size:11.5px;color:rgba(255,255,255,.82);margin-left:8px}
