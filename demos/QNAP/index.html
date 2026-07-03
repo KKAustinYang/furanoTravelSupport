@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QNAP サポート AI エージェント｜Powered by GPTBots</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><!-- aurora-mobile 統一favicon -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05070e; --bg2:#080b16; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.055);
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --ink:#eef2fb; --sub:#aab6d6; --muted:#7d8bb0;
+    --blue:#4c8dff; --cyan:#2fe0e6; --violet:#9b6bff; --green:#3fdc93; --amber:#ffbf47; --red:#ff7a86;
+    --grad:linear-gradient(120deg,#4c8dff 0%,#2fe0e6 55%,#9b6bff 100%);
+    --glow:rgba(47,224,230,.5); --brand:#56d8b5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Noto Sans JP',-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden;font-weight:400}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+  a{color:var(--cyan);text-decoration:none}
+  .mono{font-family:'JetBrains Mono',monospace}
+  ::selection{background:rgba(76,141,255,.35)}
+
+  /* intro boot */
+  .intro{position:fixed;inset:0;z-index:200;background:radial-gradient(700px 400px at 50% 40%,#0b1226,#05070e 70%);display:flex;align-items:center;justify-content:center;transition:opacity .7s ease,visibility .7s}
+  .intro.hide{opacity:0;visibility:hidden}
+  .intro-box{text-align:center;animation:iup .8s cubic-bezier(.2,.8,.2,1)}
+  @keyframes iup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .intro-logo{display:flex;gap:14px;justify-content:center;align-items:center;font-weight:900;font-size:26px}
+  .intro-sub{margin-top:20px;font-size:13px;color:var(--sub);font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+  .intro-bar{margin:20px auto 0;width:240px;height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+  .intro-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:4px;transition:width .85s cubic-bezier(.4,0,.2,1)}
+
+  /* scroll progress */
+  #sprog{position:fixed;top:0;left:0;height:3px;width:0;z-index:150;background:var(--grad);box-shadow:0 0 12px var(--glow)}
+
+  /* aurora background */
+  .aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;animation:drift 26s ease-in-out infinite}
+  .b1{width:620px;height:620px;background:radial-gradient(circle,#1f5bd6,transparent 65%);top:-220px;left:-120px}
+  .b2{width:560px;height:560px;background:radial-gradient(circle,#12b6c8,transparent 65%);top:180px;right:-160px;animation-delay:-8s}
+  .b3{width:520px;height:520px;background:radial-gradient(circle,#7b45e0,transparent 65%);top:1400px;left:20%;animation-delay:-14s;opacity:.35}
+  @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,50px) scale(1.12)}}
+  #net{position:fixed;inset:0;width:100%;height:100%;z-index:1;opacity:.35;pointer-events:none}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+  .reveal.show{opacity:1;transform:none}
+
+  header{position:sticky;top:0;z-index:30;backdrop-filter:blur(16px);background:rgba(5,7,14,.55);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+  .logos{display:flex;align-items:center;gap:13px;font-weight:700;font-size:15px}
+  .chip-q{background:linear-gradient(135deg,#0a63d6,#3b82f6);color:#fff;padding:5px 11px;border-radius:7px;font-weight:900;letter-spacing:.5px;box-shadow:0 6px 20px rgba(59,130,246,.4)}
+  .qnaplogo{height:20px;width:115px;color:#fff;display:block}.qnaplogo-lg{height:30px;width:172px}.qnaplogo-sm{height:18px;width:104px}
+  .x{color:var(--muted);font-weight:300}
+  .chip-g{font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .pw{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--sub);border:1px solid var(--line);padding:7px 15px;border-radius:22px;background:var(--panel)}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(63,220,147,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,220,147,.5)}70%{box-shadow:0 0 0 9px rgba(63,220,147,0)}100%{box-shadow:0 0 0 0 rgba(63,220,147,0)}}
+
+  .hero{padding:80px 0 30px;text-align:center;position:relative;z-index:2}
+  .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.5px;color:#cfe0ff;border:1px solid var(--line2);background:var(--panel);padding:8px 17px;border-radius:24px;margin-bottom:26px}
+  .eyebrow .spark{width:15px;height:15px;border-radius:50%;background:conic-gradient(from 0deg,var(--cyan),var(--blue),var(--violet),var(--cyan));animation:spin 4s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hero h1{font-size:clamp(32px,5.4vw,58px);line-height:1.12;font-weight:900;letter-spacing:-.5px}
+  .hero h1 .grad{background:var(--grad);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+  @keyframes shine{to{background-position:220% center}}
+  .hero p.sub{margin:24px auto 0;max-width:720px;color:var(--sub);font-size:clamp(15px,2vw,18px)}
+  .pills{display:flex;gap:11px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:9px 18px;font-size:13px;color:var(--ink);backdrop-filter:blur(6px)}
+  .pill b{color:var(--cyan);font-weight:700}
+  .models{margin-top:26px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .models b{color:var(--sub);font-weight:400;letter-spacing:1px}
+  .mbadge{border:1px solid var(--line);border-radius:20px;padding:4px 12px;color:#cfe0ff;background:var(--panel)}
+
+  section{padding:58px 0;position:relative;z-index:2}
+  .head-c{text-align:center;max-width:740px;margin:0 auto}
+  .kicker{color:var(--cyan);font-weight:500;font-size:12px;letter-spacing:4px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  h2{font-size:clamp(24px,3.6vw,34px);font-weight:900;margin:12px 0 10px;letter-spacing:-.3px}
+  .lead{color:var(--sub);font-size:15px}
+
+  /* cinematic chat */
+  .stage{margin:38px auto 0;max-width:770px;position:relative;perspective:1400px}
+  .stage:before{content:"";position:absolute;inset:-40px -20px;background:radial-gradient(600px 300px at 50% 20%,rgba(76,141,255,.18),transparent 70%);z-index:0;filter:blur(10px)}
+  .win{position:relative;z-index:1;border-radius:22px;overflow:hidden;border:1px solid var(--line2);
+    background:linear-gradient(180deg,rgba(18,24,44,.85),rgba(10,13,24,.92));backdrop-filter:blur(20px);
+    box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04),0 0 60px rgba(47,224,230,.06);
+    transition:transform .4s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+  .win-bar{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .dots{display:flex;gap:7px}.dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+  .win-title{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub)}
+  .win-title .qa{width:24px;height:24px;border-radius:7px;background:var(--grad);color:#04122b;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px var(--glow)}
+  .win-lang{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);font-family:'JetBrains Mono',monospace}
+  .win-lang .lg{border:1px solid var(--line2);border-radius:20px;padding:3px 10px;transition:.3s}
+  .win-lang .lg.on{background:rgba(76,141,255,.18);border-color:var(--blue);color:#cfe0ff}
+  .chapter{padding:11px 20px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;background:rgba(0,0,0,.15)}
+  .chapter .idx{color:var(--cyan)}
+  .chapter .title{color:var(--ink);font-family:'Noto Sans JP',sans-serif}
+  .chapter .prog{margin-left:auto;display:flex;gap:5px}
+  .chapter .prog b{width:22px;height:3px;border-radius:3px;background:var(--line2);display:block;transition:.4s}
+  .chapter .prog b.on{background:var(--grad)}
+
+  .stream{height:410px;overflow:hidden;padding:22px 22px 8px;display:flex;flex-direction:column;gap:15px;
+    -webkit-mask:linear-gradient(180deg,transparent 0,#000 26px,#000 calc(100% - 20px),transparent 100%);
+    mask:linear-gradient(180deg,transparent 0,#000 26px,#000 calc(100% - 20px),transparent 100%)}
+  .row{display:flex;gap:11px;max-width:92%;animation:slidein .5s cubic-bezier(.2,.8,.2,1)}
+  @keyframes slidein{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .row.user{align-self:flex-end;flex-direction:row-reverse}
+  .av{width:32px;height:32px;border-radius:10px;flex:0 0 32px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px}
+  .av.bot{background:var(--grad);color:#04122b;box-shadow:0 0 16px var(--glow)}
+  .av.user{background:rgba(255,255,255,.09);color:#cfe0ff;border:1px solid var(--line2)}
+  .av.human{background:linear-gradient(135deg,#ffbf47,#ff7a86);color:#3a1500}
+  .bubble{padding:14px 17px;border-radius:16px;font-size:14.5px;position:relative}
+  .row.bot .bubble{background:var(--panel2);border:1px solid var(--line);border-top-left-radius:5px}
+  .row.user .bubble{background:linear-gradient(135deg,#3b82f6,#2f6ff0);color:#fff;border-top-right-radius:5px;box-shadow:0 10px 26px rgba(59,130,246,.3)}
+  .row.human .bubble{background:rgba(255,191,71,.08);border:1px solid rgba(255,191,71,.3);border-top-left-radius:5px}
+  .ts{font-size:10px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace;opacity:.7}
+  .bubble ul{margin:8px 0 2px;padding-left:19px}.bubble li{margin:5px 0}
+  .bubble .head{font-weight:700;color:#bfe1ff;margin-top:10px}
+  .bubble p+p,.bubble .head+p{margin-top:8px}
+  .caret{display:inline-block;width:8px;height:16px;background:var(--cyan);margin-left:2px;vertical-align:-3px;border-radius:1px;animation:blink .9s steps(1) infinite;box-shadow:0 0 10px var(--glow)}
+  @keyframes blink{50%{opacity:0}}
+  .tping{display:flex;gap:5px;padding:5px 3px}
+  .tping span{width:8px;height:8px;border-radius:50%;background:var(--sub);animation:tp 1.1s infinite}
+  .tping span:nth-child(2){animation-delay:.18s}.tping span:nth-child(3){animation-delay:.36s}
+  @keyframes tp{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+
+  .rag{background:linear-gradient(180deg,rgba(76,141,255,.08),rgba(255,255,255,.02));border:1px solid var(--line2);border-radius:13px;padding:12px 14px;margin-bottom:2px}
+  .rag-h{display:flex;align-items:center;gap:9px;font-size:12.5px;color:#cfe0ff;font-weight:500;font-family:'JetBrains Mono',monospace}
+  .spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(47,224,230,.25);border-top-color:var(--cyan);animation:spin .7s linear infinite}
+  .rag-chip{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;margin-top:10px;opacity:0;transform:translateX(-10px);transition:.4s}
+  .rag-chip.in{opacity:1;transform:none}
+  .rag-doc{font-size:12px;color:var(--ink)}.rag-m{font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace}
+  .rag-bar{grid-column:1/3;height:5px;background:rgba(255,255,255,.07);border-radius:5px;overflow:hidden}
+  .rag-bar i{display:block;height:100%;background:var(--grad);width:0;transition:width .7s cubic-bezier(.2,.8,.2,1);border-radius:5px}
+  .rag.done .rag-h{color:var(--green)}.rag.miss .rag-h{color:var(--amber)}
+
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:13px;padding-top:13px;border-top:1px dashed var(--line2);align-items:center}
+  .cmeter{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .cmeter .track{width:92px;height:7px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+  .cmeter .track i{display:block;height:100%;width:0;border-radius:6px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  .cmeter.hi{color:var(--green)}.cmeter.hi i{background:linear-gradient(90deg,#3fdc93,#2fe0e6)}
+  .cmeter.mid{color:var(--amber)}.cmeter.mid i{background:linear-gradient(90deg,#ffbf47,#ffa24b)}
+  .cmeter.lo{color:var(--red)}.cmeter.lo i{background:linear-gradient(90deg,#ff7a86,#ff4b6d)}
+  .src{font-size:12px;color:var(--sub);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-top:10px;display:flex;gap:9px;align-items:flex-start;animation:slidein .5s}
+  .src .ic{color:var(--cyan)}
+  .handoff{margin-top:12px;background:rgba(255,122,134,.09);border:1px solid rgba(255,122,134,.35);border-radius:12px;padding:13px 15px;font-size:13px;animation:slidein .5s}
+  .handoff b{color:var(--red)}
+  .handoff .sum{margin-top:9px;font-size:11.5px;color:var(--sub);background:rgba(0,0,0,.25);border-radius:9px;padding:10px;font-family:'JetBrains Mono',monospace;line-height:1.7;white-space:pre-line}
+  .stamp{align-self:center;font-size:11px;color:var(--green);border:1px solid rgba(63,220,147,.3);background:rgba(63,220,147,.08);border-radius:20px;padding:5px 14px;font-family:'JetBrains Mono',monospace;animation:slidein .5s}
+  .stamp.h{color:var(--amber);border-color:rgba(255,191,71,.3);background:rgba(255,191,71,.08)}
+
+  .win-foot{display:flex;align-items:center;gap:10px;padding:13px 20px;border-top:1px solid var(--line);background:rgba(255,255,255,.02);font-size:12.5px;color:var(--muted)}
+  .win-foot .bars{display:flex;gap:3px;align-items:flex-end;height:14px}
+  .win-foot .bars i{width:3px;background:var(--cyan);border-radius:2px;animation:eq 1s ease-in-out infinite}
+  .win-foot .bars i:nth-child(2){animation-delay:.15s}.win-foot .bars i:nth-child(3){animation-delay:.3s}.win-foot .bars i:nth-child(4){animation-delay:.45s}
+  @keyframes eq{0%,100%{height:4px}50%{height:14px}}
+  .replay{margin-left:auto;font-size:11.5px;color:var(--sub);font-family:'JetBrains Mono',monospace}
+
+  /* KPI gauges */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:34px}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px 18px;text-align:center;backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;gap:12px}
+  .ring{width:118px;height:118px;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:9}
+  .ring .fg{fill:none;stroke:url(#kpiGrad);stroke-width:9;stroke-linecap:round;stroke-dasharray:327;stroke-dashoffset:327;transition:stroke-dashoffset 1.5s cubic-bezier(.2,.8,.2,1)}
+  .ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:26px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ring .val span{font-size:14px}
+  .kpi .lbl{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .kpi .num{font-size:40px;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.5}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:34px}
+  @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 20px;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(6px)}
+  .stat:before{content:"";position:absolute;top:-50%;right:-30%;width:130px;height:130px;background:radial-gradient(circle,rgba(47,224,230,.16),transparent 70%)}
+  .stat .big{font-size:clamp(28px,4.4vw,40px);font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-1px}
+  .stat .lbl{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+  .cmp{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:26px;backdrop-filter:blur(6px)}
+  .cmp h3{font-size:16px;margin-bottom:4px}.cmp .note{color:var(--muted);font-size:12.5px;margin-bottom:20px}
+  .barrow{display:grid;grid-template-columns:220px 1fr;gap:14px;align-items:center;margin:13px 0}
+  @media(max-width:620px){.barrow{grid-template-columns:1fr}}
+  .barrow .t{font-size:13px}.barrow .t small{color:var(--muted);display:block;font-size:11.5px}
+  .bar{height:30px;border-radius:9px;background:rgba(255,255,255,.05);position:relative;overflow:hidden}
+  .bar .fill{height:100%;border-radius:9px;display:flex;align-items:center;padding-left:12px;font-size:12px;font-weight:700;color:#04122b;white-space:nowrap;width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+  .fill.human{background:linear-gradient(90deg,#ffbf47,#ff7a86)}
+  .fill.ai{background:linear-gradient(90deg,#2fe0e6,#3fdc93);box-shadow:0 0 22px rgba(47,224,230,.4)}
+
+  /* comparison table */
+  .ctable{margin-top:30px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--panel);backdrop-filter:blur(6px)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  thead th{padding:16px 14px;text-align:left;font-weight:700;border-bottom:1px solid var(--line2);background:rgba(255,255,255,.03)}
+  thead th.us{background:linear-gradient(180deg,rgba(47,224,230,.14),rgba(76,141,255,.1));color:#cfe0ff}
+  tbody td{padding:14px;border-bottom:1px solid var(--line);color:var(--sub);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  td.feat{color:var(--ink);font-weight:500}
+  td.us{background:rgba(47,224,230,.05)}
+  .yes{color:var(--green);font-weight:700}.mid2{color:var(--amber);font-weight:700}.no{color:var(--red);font-weight:700}
+  .cnote{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+
+  .kbgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
+  @media(max-width:760px){.kbgrid{grid-template-columns:repeat(2,1fr)}}
+  .kbc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center;backdrop-filter:blur(6px);transition:.2s}
+  .kbc:hover{border-color:var(--line2);transform:translateY(-3px)}
+  .kbc .n{font-size:30px;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .kbc .c{font-size:12.5px;color:var(--muted);margin-top:6px}
+
+  .archcard{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px;margin-top:30px;overflow-x:auto;backdrop-filter:blur(6px)}
+  .flow{stroke-dasharray:7 7;animation:dash 1s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-14}}
+
+  .reqs{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+  @media(max-width:760px){.reqs{grid-template-columns:1fr}}
+  .req{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;transition:.25s;backdrop-filter:blur(6px)}
+  .req:hover{border-color:var(--line2);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .req .no{width:38px;height:38px;border-radius:11px;background:var(--grad);color:#04122b;display:flex;align-items:center;justify-content:center;font-weight:900;margin-bottom:14px;box-shadow:0 0 20px var(--glow)}
+  .req h4{font-size:15px;margin-bottom:9px}.req p{font-size:13.5px;color:var(--muted)}
+  .req .ask{font-size:12.5px;color:var(--amber);border-left:2px solid var(--amber);padding-left:11px;margin-bottom:12px;line-height:1.5}
+
+  .cta{margin-top:40px;text-align:center;background:linear-gradient(120deg,rgba(76,141,255,.14),rgba(47,224,230,.1),rgba(155,107,255,.12));border:1px solid var(--line2);border-radius:22px;padding:44px 24px;backdrop-filter:blur(6px)}
+  .cta h3{font-size:clamp(20px,3vw,26px);font-weight:900}.cta p{color:var(--sub);margin-top:10px}
+
+  /* brand logo */
+  .brandlogo{height:22px;width:124px;display:block}
+  .intro-brand{height:44px;width:246px;display:block;margin:0 auto;filter:drop-shadow(0 0 16px rgba(86,216,181,.3));animation:logopulse 2.4s ease-in-out infinite}
+  @keyframes logopulse{0%,100%{filter:drop-shadow(0 0 12px rgba(86,216,181,.22))}50%{filter:drop-shadow(0 0 26px rgba(86,216,181,.5))}}
+  /* floating GPTBots widget */
+  .fab{position:fixed;right:26px;bottom:26px;z-index:120;width:62px;height:62px;border-radius:50%;border:1px solid var(--line2);
+    background:radial-gradient(circle at 32% 28%,#17253f,#0a1122);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:transform .2s;animation:fabglow 2.8s ease-in-out infinite}
+  @keyframes fabglow{0%,100%{box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 0 rgba(86,216,181,0)}50%{box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 22px 4px rgba(86,216,181,.3)}}
+  .fab:hover{transform:translateY(-3px) scale(1.06)}
+  .fab-ic{width:34px;height:28px;color:var(--brand)}
+  .fab .ndot{position:absolute;top:5px;right:5px;width:13px;height:13px;border-radius:50%;background:var(--brand);border:2px solid #0a1122;box-shadow:0 0 10px rgba(86,216,181,.7)}
+  .fab-tip{position:fixed;right:100px;bottom:40px;z-index:120;background:rgba(16,31,61,.95);border:1px solid var(--line2);border-radius:12px;padding:9px 14px;font-size:12.5px;color:var(--ink);box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;transform:translateX(8px);transition:.4s;pointer-events:none;backdrop-filter:blur(8px)}
+  .fab-tip.show{opacity:1;transform:none}
+  .fab-tip b{color:var(--brand)}
+  .trylive-btn{background:var(--grad);color:#04122b;border:0;font-weight:800;font-size:14px;font-family:inherit;padding:13px 26px;border-radius:12px;cursor:pointer;box-shadow:0 12px 30px rgba(47,224,230,.28);transition:transform .18s,box-shadow .18s;}
+  .trylive-btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(47,224,230,.42);}
+  .chatfull{position:fixed;inset:0;z-index:200;background:radial-gradient(900px 500px at 50% -10%,#0e1830,#05070e 72%);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:scale(1.008);transition:opacity .32s ease,transform .32s ease,visibility .32s;}
+  .chatfull.open{opacity:1;visibility:visible;transform:none;}
+  .chatfull-head{display:flex;align-items:center;gap:14px;padding:12px 22px;background:linear-gradient(120deg,#0A63D6,#1F3864 55%,#2E9B8A);color:#fff;flex:0 0 auto;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+  .chatfull-head .back{background:rgba(255,255,255,.16);border:0;color:#fff;font-family:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.15s;}
+  .chatfull-head .back:hover{background:rgba(255,255,255,.3);transform:translateX(-2px);}
+  .chatfull-head .qa2{width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;}
+  .chatfull-head .t{font-weight:700;font-size:15px;line-height:1.25;}
+  .chatfull-head .s{font-size:11.5px;opacity:.92;display:flex;align-items:center;gap:5px;margin-top:2px;}
+  .chatfull-head .s i{width:6px;height:6px;border-radius:50%;background:#8dffc8;display:inline-block;}
+  .chatfull-head .pw2{margin-left:auto;font-size:11.5px;color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:5px 13px;white-space:nowrap;}
+  .chatfull-body{flex:1;min-height:0;background:#fff;}
+  .chatfull-body iframe{width:100%;height:100%;border:0;display:block;}
+  @media(max-width:600px){.chatfull-head{padding:11px 14px;gap:10px;}.chatfull-head .pw2{display:none;}}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px;text-align:center;position:relative;z-index:2}
+  .disc{max-width:860px;margin:12px auto 0;font-size:11.5px;color:#5c6a8c;line-height:1.7}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="gptlogo" viewBox="0 0 888.5 158.6">
+<path fill="#56d8b5" d="M194.5,64.48c2.57,2.57,2.27,25.09.45,28.42-1.66,2.72-10.58,6.35-13.91,8.92-10.43,7.86-13.15,17.23-20.56,26.61-31.44,39.61-89.94,40.21-122.75,1.97-7.41-8.62-11.49-19.35-20.26-26.76-4.08-3.48-16.63-9.07-17.23-12.09-.45-2.72-.3-24.64.6-26.15,6.35-4.23,14.36-8.01,19.8-13.3,9.52-9.37,13.76-22.83,24.79-32.5,32.95-28.72,83.29-25.55,111.86,7.56,7.86,9.07,12.7,21.01,22.22,28.72,3.63,2.87,13.3,6.8,14.97,8.62ZM64.64,33.94c-6.05,1.06-10.43,4.69-12.4,10.58,1.81,21.62-2.57,47.47,0,68.63.91,8.16,7.26,11.34,14.66,12.09,15.42,1.51,45.65,1.36,61.07,0,9.37-.76,14.66-3.48,15.87-13.45,1.51-13.76,1.66-51.25,0-64.85-.91-8.31-8.31-12.55-15.87-13.3-12.85-1.36-51.09-1.81-63.34.3Z"/>
+<path fill="#e9f0ff" d="M299.1,80.5c-7.41,9.52-19.35,13.76-31.29,10.88-11.49-2.72-19.5-11.19-21.62-22.37-1.97-10.28.6-19.8,6.95-26.76,5.59-6.2,13.91-9.52,22.98-9.52h3.33c10.13.91,18.74,7.26,23.13,17.08,4.54,10.28,3.33,22.07-3.17,30.54l-.3.15ZM245.44,148.07v-35.68c4.69,2.87,9.83,5.44,15.72,6.65,4.69,1.06,9.22,1.51,13.76,1.51,21.31,0,40.36-10.73,50.79-29.48,4.69-8.31,7.1-17.38,7.41-26.91.3-8.92-1.66-17.99-5.29-26.15-7.71-16.78-22.37-28.57-40.21-32.35-17.38-3.63-34.31.15-47.62,10.58-13.6,10.58-21.77,26.91-22.67,44.9-.45,10.13-.3,20.86,0,31.29,0,4.08,0,8.16.15,12.09,0,4.23,0,40.66-.3,44.59v3.48l28.57-.3"/>
+<path fill="#e9f0ff" d="M509.38,124.48c-10.43.91-19.95-2.57-26.15-9.52-6.35-6.95-8.77-16.48-6.95-26.76,2.12-11.19,10.13-19.65,21.62-22.37,11.94-2.87,24.04,1.21,31.29,10.88,6.5,8.47,7.86,20.26,3.17,30.54-4.38,9.83-13,16.33-23.13,17.08l.15.15ZM475.51,4.46h-28.57v3.48c.3,4.08.45,40.36.45,44.59,0,3.93,0,8.16-.15,12.09-.15,10.43-.3,21.16,0,31.29.91,17.99,9.07,34.47,22.67,44.9,10.13,7.86,22.22,11.94,34.92,11.94,4.23,0,8.47-.45,12.85-1.36,17.84-3.78,32.65-15.42,40.21-32.35,3.78-8.16,5.59-17.23,5.29-26.15-.3-9.52-2.72-18.59-7.41-26.91-12.7-22.67-38.09-33.56-64.7-27.97-5.9,1.21-10.88,3.78-15.72,6.65V8.99"/>
+<path fill="#e9f0ff" d="M422.3,35.15h-44.14V4.92h-27.97v91.46c.6,14.97,6.8,28.87,17.38,39.15,10.58,10.43,24.64,16.33,39.45,16.78h15.12v-30.54l-4.69,2.27c-14.97.3-24.19-1.21-32.2-10.73-5.44-6.35-6.65-12.4-6.95-21.92-.15-4.38,0-8.92,0-13.45,0-4.84.15-9.98,0-14.97h43.69v-28.27l.3.45Z"/>
+<path fill="#e9f0ff" d="M853.43,80.2c-12.55-4.69-20.26-7.86-20.26-15.12,0-6.65,5.9-10.88,15.27-10.88,7.41,0,15.27,3.33,20.11,8.47l2.42,2.57,17.54-18.14-2.12-2.27c-8.16-8.92-21.77-14.06-37.34-14.06-12.55,0-23.28,3.63-31.14,10.58-7.26,6.5-11.34,15.27-11.34,24.79,0,23.43,19.35,30.54,34.92,36.28,12.55,4.69,20.11,7.86,20.11,14.97s-6.2,11.94-16.78,11.94c-15.12,0-24.94-9.07-27.66-11.79l-2.57-2.57-16.48,19.65,2.12,2.12c4.08,4.23,9.98,8.01,16.63,10.73,8.16,3.33,17.23,4.99,26.91,4.99,13.91,0,25.4-3.93,33.56-11.49,6.95-6.5,10.88-15.42,10.88-24.49,0-23.58-19.35-30.69-35.07-36.43l.3.15Z"/>
+<path fill="#e9f0ff" d="M782.08,35.15h-44.14V4.92h-27.97v91.46c.6,14.97,6.8,28.87,17.38,39.15,10.58,10.43,24.64,16.33,39.45,16.78h15.12v-30.54l-4.69,2.27c-14.97.3-24.19-1.21-32.2-10.73-5.44-6.35-6.65-12.4-6.95-21.92-.15-4.38,0-8.92,0-13.45,0-4.84.15-9.98,0-14.97h43.69v-28.27l.3.45Z"/>
+<path fill="#56d8b5" d="M643.31,26.98c-.6-1.21-1.66-2.12-3.02-2.57-1.36-.45-2.72-.3-3.93.3-.91.45-1.66,1.21-2.12,2.12l-63.79,121.99h32.95l34.92-65.61,33.86,64.85.45.76h32.95l-62.28-121.99v.15Z"/>
+</symbol>
+<symbol id="gptmark" viewBox="0 0 196 158.6">
+<path fill="currentColor" d="M194.5,64.48c2.57,2.57,2.27,25.09.45,28.42-1.66,2.72-10.58,6.35-13.91,8.92-10.43,7.86-13.15,17.23-20.56,26.61-31.44,39.61-89.94,40.21-122.75,1.97-7.41-8.62-11.49-19.35-20.26-26.76-4.08-3.48-16.63-9.07-17.23-12.09-.45-2.72-.3-24.64.6-26.15,6.35-4.23,14.36-8.01,19.8-13.3,9.52-9.37,13.76-22.83,24.79-32.5,32.95-28.72,83.29-25.55,111.86,7.56,7.86,9.07,12.7,21.01,22.22,28.72,3.63,2.87,13.3,6.8,14.97,8.62ZM64.64,33.94c-6.05,1.06-10.43,4.69-12.4,10.58,1.81,21.62-2.57,47.47,0,68.63.91,8.16,7.26,11.34,14.66,12.09,15.42,1.51,45.65,1.36,61.07,0,9.37-.76,14.66-3.48,15.87-13.45,1.51-13.76,1.66-51.25,0-64.85-.91-8.31-8.31-12.55-15.87-13.3-12.85-1.36-51.09-1.81-63.34.3Z"/>
+</symbol>
+<symbol id="qnaplogo" viewBox="0 0 138 24">
+  <g id="uuid-c1730897-8a8c-4c4f-8ac3-a0d3b8b0973c" data-name="组 186">
+    <g id="uuid-07e5c0ff-ef8e-4498-9115-2ce3141bdaf8" data-name="组 165">
+      <g id="uuid-08557dd1-cfaf-479c-8913-1ea47a13cd8c" data-name="组 163">
+        <path id="uuid-a531e974-cdae-4441-b5f5-666520faee53" data-name="路径 124" d="M134.09,5.35v-3.07h1.36c.21,0,.42.02.63.08.14.06.26.16.34.29.09.14.13.3.13.46,0,.2-.07.4-.21.55-.18.17-.41.27-.66.28.09.04.17.09.25.15.13.12.24.26.34.41l.54.84h-.51l-.41-.64c-.12-.18-.22-.33-.29-.42-.06-.08-.13-.15-.21-.2-.06-.04-.12-.07-.18-.08-.08-.01-.15-.02-.23-.01h-.47v1.36h-.41ZM134.5,3.63h.87c.15,0,.29-.01.44-.06.1-.03.18-.1.24-.18.05-.08.08-.18.08-.28,0-.14-.05-.27-.16-.36-.14-.11-.32-.16-.5-.14h-.97v1.02Z" style="fill: currentColor;"/>
+      </g>
+      <g id="uuid-11b0541a-06c1-4bd2-935e-fb5f3463ac93" data-name="组 164">
+        <path id="uuid-674754c9-b429-4672-905d-500b0df759da" data-name="路径 125" d="M132.59,3.77c0-1.49,1.21-2.7,2.7-2.7h0c1.49,0,2.7,1.21,2.7,2.7h0c0,1.49-1.21,2.7-2.7,2.7h0c-1.49,0-2.7-1.21-2.7-2.7ZM132.99,3.77c0,1.27,1.03,2.3,2.31,2.31h0c1.27,0,2.3-1.03,2.31-2.31h0c0-1.27-1.03-2.31-2.31-2.31h0c-1.27,0-2.3,1.04-2.31,2.31Z" style="fill: currentColor;"/>
+      </g>
+    </g>
+    <g id="uuid-7330da66-fd56-41b6-a93e-497cc1ad09fe" data-name="组 166">
+      <path id="uuid-b812c293-a95e-4345-95ce-ffabc4d4455d" data-name="路径 126" d="M97.18,23.45h-8.81v-6.07h-12.33v6.07h-8.81V5.6c-.05-1.42.6-2.78,1.74-3.64,1.43-.96,3.14-1.43,4.87-1.31h16.76c1.72-.11,3.43.35,4.87,1.31,1.13.86,1.77,2.22,1.71,3.64v17.84ZM88.37,13.18v-6.6h-12.33v6.6h12.33Z" style="fill: currentColor;"/>
+      <path id="uuid-71e61e6c-e969-4b0c-a240-731fea2ee1c1" data-name="路径 127" d="M128.76,1.79c-1.21-.79-2.65-1.19-4.1-1.13h.03s-.34,0-.34,0h-16.41c-1.72-.11-3.44.35-4.87,1.32-1.11.83-1.76,2.14-1.74,3.52h0v.11h0v17.84h8.8v-5.95h14.24c3.87,0,5.8-1.54,5.8-4.61v-7.31c.14-1.41-.39-2.81-1.42-3.78ZM121.21,12.48h-11.2v-5.9h11.2v5.9Z" style="fill: currentColor;"/>
+      <path id="uuid-aa3ccd19-b600-40cf-9de7-0db99d52df8c" data-name="路径 128" d="M56.17.65h-1.31v13.26c-.06.14-.18.24-.45.2-.11-.03-.22-.08-.3-.16-1.49-2.27-7.21-10.05-9.04-12.53,0-.01-.01-.02-.02-.03h0s-.06-.05-.09-.08c0-.02-.02-.04-.04-.04-.53-.44-1.2-.66-1.89-.62h-7.11c-.76-.05-1.51.22-2.06.74-.5.55-.76,1.27-.74,2h-.01v20.05h8.32s-.05-10.59-.07-13.71c.03-.2.19-.51.82-.43.14.01.27.08.35.2h0c1.61,2.53,12.12,13.94,12.12,13.94h8.64V.65h-7.11Z" style="fill: currentColor;"/>
+    </g>
+    <path id="uuid-ca16467c-889d-4f40-9f28-375b104ea9b7" data-name="路径 129" d="M18.91,18.17l-.39-.28h-9.22V5.86h12.27v10.21c2.88.81,5.58,2.17,7.95,3.99.31-.81.46-1.67.44-2.54V6.4c0-3.82-2.26-5.83-6.77-6.04v-.02H7.59C2.53.35,0,2.36,0,6.4v11.12c0,4.01,2.53,6.02,7.59,6.02h14.8c.73,0,1.46-.05,2.18-.16-1.61-2.01-3.52-3.77-5.66-5.21Z" style="fill: currentColor;"/>
+    <path id="uuid-006fedb2-e245-4dc7-8337-eb041b2de140" data-name="路径 130" d="M16.05,15.25c2.76,1.75,7.79,5.23,9.45,8.4h6.27c-1.07-1.91-4.69-6.51-15.72-8.4Z" style="fill: currentColor;"/>
+  </g>
+</symbol>
+</defs></svg>
+<div class="intro" id="intro">
+  <div class="intro-box">
+    <div class="intro-logo"><svg class="qnaplogo qnaplogo-lg"><use href="#qnaplogo"/></svg><span class="x">×</span><svg class="intro-brand"><use href="#gptlogo"/></svg></div>
+    <div class="intro-sub" id="introSub">AI サポートエージェントを起動しています…</div>
+    <div class="intro-bar"><i id="introBar"></i></div>
+  </div>
+</div>
+<div id="sprog"></div>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+<canvas id="net"></canvas>
+<div class="grain"></div>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="kpiGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8dff"/><stop offset="1" stop-color="#2fe0e6"/></linearGradient>
+</defs></svg>
+
+<header>
+  <div class="wrap nav">
+    <div class="logos"><svg class="qnaplogo"><use href="#qnaplogo"/></svg><span class="x">×</span><svg class="brandlogo"><use href="#gptlogo"/></svg></div>
+    <div class="pw"><span class="live-dot"></span>Powered by GPTBots AI ・ Aurora Mobile</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow"><span class="spark"></span> エンタープライズ AI エージェント ・ RAG 検索 ・ 多言語</div>
+    <h1>QNAP サポートを、<br><span class="grad">24時間・数秒・日本語</span>で。</h1>
+    <p class="sub">御社の<b style="color:#fff">実際のサポートチケット</b>から学習した AI エージェント。日本のサポート敬語で応対し、公式FAQを引用し、確信が持てない時は人へ引き継ぎます。</p>
+    <div class="pills">
+      <span class="pill">📚 実チケット <b>12件</b>で学習</span>
+      <span class="pill">🌐 日本語・英語・中国語</span>
+      <span class="pill">🔗 Salesforce / Dynamics / NAS</span>
+      <span class="pill">🔒 オンプレ配置対応</span>
+    </div>
+    <div class="models"><b>対応LLM</b><span class="mbadge">GPT</span><span class="mbadge">Claude</span><span class="mbadge">DeepSeek-V4</span><span class="mbadge">Gemini</span><span class="mbadge">Llama</span></div>
+  </div>
+</div>
+
+<!-- CINEMATIC CHAT -->
+<section id="demo" style="padding-top:18px">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Live AI ・ Auto-playing</div>
+      <h2>AI が、その場で応える</h2>
+      <p class="lead">知識ベースを検索し、根拠を引用しながら日本語敬語でリアルタイムに回答します。以下は実チケットに基づく自動デモです。</p>
+    </div>
+    <div class="stage reveal" id="stage">
+      <div class="win" id="win">
+        <div class="win-bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="win-title"><span class="qa">Q</span> QNAP Support AI · GPTBots</div>
+          <div class="win-lang">検出言語:
+            <span class="lg on" data-l="ja">日本語</span><span class="lg" data-l="en">EN</span><span class="lg" data-l="zh">中文</span>
+          </div>
+        </div>
+        <div class="chapter">
+          <span class="idx" id="chIdx">01</span> / 04
+          <span class="title" id="chTitle">即時回答 ＋ 出典引用</span>
+          <span class="prog" id="prog"><b class="on"></b><b></b><b></b><b></b></span>
+        </div>
+        <div class="stream" id="stream"></div>
+        <div class="win-foot">
+          <span class="bars"><i></i><i></i><i></i><i></i></span>
+          GPTBots がリアルタイムに応答しています
+          <span class="replay">↻ 自動リプレイ</span>
+        </div>
+      </div>
+    </div>
+    <div class="reveal" style="text-align:center;margin-top:26px;">
+      <button id="tryLive" class="trylive-btn">▶ 実際に AI と話してみる（全画面）</button>
+      <div style="font-size:12px;color:var(--muted);margin-top:9px;">上は実チケットに基づく自動デモです。こちらから、<b style="color:var(--ink)">実際に動作するAI</b>を全画面でお試しいただけます。</div>
+    </div>
+  </div>
+</section>
+
+<!-- KPI -->
+<section id="kpi" style="padding-top:8px">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Projected KPI</div>
+      <h2>導入で見込める効果</h2>
+      <p class="lead">実チケット分析に基づく想定値。FAQ型・定型問い合わせの多くを自動解決し、有人対応を高難度案件に集中できます。</p>
+    </div>
+    <div class="kpis reveal" id="kpiband">
+      <div class="kpi"><div class="ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" cx="60" cy="60" r="52" data-pct="70"/></svg><div class="val" data-count="70">0<span>%</span></div></div><div class="lbl">FAQ型の<br>自動解決見込み</div></div>
+      <div class="kpi"><div class="ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" cx="60" cy="60" r="52" data-pct="95"/></svg><div class="val" data-count="95">0<span>%</span></div></div><div class="lbl">一次応答<br>5秒以内（想定）</div></div>
+      <div class="kpi"><div class="ring"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" cx="60" cy="60" r="52" data-pct="90"/></svg><div class="val" data-count="90">0<span>%</span></div></div><div class="lbl">想定CSAT<br>（顧客満足度）</div></div>
+      <div class="kpi"><div class="num"><span data-count="3">0</span>言語</div><div class="lbl">日本語・英語・中国語<br>を単一エージェントで</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section id="impact" style="background:rgba(255,255,255,.015)">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Business Impact</div>
+      <h2>「6日待ち」を「数秒」に</h2>
+      <p class="lead">以下は御社の実チケットの<b style="color:#fff">実データ</b>。人手では初回応答まで最大6日、解決まで最長17日かかっていました。</p>
+    </div>
+    <div class="stats reveal">
+      <div class="stat"><div class="big">最大6日</div><div class="lbl">人手の初回応答（春節期間）</div></div>
+      <div class="stat"><div class="big">&lt;5秒</div><div class="lbl">AIの一次応答</div></div>
+      <div class="stat"><div class="big">24/7</div><div class="lbl">時差・営業時間に非依存</div></div>
+      <div class="stat"><div class="big" data-count="12" data-suffix="件">0件</div><div class="lbl">実チケットから学習</div></div>
+    </div>
+    <div class="cmp reveal" id="cmp">
+      <h3>実チケットの初回応答時間（人手） vs AI</h3>
+      <div class="note">出典：QNAP提供チケット（2026年2〜6月）。バーは初回応答までの実所要時間。</div>
+      <div class="barrow"><div class="t">Box連携の質問<small>Q-202602-11708</small></div><div class="bar"><div class="fill human" data-w="96">6日（本社が返信遅延を謝罪）</div></div></div>
+      <div class="barrow"><div class="t">HBS3 圧縮オプション<small>Q-202602-11258</small></div><div class="bar"><div class="fill human" data-w="96">6日（開発部門へ確認）</div></div></div>
+      <div class="barrow"><div class="t">スマートバージョン管理<small>Q-202602-10403</small></div><div class="bar"><div class="fill human" data-w="52">3日（春節休暇）</div></div></div>
+      <div class="barrow"><div class="t">別拠点アクセス不可<small>Q-202603-15122</small></div><div class="bar"><div class="fill human" data-w="40">2日（解決まで計17日）</div></div></div>
+      <div class="barrow"><div class="t"><b style="color:#2fe0e6">GPTBots AI</b><small>全チケット共通</small></div><div class="bar"><div class="fill ai" data-w="8">数秒</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY THIRD-PARTY -->
+<section id="why">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Why GPTBots</div>
+      <h2>なぜ Salesforce / Microsoft 標準AI ではなく GPTBots か</h2>
+      <p class="lead">各社の標準AIは自社エコシステム内では強力ですが、御社の「日本特化・複数システム横断・NAS上でのデータ主権」という要件では、独立系エージェントに優位性があります。</p>
+    </div>
+    <div class="ctable reveal">
+      <table>
+        <thead><tr>
+          <th style="width:30%">御社の要件</th>
+          <th class="us">GPTBots（Aurora）</th>
+          <th>Salesforce 標準AI</th>
+          <th>Copilot 365</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="feat">複数システム横断の学習<br><small style="color:var(--muted)">Salesforce＋Dynamics＋Document365＋NAS</small></td>
+              <td class="us"><span class="yes">◎</span> 全ソースを1つのRAGに統合</td>
+              <td><span class="mid2">△</span> 主にSalesforce内</td>
+              <td><span class="mid2">△</span> 主にMicrosoft内</td></tr>
+          <tr><td class="feat">日本語サポート敬語の特化</td>
+              <td class="us"><span class="yes">◎</span> 実チケットで日本特化学習</td>
+              <td><span class="mid2">△</span> 汎用多言語</td>
+              <td><span class="mid2">△</span> 汎用的（効果は限定的との評価）</td></tr>
+          <tr><td class="feat">類似度しきい値で有人転送を制御</td>
+              <td class="us"><span class="yes">◎</span> 閾値・カテゴリで細かく制御</td>
+              <td><span class="mid2">△</span> 設定に制約</td>
+              <td><span class="no">✕</span> 細かな制御は困難</td></tr>
+          <tr><td class="feat">NAS上でのオンプレ配置（データ主権）</td>
+              <td class="us"><span class="yes">◎</span> オンプレ／NAS内・暗号化</td>
+              <td><span class="no">✕</span> クラウド前提</td>
+              <td><span class="no">✕</span> クラウド前提</td></tr>
+          <tr><td class="feat">LLMモデルの選択自由度</td>
+              <td class="us"><span class="yes">◎</span> GPT/Claude/DeepSeek 他</td>
+              <td><span class="mid2">△</span> 自社モデル中心</td>
+              <td><span class="no">✕</span> OpenAI系に固定</td></tr>
+          <tr><td class="feat">Web/App/NAS への配信形態</td>
+              <td class="us"><span class="yes">◎</span> ウィジェット/iframe/API</td>
+              <td><span class="mid2">△</span> 自社UI中心</td>
+              <td><span class="mid2">△</span> Teams/365中心</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cnote">◎ 優位 ・ △ 条件付き ・ ✕ 非対応／困難 ／ 各社標準AIは自社製品内では強力です。本表は御社要件の観点での比較です。</div>
+  </div>
+</section>
+
+<!-- KB -->
+<section id="kb" style="background:rgba(255,255,255,.015)">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Grounded in Your Data</div>
+      <h2>御社の12チケットで学習済み</h2>
+      <p class="lead">作り込んだFAQではありません。実際のサポート対応からそのままナレッジ化。手動QA整理は不要です。</p>
+    </div>
+    <div class="kbgrid reveal">
+      <div class="kbc"><div class="n">4</div><div class="c">バックアップ／世代管理</div></div>
+      <div class="kbc"><div class="n">3</div><div class="c">ネットワーク／接続・UI</div></div>
+      <div class="kbc"><div class="n">3</div><div class="c">ストレージ／RAID／FS</div></div>
+      <div class="kbc"><div class="n">2</div><div class="c">マルチメディア／アプリ</div></div>
+      <div class="kbc"><div class="n">1</div><div class="c">保証／RMA</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCH -->
+<section id="arch">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Architecture</div>
+      <h2>学習ソースから、あらゆる接点へ</h2>
+      <p class="lead">Salesforce・Dynamics・Document365・NAS内文書を RAG で統合し、Web／App／NAS上のUIへ。オンプレ配置ではデータがNASの外に出ません。</p>
+    </div>
+    <div class="archcard reveal">
+      <svg viewBox="0 0 1000 300" width="100%" height="auto">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#4c8dff"/><stop offset="1" stop-color="#2fe0e6"/></linearGradient>
+          <marker id="ar" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2fe0e6"/></marker>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <g font-size="13" fill="#eef2fb" text-anchor="middle" font-family="Noto Sans JP, sans-serif">
+          <rect x="20" y="30" width="180" height="42" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="110" y="56">Salesforce（技術サポート）</text>
+          <rect x="20" y="88" width="180" height="42" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="110" y="114">Microsoft Dynamics CRM</text>
+          <rect x="20" y="146" width="180" height="42" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="110" y="172">Document365 / SOP</text>
+          <rect x="20" y="204" width="180" height="42" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="110" y="230">QNAP NAS 内ドキュメント</text>
+        </g>
+        <g stroke="#2fe0e6" stroke-width="1.8" fill="none" marker-end="url(#ar)" class="flow">
+          <path d="M200,51 C300,51 320,124 374,143"/><path d="M200,109 C300,109 316,138 374,148"/>
+          <path d="M200,167 C300,167 316,162 374,153"/><path d="M200,225 C300,225 320,178 374,158"/>
+        </g>
+        <rect x="380" y="108" width="200" height="84" rx="14" fill="url(#g1)" filter="url(#glow)"/>
+        <text x="480" y="144" text-anchor="middle" font-size="15" font-weight="700" fill="#04122b" font-family="Noto Sans JP, sans-serif">GPTBots RAG エンジン</text>
+        <text x="480" y="167" text-anchor="middle" font-size="11.5" fill="#04122b" font-family="Noto Sans JP, sans-serif">ベクトル検索＋引用付き生成</text>
+        <path d="M580,150 L640,150" stroke="#2fe0e6" stroke-width="1.8" marker-end="url(#ar)" class="flow"/>
+        <rect x="642" y="108" width="150" height="84" rx="14" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/>
+        <text x="717" y="143" text-anchor="middle" font-size="13" fill="#eef2fb" font-family="Noto Sans JP, sans-serif">AI エージェント</text>
+        <text x="717" y="165" text-anchor="middle" font-size="11" fill="#7d8bb0" font-family="Noto Sans JP, sans-serif">類似度判定＋転送制御</text>
+        <g stroke="#2fe0e6" stroke-width="1.8" fill="none" marker-end="url(#ar)" class="flow">
+          <path d="M792,140 C826,140 826,60 854,60"/><path d="M792,150 L854,150"/><path d="M792,160 C826,160 826,240 854,240"/>
+        </g>
+        <g font-size="12.5" fill="#eef2fb" text-anchor="middle" font-family="Noto Sans JP, sans-serif">
+          <rect x="860" y="42" width="130" height="36" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="925" y="64">Web ウィジェット</text>
+          <rect x="860" y="132" width="130" height="36" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)"/><text x="925" y="154">モバイル App</text>
+          <rect x="860" y="222" width="130" height="36" rx="9" fill="rgba(63,220,147,.08)" stroke="rgba(63,220,147,.3)"/><text x="925" y="244">🔒 QNAP NAS 上UI</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- REQ -->
+<section id="req">
+  <div class="wrap">
+    <div class="head-c reveal">
+      <div class="kicker">Your Requirements → Answered</div>
+      <h2>御社の3つのご要望への回答</h2>
+    </div>
+    <div class="reqs reveal">
+      <div class="req"><div class="no">1</div>
+        <div class="ask">「Document365・Salesforce実応答から学習したい。手動QA整理は避けたい」</div>
+        <h4>実データをそのまま学習</h4>
+        <p>実チケットHTML・KB・SOPをRAGに取り込み。手動QA整理は不要。今回も12件のHTMLをそのまま学習させています。</p></div>
+      <div class="req"><div class="no">2</div>
+        <div class="ask">「Web？App？将来はNAS上でも使える？」</div>
+        <h4>Web・App・NASすべて対応</h4>
+        <p>Webウィジェット／iframe／API で埋め込み。将来はNASのContainer Station上でのセルフホストも提案可能。</p></div>
+      <div class="req"><div class="no">3</div>
+        <div class="ask">「NAS内データを学習してRAGチャットボット化したい」</div>
+        <h4>オンプレでデータ主権を確保</h4>
+        <p>オンプレ／プライベート配置＋暗号化で、データがNASの外に出ない構成。NASユーザーの最大の関心に合致します。</p></div>
+    </div>
+    <div class="cta reveal">
+      <h3>まずは日本サポートの実チケットで PoC を。</h3>
+      <p>Salesforce / Dynamics の API 連携はスコープを分け、段階的に。データはNASの外に出しません。</p>
+    </div>
+  </div>
+</section>
+
+<div class="chatfull" id="chatFull">
+  <div class="chatfull-head">
+    <button class="back" id="chatClose">‹ デモに戻る</button>
+    <div class="qa2">Q</div>
+    <div><div class="t">QNAP サポートAI</div><div class="s"><i></i>オンライン ・ 実チケット12件から学習</div></div>
+    <div class="pw2">Powered by GPTBots</div>
+  </div>
+  <div class="chatfull-body"><iframe allow="microphone *; camera *; display-capture *" src="https://jp.gptbots.ai/widget/eephokx0ep6mbvsefcdjoxh/chat.html"></iframe></div>
+</div>
+<div class="fab-tip" id="fabTip"><b>QNAP サポートAI</b> — お困りですか？</div>
+<button class="fab" id="fab" aria-label="AI サポートを開く" title="QNAP サポートAI"><span class="ndot"></span><svg class="fab-ic"><use href="#gptmark"/></svg></button>
+
+<footer>
+  <div class="wrap">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap"><svg class="qnaplogo qnaplogo-sm"><use href="#qnaplogo"/></svg> <span class="x">×</span> <svg class="brandlogo" style="height:20px;width:112px"><use href="#gptlogo"/></svg> — Aurora Mobile 株式会社</div>
+    <div class="disc">本デモは QNAP 提供の実サポートチケット12件に基づき構築されています。チャット応答はデモ用にスクリプト化された実チケット回答であり、本番では GPTBots の RAG エンジンがリアルタイムに生成します。KPI・類似度スコア・応答時間・比較表はデモ用の想定／例示値を含みます。</div>
+  </div>
+</footer>
+
+<script>
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const stream=document.getElementById('stream');
+function now(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+
+const DB={
+ q1:{ q:"2台で相互バックアップし、日次7・週次4・月次12で1年分を保持したいです。週数4だと月末に取得できない週が出ませんか？5にすべき？差分ですか？",
+   kb:[["KB-13 スマートバージョン管理の仕様",96],["KB-12 スナップショット保持ポリシー",81],["HBS3 世代管理ドキュメント",73]], conf:0.96,
+   a:[["p","いつもお世話になっております。QNAP株式会社のAIサポートです。ご質問の2点についてご案内いたします。"],
+      ["head","① 週数の設定について"],
+      ["p","スマートバージョン管理は「最新から遡って過去N週分を保持する」ローリング方式です。そのため**週数4でも空白週は発生しません**。5にすると保持世代が1つ増え容量を消費します。標準的な1年管理なら既定の週次4・月次12で十分です。"],
+      ["head","② バックアップ方式について"],
+      ["p","HBS3は初回フルバックアップ後は**差分（増分）方式**で運用され、変更分のみ保存します。復元時は差分を自動統合します。"]],
+   src:{t:"HBS でのスマートバージョン管理の動作 | QNAP 公式FAQ",u:"#"} },
+ q2:{ q:"別拠点のQNAP（TS-264）に共有フォルダもQfinder Proでもアクセスできません。同一拠点内はOK、別拠点からはpingも応答なしです。",
+   kb:[["KB-01 ファイアウォールによる拠点間アクセス不可",93],["KB-02 保存ボタンが表示されない",76],["診断ログの取得方法",70]], conf:0.93,
+   a:[["p","いつもお世話になっております。QNAP株式会社のAIサポートです。"],
+      ["p","別拠点からpingが通らない場合、まず**QuFirewall（ファイアウォール）**をご確認ください。「自拠点セグメントのみ許可」だと他拠点からのアクセスがブロックされます。"],
+      ["li","QuFirewallを一時無効化し、アクセスできるかご確認ください。→ できれば原因はファイアウォールです。"],
+      ["li","許可したい別拠点のセグメントを許可ルールに追加してください。"],
+      ["p","※「適用」後の保存ボタンが出ない場合は、Ctrl＋スクロールで画面を縮小すると表示されます。"]],
+   src:{t:"ヘルプデスクから診断ログをダウンロードする方法は？ | QNAP",u:"#"} },
+ zh:{ q:"智能版本管理，周数设为4还是5更好？备份是差异备份吗？",
+   kb:[["KB-13 智能版本管理规格",96],["KB-12 快照保留策略",80],["HBS3 世代管理文档",72]], conf:0.95,
+   a:[["p","感谢您联系 QNAP 支持。"],
+      ["p","智能版本管理采用**滚动策略**——保留过去N周内每周的最新备份，而非按日历周划分，因此**设为4周也不会出现空缺周**。设为5只会多保留一个版本、占用更多空间。"],
+      ["p","HBS3 在首次完整备份后采用**差异（增量）备份**，还原时会自动合并所需增量。"]],
+   src:{t:"HBS 智能版本管理 | QNAP FAQ",u:"#"} },
+ q6:{ q:"QNAP NASをKubernetesの永続ストレージ（CSIドライバ）として使い、ArgoCDのGitOpsと連携させたいです。推奨構成は？",
+   kb:[["NAS一般構成ガイド",41],["Container Station 概要",36],["iSCSI/LUN 設定",33]], conf:0.38, handoff:true,
+   a:[["p","お問い合わせありがとうございます。恐れ入りますが、ご質問の内容は現在の知識ベースでは確信を持ってお答えできる情報が十分にございません。"],
+      ["p","より正確なご案内のため、**担当者にてお調べのうえ、追ってご連絡**いたします。以下を引き継ぎいたします。"]],
+   summary:"【有人転送サマリー】\nカテゴリ: Kubernetes/CSI 連携（学習範囲外）\n類似度: 0.38（しきい値 0.60 未満）\n要点: NASをK8s永続ストレージ(CSI)として利用しArgoCDと連携したい\n推奨: インフラ／開発部門へエスカレーション",
+   human:"田中（サポート担当）です。担当を引き継ぎました。CSI連携の推奨構成について確認のうえ、本日中にご返信いたします。",
+   src:null }
+};
+const SCENES=[
+  {key:'q1', lang:'ja', title:'即時回答 ＋ 出典引用'},
+  {key:'q2', lang:'ja', title:'技術トラブルの切り分け'},
+  {key:'zh', lang:'zh', title:'多言語対応（中国語）'},
+  {key:'q6', lang:'ja', title:'確信がなければ人へ（有人転送）'}
+];
+
+function setLang(l){document.querySelectorAll('.win-lang .lg').forEach(x=>x.classList.toggle('on',x.dataset.l===l));}
+function setChapter(i){document.getElementById('chIdx').textContent='0'+(i+1);document.getElementById('chTitle').textContent=SCENES[i].title;
+  document.querySelectorAll('#prog b').forEach((b,k)=>b.classList.toggle('on',k===i));}
+function scrollB(){stream.scrollTop=stream.scrollHeight;}
+
+function addUser(t){const r=document.createElement('div');r.className='row user';
+  r.innerHTML='<div class="av user">客</div><div class="bubble"></div>';
+  const b=r.querySelector('.bubble');b.textContent=t;
+  const ts=document.createElement('div');ts.className='ts';ts.textContent=now();b.appendChild(ts);
+  stream.appendChild(r);scrollB();}
+
+async function typeInto(parent,text,speed){
+  const parts=text.split('**');
+  for(let i=0;i<parts.length;i++){const bold=i%2===1;const node=bold?document.createElement('strong'):document.createTextNode('');
+    parent.appendChild(node);for(const ch of parts[i]){node.textContent+=ch;scrollB();await sleep(speed);}}
+}
+async function showTyping(cls){
+  const r=document.createElement('div');r.className='row '+(cls||'bot');
+  r.innerHTML='<div class="av '+(cls==='human'?'human':'bot')+'">'+(cls==='human'?'田':'Q')+'</div><div class="bubble"><div class="tping"><span></span><span></span><span></span></div></div>';
+  stream.appendChild(r);scrollB();await sleep(750);return r;
+}
+async function ragPanel(bub,kb,ok){
+  const p=document.createElement('div');p.className='rag';
+  p.innerHTML='<div class="rag-h"><span class="spin"></span> ナレッジベースを検索中…</div>';
+  bub.appendChild(p);scrollB();await sleep(520);
+  const box=document.createElement('div');p.appendChild(box);
+  for(const [name,m] of kb){const chip=document.createElement('div');chip.className='rag-chip';
+    chip.innerHTML='<span class="rag-doc">📄 '+name+'</span><span class="rag-m">一致 '+m+'%</span><span class="rag-bar"><i></i></span>';
+    box.appendChild(chip);await sleep(60);chip.classList.add('in');await sleep(90);
+    chip.querySelector('.rag-bar i').style.width=m+'%';await sleep(340);}
+  await sleep(220);
+  if(ok){p.classList.add('done');p.querySelector('.rag-h').innerHTML='✓ 根拠 '+kb.length+'件を参照 ・ 回答を生成中…';}
+  else{p.classList.add('miss');p.querySelector('.rag-h').innerHTML='⚠ 十分に一致する根拠が見つかりません（最高 '+kb[0][1]+'%）';}
+  await sleep(560);
+}
+async function streamAnswer(bub,d){
+  const caret=document.createElement('span');caret.className='caret';
+  for(const [type,text] of d.a){let el;
+    if(type==='li'){let ul=bub.lastElementChild&&bub.lastElementChild.tagName==='UL'?bub.lastElementChild:null;
+      if(!ul){ul=document.createElement('ul');bub.appendChild(ul);}el=document.createElement('li');ul.appendChild(el);}
+    else{el=document.createElement(type==='head'?'div':'p');if(type==='head')el.className='head';bub.appendChild(el);}
+    const holder=document.createElement('span');el.appendChild(holder);el.appendChild(caret);
+    await typeInto(holder,text,type==='head'?15:8);await sleep(80);}
+  caret.remove();
+}
+async function botTurn(d){
+  const t=await showTyping('bot');t.remove();
+  const r=document.createElement('div');r.className='row bot';r.innerHTML='<div class="av bot">Q</div>';
+  const bub=document.createElement('div');bub.className='bubble';r.appendChild(bub);stream.appendChild(r);scrollB();
+  await ragPanel(bub,d.kb,!d.handoff);
+  await streamAnswer(bub,d);
+  const meta=document.createElement('div');meta.className='meta';
+  const cls=d.conf>=0.75?'hi':(d.conf>=0.60?'mid':'lo');
+  const label=d.conf>=0.75?'高い確信で回答':(d.conf>=0.60?'要確認レベル':'確信不足 → 転送');
+  meta.innerHTML='<div class="cmeter '+cls+'">類似度 '+Math.round(d.conf*100)+'% <span class="track"><i></i></span> '+label+'</div>';
+  bub.appendChild(meta);requestAnimationFrame(()=>{meta.querySelector('.track i').style.width=(d.conf*100)+'%';});
+  if(d.handoff){const h=document.createElement('div');h.className='handoff';
+    h.innerHTML='<b>⇄ 有人担当者へ転送します</b>（類似度が0.60未満のため回答を保留）<div class="sum"></div>';
+    h.querySelector('.sum').textContent=d.summary;bub.appendChild(h);}
+  if(d.src){const s=document.createElement('div');s.className='src';
+    s.innerHTML='<span class="ic">🔗</span><div>参考: <a href="'+d.src.u+'">'+d.src.t+'</a></div>';bub.appendChild(s);}
+  const tsb=document.createElement('div');tsb.className='ts';tsb.textContent=now();bub.appendChild(tsb);
+  scrollB();
+  // human handoff continuation
+  if(d.handoff&&d.human){
+    await sleep(900);const ht=await showTyping('human');ht.remove();
+    const hr=document.createElement('div');hr.className='row human';hr.innerHTML='<div class="av human">田</div>';
+    const hb=document.createElement('div');hb.className='bubble';hr.appendChild(hb);stream.appendChild(hr);scrollB();
+    const hold=document.createElement('span');hb.appendChild(hold);await typeInto(hold,d.human,9);
+    const ht2=document.createElement('div');ht2.className='ts';ht2.textContent=now();hb.appendChild(ht2);scrollB();
+  }
+  // resolved stamp
+  await sleep(500);const st=document.createElement('div');
+  if(d.handoff){st.className='stamp h';st.textContent='⇄ 有人へ引き継ぎ完了 ・ 文脈を保持';}
+  else{st.className='stamp';st.textContent='✓ 解決済み ・ 一次応答 '+(3+Math.random()*2).toFixed(1)+'秒';}
+  stream.appendChild(st);scrollB();
+}
+async function fadeClear(){stream.style.transition='opacity .5s';stream.style.opacity='0';await sleep(520);stream.innerHTML='';stream.style.opacity='1';}
+async function player(){let i=0;while(true){const sc=SCENES[i];setChapter(i);setLang(sc.lang);const d=DB[sc.key];
+  addUser(d.q);await sleep(300);await botTurn(d);await sleep(2600);await fadeClear();i=(i+1)%SCENES.length;}}
+
+/* window 3D tilt */
+(function(){const stage=document.getElementById('stage'),win=document.getElementById('win');if(!stage)return;
+  stage.addEventListener('mousemove',e=>{const r=stage.getBoundingClientRect();const px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;
+    win.style.transform='rotateY('+(px*4)+'deg) rotateX('+(-py*4)+'deg)';});
+  stage.addEventListener('mouseleave',()=>win.style.transform='rotateY(0) rotateX(0)');})();
+
+/* neural canvas */
+(function(){const c=document.getElementById('net');if(!c)return;const x=c.getContext('2d');let w,h,pts;
+  function size(){w=c.width=innerWidth;h=c.height=innerHeight;const n=Math.min(70,Math.floor(w/24));
+    pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35}));}
+  size();addEventListener('resize',size);
+  function loop(){x.clearRect(0,0,w,h);
+    for(const p of pts){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;}
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const a=pts[i],b=pts[j],dx=a.x-b.x,dy=a.y-b.y,dist=Math.hypot(dx,dy);
+      if(dist<140){x.strokeStyle='rgba(47,224,230,'+(1-dist/140)*.22+')';x.lineWidth=1;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}
+    for(const p of pts){x.fillStyle='rgba(130,180,255,.8)';x.beginPath();x.arc(p.x,p.y,1.5,0,7);x.fill();}
+    requestAnimationFrame(loop);}loop();})();
+
+/* scroll progress */
+addEventListener('scroll',()=>{const s=document.documentElement;const p=s.scrollTop/(s.scrollHeight-s.clientHeight);
+  document.getElementById('sprog').style.width=(p*100)+'%';});
+
+/* floating GPTBots widget */
+const fab=document.getElementById('fab'),fabTip=document.getElementById('fabTip'),chatFull=document.getElementById('chatFull');
+function openChat(){if(chatFull)chatFull.classList.add('open');if(fabTip)fabTip.classList.remove('show');}
+function closeChat(){if(chatFull)chatFull.classList.remove('open');}
+if(fab){fab.addEventListener('click',openChat);
+  setTimeout(()=>{if(chatFull&&!chatFull.classList.contains('open')&&fabTip)fabTip.classList.add('show');},3200);
+  setTimeout(()=>{if(fabTip)fabTip.classList.remove('show');},8200);}
+var _cl=document.getElementById('chatClose');if(_cl)_cl.addEventListener('click',closeChat);
+var _tl=document.getElementById('tryLive');if(_tl)_tl.addEventListener('click',openChat);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChat();});
+
+/* reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target);}}),{threshold:.14});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* count-up helper */
+function countUp(el){const end=+el.dataset.count,suf=el.dataset.suffix||'';let c=0;const step=Math.max(1,Math.ceil(end/26));
+  const isSpanNum=el.querySelector&&el.querySelector('span[data-count]');
+  const t=setInterval(()=>{c+=step;if(c>=end){c=end;clearInterval(t);}
+    if(el.classList&&el.classList.contains('val')){el.childNodes[0].nodeValue=c;}
+    else if(el.tagName==='SPAN'){el.textContent=c;}
+    else{el.textContent=c+suf;}},30);}
+
+/* KPI rings + impact bars */
+const kpiIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){
+  document.querySelectorAll('#kpiband .fg').forEach(fg=>{const pct=+fg.dataset.pct;fg.style.strokeDashoffset=327*(1-pct/100);});
+  document.querySelectorAll('#kpiband .val[data-count], #kpiband .num span[data-count]').forEach(countUp);
+  kpiIO.unobserve(e.target);}}),{threshold:.3});
+const kpiband=document.getElementById('kpiband');if(kpiband)kpiIO.observe(kpiband);
+
+const impIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){
+  document.querySelectorAll('#impact [data-count]').forEach(countUp);
+  document.querySelectorAll('.bar .fill').forEach(f=>f.style.width=f.dataset.w+'%');impIO.unobserve(e.target);}}),{threshold:.25});
+impIO.observe(document.getElementById('impact'));
+
+/* intro boot then start */
+addEventListener('load',()=>{
+  setTimeout(()=>{document.getElementById('introBar').style.width='100%';},100);
+  setTimeout(()=>{document.getElementById('introSub').textContent='ナレッジベースを読み込み完了 ✓';},700);
+  setTimeout(()=>{document.getElementById('intro').classList.add('hide');},1000);
+  setTimeout(player,1150);
+});
+</script>
+</body>
+</html>
