@@ -245,6 +245,18 @@
   .fab-tip b{color:var(--brand)}
   .trylive-btn{background:var(--grad);color:#04122b;border:0;font-weight:800;font-size:14px;font-family:inherit;padding:13px 26px;border-radius:12px;cursor:pointer;box-shadow:0 12px 30px rgba(47,224,230,.28);transition:transform .18s,box-shadow .18s;}
   .trylive-btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(47,224,230,.42);}
+  /* hero chat CTA (first-screen, prominent) */
+  .hero-cta{margin:34px auto 4px;display:flex;flex-direction:column;align-items:center;gap:13px}
+  .hero-chat-btn{display:inline-flex;align-items:center;gap:12px;background:var(--grad);background-size:200% auto;color:#04122b;border:0;font-family:inherit;font-weight:900;font-size:clamp(16px,2.2vw,19px);letter-spacing:.2px;padding:17px 34px;border-radius:15px;cursor:pointer;box-shadow:0 16px 44px rgba(47,224,230,.4);transition:transform .18s,box-shadow .18s;animation:ctaPulse 2.6s ease-in-out infinite}
+  .hero-chat-btn:hover{transform:translateY(-3px);box-shadow:0 22px 58px rgba(47,224,230,.58)}
+  .hcb-ic{width:22px;height:22px}
+  .hcb-arrow{font-weight:700;transition:transform .2s}
+  .hero-chat-btn:hover .hcb-arrow{transform:translateX(4px)}
+  @keyframes ctaPulse{0%,100%{box-shadow:0 16px 44px rgba(47,224,230,.4)}50%{box-shadow:0 18px 54px rgba(47,224,230,.62),0 0 0 7px rgba(47,224,230,.09)}}
+  .hero-cta-sub{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--sub)}
+  .hero-cta-2{font-size:13px;color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}
+  .hero-cta-2:hover{color:var(--ink);border-color:var(--line2)}
+  @media (prefers-reduced-motion: reduce){.hero-chat-btn{animation:none}}
   .chatfull{position:fixed;inset:0;z-index:200;background:radial-gradient(900px 500px at 50% -10%,#0e1830,#05070e 72%);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:scale(1.008);transition:opacity .32s ease,transform .32s ease,visibility .32s;}
   .chatfull.open{opacity:1;visibility:visible;transform:none;}
   .chatfull-head{display:flex;align-items:center;gap:14px;padding:12px 22px;background:linear-gradient(120deg,#0A63D6,#1F3864 55%,#2E9B8A);color:#fff;flex:0 0 auto;box-shadow:0 6px 24px rgba(0,0,0,.35);}
@@ -324,6 +336,15 @@
     <div class="eyebrow"><span class="spark"></span> エンタープライズ AI エージェント ・ RAG 検索 ・ 多言語</div>
     <h1>QNAP サポートを、<br><span class="grad">24時間・数秒・日本語</span>で。</h1>
     <p class="sub">御社の<b style="color:#fff">実際のサポートチケット</b>から学習した AI エージェント。日本のサポート敬語で応対し、公式FAQを引用し、確信が持てない時は人へ引き継ぎます。</p>
+    <div class="hero-cta">
+      <button id="heroChat" class="hero-chat-btn" type="button">
+        <svg class="hcb-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></svg>
+        今すぐ AI に質問してみる
+        <span class="hcb-arrow">→</span>
+      </button>
+      <div class="hero-cta-sub"><span class="live-dot"></span>実際に動く QNAP サポートAI と、日本語でチャットできます</div>
+      <a href="#demo" class="hero-cta-2">まずは自動デモを見る ↓</a>
+    </div>
     <div class="pills">
       <span class="pill">📚 実チケット <b>12件</b>で学習</span>
       <span class="pill">🌐 日本語・英語・中国語</span>
@@ -727,6 +748,7 @@ if(fab){fab.addEventListener('click',openChat);
   setTimeout(()=>{if(fabTip)fabTip.classList.remove('show');},8200);}
 var _cl=document.getElementById('chatClose');if(_cl)_cl.addEventListener('click',closeChat);
 var _tl=document.getElementById('tryLive');if(_tl)_tl.addEventListener('click',openChat);
+var _hc=document.getElementById('heroChat');if(_hc)_hc.addEventListener('click',openChat);
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChat();});
 
 /* reveal */
