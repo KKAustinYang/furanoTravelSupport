@@ -574,6 +574,7 @@
   </div>
 </section>
 
+<!-- 全画面チャット（元の GPTBots）— 「全画面」ボタン(#tryLive)から起動 -->
 <div class="chatfull" id="chatFull">
   <div class="chatfull-head">
     <button class="back" id="chatClose">‹ デモに戻る</button>
@@ -583,8 +584,18 @@
   </div>
   <div class="chatfull-body"><iframe allow="microphone *; camera *; display-capture *" src="https://jp.gptbots.ai/widget/eephokx0ep6mbvsefcdjoxh/chat.html"></iframe></div>
 </div>
-<div class="fab-tip" id="fabTip"><b>QNAP サポートAI</b> — お困りですか？</div>
-<button class="fab" id="fab" aria-label="AI サポートを開く" title="QNAP サポートAI"><span class="ndot"></span><svg class="fab-ic"><use href="#gptmark"/></svg></button>
+
+<!-- EngageLab LiveDesk チャット（バブル型ウィジェット・SDK が右下にランチャーを表示） -->
+<script>
+  (function(d,t){
+    var BASE_URL="https://livedesk.engagelab.com";
+    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=BASE_URL+"/console/livedesk/widget/sdk.js";
+    g.defer=true; g.async=true;
+    s.parentNode.insertBefore(g,s);
+    g.onload=function(){ window.livedeskSDK.run({ websiteToken:'nfsXJizqLngQ7RFrCkWrcWs2', baseUrl:BASE_URL }); };
+  })(document,"script");
+</script>
 
 <footer>
   <div class="wrap">
@@ -739,17 +750,24 @@ async function player(){let i=0;while(true){const sc=SCENES[i];setChapter(i);set
 addEventListener('scroll',()=>{const s=document.documentElement;const p=s.scrollTop/(s.scrollHeight-s.clientHeight);
   document.getElementById('sprog').style.width=(p*100)+'%';});
 
-/* floating GPTBots widget */
-const fab=document.getElementById('fab'),fabTip=document.getElementById('fabTip'),chatFull=document.getElementById('chatFull');
-function openChat(){if(chatFull)chatFull.classList.add('open');if(fabTip)fabTip.classList.remove('show');}
-function closeChat(){if(chatFull)chatFull.classList.remove('open');}
-if(fab){fab.addEventListener('click',openChat);
-  setTimeout(()=>{if(chatFull&&!chatFull.classList.contains('open')&&fabTip)fabTip.classList.add('show');},3200);
-  setTimeout(()=>{if(fabTip)fabTip.classList.remove('show');},8200);}
-var _cl=document.getElementById('chatClose');if(_cl)_cl.addEventListener('click',closeChat);
-var _tl=document.getElementById('tryLive');if(_tl)_tl.addEventListener('click',openChat);
-var _hc=document.getElementById('heroChat');if(_hc)_hc.addEventListener('click',openChat);
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeChat();});
+/* 右下バブル = EngageLab LiveDesk（Chatwoot系）。SDK の公開API→ダメならランチャーをクリック */
+function openChat(retry){
+  try{ if(window.$livedesk && window.$livedesk.toggle){ window.$livedesk.toggle('open'); return; } }catch(e){}
+  var b=document.querySelector('.woot-widget-bubble:not(.woot--close)'); if(b){ b.click(); return; }
+  if((retry||0)<10) setTimeout(function(){ openChat((retry||0)+1); }, 500); // SDK読み込み待ち（最大5秒）
+}
+function closeChat(){
+  try{ if(window.$livedesk && window.$livedesk.toggle){ window.$livedesk.toggle('close'); return; } }catch(e){}
+  var c=document.querySelector('.woot-widget-bubble.woot--close'); if(c){ c.click(); }
+}
+/* 全画面 = 元の GPTBots チャット（#tryLive「全画面」ボタンから起動） */
+var chatFull=document.getElementById('chatFull');
+function openFull(){ if(chatFull) chatFull.classList.add('open'); }
+function closeFull(){ if(chatFull) chatFull.classList.remove('open'); }
+var _cl=document.getElementById('chatClose');if(_cl)_cl.addEventListener('click',closeFull);
+var _tl=document.getElementById('tryLive');if(_tl)_tl.addEventListener('click',openFull);              // 全画面ボタン → フルスクリーンGPTBots
+var _hc=document.getElementById('heroChat');if(_hc)_hc.addEventListener('click',function(){openChat();}); // 首屏CTA → 右下バブル
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeFull();closeChat();}});
 
 /* reveal */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('show');io.unobserve(e.target);}}),{threshold:.14});
