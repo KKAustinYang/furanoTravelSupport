@@ -257,6 +257,31 @@
   .hero-cta-2{font-size:13px;color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}
   .hero-cta-2:hover{color:var(--ink);border-color:var(--line2)}
   @media (prefers-reduced-motion: reduce){.hero-chat-btn{animation:none}}
+  /* LiveDesk チャット専用ページ（livedesk.html）への導線 */
+  .navr{display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0}
+  .nav .logos{flex:0 0 auto}.nav .logos svg{flex:0 0 auto}
+  .nav{padding-left:24px;padding-right:24px} /* .nav の padding 短縮形が .wrap の左右余白を消していたため復元 */
+  .nav-ld{display:inline-flex;align-items:center;gap:9px;padding:9px 18px;border-radius:22px;font-size:12.5px;font-weight:800;
+          color:#04122b;background:var(--grad);box-shadow:0 8px 24px rgba(47,224,230,.32);white-space:nowrap;
+          transition:transform .18s,box-shadow .18s}
+  .nav-ld:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(47,224,230,.5)}
+  .nav-ld .d{width:7px;height:7px;border-radius:50%;background:#04122b;opacity:.65;animation:ldp 1.8s infinite}
+  @keyframes ldp{0%,100%{opacity:.65}50%{opacity:.15}}
+  .hero-ld{display:inline-flex;align-items:center;gap:11px;padding:15px 28px;border-radius:15px;font-size:clamp(14px,1.9vw,16px);font-weight:800;
+           color:var(--ink);background:rgba(47,224,230,.08);border:1.5px solid rgba(47,224,230,.55);
+           box-shadow:0 0 0 6px rgba(47,224,230,.05);transition:transform .18s,box-shadow .18s,background .18s}
+  .hero-ld:hover{transform:translateY(-3px);background:rgba(47,224,230,.15);box-shadow:0 14px 38px rgba(47,224,230,.3),0 0 0 8px rgba(47,224,230,.07)}
+  .hero-ld .ic{width:20px;height:20px;flex:0 0 auto}
+  .hero-ld .ar{transition:transform .2s}
+  .hero-ld:hover .ar{transform:translate(3px,-3px)}
+  .hero-cta-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+  .nav-ld .short{display:none}
+  @media(max-width:860px){
+    .nav-ld{padding:8px 13px;font-size:11.5px}.pw{display:none}
+    .nav-ld .full{display:none}.nav-ld .short{display:inline}
+    .logos .brandlogo,.logos .x{display:none}
+    .hero-ld{padding:13px 22px}
+  }
   .chatfull{position:fixed;inset:0;z-index:200;background:radial-gradient(900px 500px at 50% -10%,#0e1830,#05070e 72%);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:scale(1.008);transition:opacity .32s ease,transform .32s ease,visibility .32s;}
   .chatfull.open{opacity:1;visibility:visible;transform:none;}
   .chatfull-head{display:flex;align-items:center;gap:14px;padding:12px 22px;background:linear-gradient(120deg,#0A63D6,#1F3864 55%,#2E9B8A);color:#fff;flex:0 0 auto;box-shadow:0 6px 24px rgba(0,0,0,.35);}
@@ -327,7 +352,10 @@
 <header>
   <div class="wrap nav">
     <div class="logos"><svg class="qnaplogo"><use href="#qnaplogo"/></svg><span class="x">×</span><svg class="brandlogo"><use href="#gptlogo"/></svg></div>
-    <div class="pw"><span class="live-dot"></span>Powered by GPTBots AI ・ Aurora Mobile</div>
+    <div class="navr">
+      <a class="nav-ld" href="livedesk.html"><span class="d"></span><span class="full">チャット専用ページを開く →</span><span class="short">チャットを試す →</span></a>
+      <div class="pw"><span class="live-dot"></span>Powered by GPTBots AI ・ Aurora Mobile</div>
+    </div>
   </div>
 </header>
 
@@ -337,11 +365,18 @@
     <h1>QNAP サポートを、<br><span class="grad">24時間・数秒・日本語</span>で。</h1>
     <p class="sub">御社の<b style="color:#fff">実際のサポートチケット</b>から学習した AI エージェント。日本のサポート敬語で応対し、公式FAQを引用し、確信が持てない時は人へ引き継ぎます。</p>
     <div class="hero-cta">
-      <button id="heroChat" class="hero-chat-btn" type="button">
-        <svg class="hcb-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></svg>
-        今すぐ AI に質問してみる
-        <span class="hcb-arrow">→</span>
-      </button>
+      <div class="hero-cta-row">
+        <button id="heroChat" class="hero-chat-btn" type="button">
+          <svg class="hcb-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></svg>
+          今すぐ AI に質問してみる
+          <span class="hcb-arrow">→</span>
+        </button>
+        <a class="hero-ld" href="livedesk.html">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="14" rx="2.5"/><path d="M2.5 8.5h19M6 6.2h.01M8.6 6.2h.01"/></svg>
+          チャット専用ページで試す
+          <span class="ar">↗</span>
+        </a>
+      </div>
       <div class="hero-cta-sub"><span class="live-dot"></span>実際に動く QNAP サポートAI と、日本語でチャットできます</div>
       <a href="#demo" class="hero-cta-2">まずは自動デモを見る ↓</a>
     </div>
