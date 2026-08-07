@@ -38,9 +38,13 @@ for (const slug of dirs) {
     cpSync(join(dir, 'dist'), out, { recursive: true })
     built.push(`${slug} (vite)`)
   } else if (existsSync(join(dir, 'index.html'))) {
-    // Static demo — copy the folder as-is (skip any node_modules)
+    // Static demo — copy the folder as-is (skip node_modules and *.md docs,
+    // so internal notes like CLAUDE.md are never published to /d/<slug>/)
     console.log(`\n▶ copying demo (static): ${slug}`)
-    cpSync(dir, out, { recursive: true, filter: (src) => !src.includes(`${slug}/node_modules`) })
+    cpSync(dir, out, {
+      recursive: true,
+      filter: (src) => !src.includes(`${slug}/node_modules`) && !/\.md$/i.test(src),
+    })
     built.push(`${slug} (static)`)
   } else {
     console.log(`\n⚠ skip (no package.json / index.html): ${slug}`)

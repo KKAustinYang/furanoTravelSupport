@@ -37,7 +37,9 @@ const DEMOS=[
   {cat:'engage', icon:'sms', ja:{t:'SMS 配信',d:'到達性の高いSMSをグローバルに配信するデモ。'},en:{t:'SMS Delivery',d:'Send high-deliverability SMS to customers worldwide.'},tags:['EngageLab','SMS']},
   {cat:'engage', icon:'phone', ja:{t:'WhatsApp Business 対話',d:'WhatsApp 公式 API を活用した、お客様との双方向コミュニケーションのデモ。'},en:{t:'WhatsApp Business Conversations',d:'Two-way customer conversations on the official WhatsApp Business API.'},tags:['EngageLab','WhatsApp']},
   {cat:'engage', icon:'lock', ja:{t:'Silent Auth 番号認証',d:'SMSレスでシームレスに本人確認を行う、番号認証(Silent Auth)のデモ。'},en:{t:'Silent Auth Verification',d:'Seamless SMS-less phone-number verification (Silent Auth).'},tags:['EngageLab','Silent Auth']},
-  {cat:'model', icon:'cpu', ja:{t:'Modellix AI モデルコンソール',d:'主要なマルチモーダルAIモデルを、ひとつのコンソールから呼び出せる MaaS のデモ。'},en:{t:'Modellix AI Model Console',d:'Access leading multimodal AI models from a single MaaS console.'},tags:['Modellix','MaaS','AI']}
+  {cat:'model', icon:'spark', url:'/d/property-video/index.html', ja:{t:'物件写真 → 内見動画 自動生成',d:'物件写真をアップロードするだけで、AIが各部屋を動画化し1本の内見動画として連続再生。撮影・編集なしで内見動画をつくるライブデモ。'},en:{t:'Property Photos → Walkthrough Video',d:'Upload property photos and AI turns each room into video, played back as a single walkthrough. No filming, no editing.'},tags:['Modellix','不動産','Live']},
+  {cat:'model', icon:'cpu', ja:{t:'Modellix AI モデルコンソール',d:'主要なマルチモーダルAIモデルを、ひとつのコンソールから呼び出せる MaaS のデモ。'},en:{t:'Modellix AI Model Console',d:'Access leading multimodal AI models from a single MaaS console.'},tags:['Modellix','MaaS','AI']},
+  {cat:'model', icon:'globe', url:'/d/touring-2026/index.html', ja:{t:'信州＋日本海 ツーリング行程表',d:'4日間・約1,050kmの行程表。日ごとの地図・給油ポイント・高速料金・宿泊先をまとめ、どのピンからも Google マップのナビを開ける。'},en:{t:'Shinshu × Sea of Japan Touring Plan',d:'A 4-day, ~1,050 km itinerary with per-day maps, fuel stops, tolls and lodging — every pin opens Google Maps navigation.'},tags:['Leaflet','地図','ツーリング']}
 ];
 const CATS={ all:{ja:'すべて',en:'All'}, agent:{ja:'AI エージェント',en:'AI Agents'}, engage:{ja:'エンゲージメント',en:'Engagement'}, model:{ja:'AI モデル',en:'AI Models'} };
 const FROWS=[

@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>信州＋日本海 ツーリング 2026.8.8–8.11</title>
+<meta name="description" content="東京発4日間・約970kmのツーリング行程。各日の地図、給油ポイント、宿泊先。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+/* ============================================================
+   1. トークン
+   ============================================================ */
+:root{
+  --background:#faf9f7;
+  --foreground:#1a1d21;
+  --card:#ffffff;
+  --muted:#f0eeea;
+  --muted-foreground:#5c6169;
+  --primary:#1e4d54;
+  --primary-foreground:#ffffff;
+  --accent:#a8471a;
+  --accent-foreground:#ffffff;
+  --border:#dfdbd4;
+  --ring:#1e4d54;
+
+  --space-1:4px;  --space-2:8px;  --space-3:12px; --space-4:16px;
+  --space-6:24px; --space-8:32px; --space-12:48px; --space-16:64px;
+  --space-24:96px;
+  --space-section: var(--space-16);
+
+  --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+  --shadow-sm: 0 1px 2px rgba(26,29,33,.06);
+  --shadow-md: 0 4px 16px rgba(26,29,33,.08);
+
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --dur-fast:150ms; --dur-base:250ms;
+
+  --font-sans:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
+  --measure:34em;
+  --container:1000px;
+}
+@media (max-width:768px){ :root{ --space-section: var(--space-12); } }
+
+/* ============================================================
+   2. リセット + 日本語ベースレイヤー
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);
+  font-size:16px;
+  line-height:1.8;
+  letter-spacing:.02em;
+  font-feature-settings:"palt" 0;
+  color:var(--foreground);
+  background:var(--background);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{
+  line-height:1.35; letter-spacing:.01em;
+  font-feature-settings:"palt" 1;
+  text-wrap:balance; word-break:auto-phrase;
+  font-weight:700;
+}
+:where(p,li,h1,h2,h3,h4,dd,dt){line-break:strict; overflow-wrap:break-word}
+img,svg{display:block; max-width:100%; height:auto}
+a{color:inherit; text-underline-offset:.2em}
+:focus-visible{outline:2px solid var(--ring); outline-offset:3px; border-radius:4px}
+.num{font-family:"Inter",sans-serif; font-variant-numeric:tabular-nums; letter-spacing:0}
+
+/* ============================================================
+   3. レイアウト
+   ============================================================ */
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--space-6)}
+.eyebrow{font-size:13px; font-weight:600; letter-spacing:.1em; color:var(--muted-foreground); text-transform:uppercase}
+
+/* ヒーロー */
+.hero{padding-block:var(--space-16) var(--space-12); border-bottom:1px solid var(--border)}
+.hero h1{font-size:clamp(26px,4.6vw,44px); margin-top:var(--space-2)}
+.hero .lead{font-size:clamp(15px,1.6vw,18px); color:var(--muted-foreground); margin-top:var(--space-4); max-width:var(--measure)}
+
+.stats{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--border);
+  border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-top:var(--space-8)}
+@media (min-width:768px){ .stats{grid-template-columns:repeat(4,1fr)} }
+.stat{background:var(--card); padding:var(--space-4) var(--space-6)}
+.stat dt{font-size:13px; color:var(--muted-foreground); letter-spacing:.04em}
+.stat dd{font-size:clamp(20px,2.4vw,26px); font-weight:700; margin-top:2px;
+  font-variant-numeric:tabular-nums; letter-spacing:0}
+.stat dd small{font-size:13px; font-weight:500; color:var(--muted-foreground); margin-left:2px}
+
+/* タブ */
+.tabs{position:sticky; top:0; z-index:40; background:color-mix(in srgb,var(--background) 92%,transparent);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--border)}
+.tabs-inner{display:flex; gap:var(--space-1); overflow-x:auto; scrollbar-width:none; padding-block:var(--space-2)}
+.tabs-inner::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto; min-height:48px; padding:0 var(--space-4); border:none; background:none;
+  font-family:inherit; font-size:14px; font-weight:600; letter-spacing:.02em; color:var(--muted-foreground);
+  cursor:pointer; border-radius:var(--radius-md); display:inline-flex; align-items:center; gap:var(--space-2);
+  transition:color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out)}
+.tab:hover{background:var(--muted)}
+.tab[aria-selected="true"]{background:var(--primary); color:var(--primary-foreground)}
+.tab .d{font-size:13px; opacity:.75; font-weight:500}
+
+/* 日パネル */
+.day{padding-block:var(--space-section)}
+.day[hidden]{display:none}
+.day-head{display:flex; flex-wrap:wrap; align-items:baseline; gap:var(--space-3) var(--space-6);
+  padding-bottom:var(--space-6); border-bottom:2px solid var(--foreground)}
+.day-head h2{font-size:clamp(22px,3.2vw,32px)}
+.day-meta{display:flex; gap:var(--space-4); flex-wrap:wrap; font-size:13px; color:var(--muted-foreground);
+  font-variant-numeric:tabular-nums}
+.day-meta b{color:var(--foreground); font-weight:600}
+
+/* 地図 */
+.map{height:340px; margin-top:var(--space-8); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden; background:var(--muted)}
+@media (min-width:768px){ .map{height:420px} }
+.leaflet-container{font-family:var(--font-sans); font-size:13px}
+.pin{display:flex; align-items:center; justify-content:center; width:26px; height:26px;
+  border-radius:50%; color:#fff; font-size:12px; font-weight:700; border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); font-family:"Inter",sans-serif}
+.pin-sm{width:20px; height:20px; font-size:11px; border-width:1.5px}
+.pin-stop{background:var(--primary)}
+.pin-fuel{background:var(--accent)}
+.pin-bed{background:#3f5d20}
+
+/* タイムライン */
+.timeline{margin-top:var(--space-12); list-style:none; padding:0}
+.tl{display:grid; grid-template-columns:64px 1fr; gap:var(--space-4); padding-block:var(--space-4);
+  border-bottom:1px solid var(--border)}
+@media (min-width:768px){ .tl{grid-template-columns:76px 28px 1fr; gap:var(--space-6)} }
+.tl-time{font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:0;
+  color:var(--muted-foreground); padding-top:2px}
+.tl-badge{display:none}
+@media (min-width:768px){
+  .tl-badge{display:flex; align-items:center; justify-content:center; width:26px; height:26px;
+    border-radius:50%; font-size:12px; font-weight:700; color:#fff; font-family:"Inter",sans-serif; margin-top:1px}
+}
+.tl-body h3{font-size:17px}
+.tl-body p{font-size:15px; color:var(--muted-foreground); margin-top:var(--space-1); max-width:var(--measure)}
+.tl-tag{display:inline-block; font-size:12px; font-weight:600; letter-spacing:.04em;
+  padding:2px 8px; border-radius:99px; margin-left:var(--space-2); vertical-align:2px}
+.tag-fuel{background:var(--accent); color:var(--accent-foreground)}
+.tag-bed{background:#3f5d20; color:#fff}
+.tl-km{font-size:13px; color:var(--muted-foreground); font-variant-numeric:tabular-nums; letter-spacing:0}
+
+/* 道路種別 */
+.tl-road{display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;
+  margin-top:var(--space-2); font-size:13px; color:var(--muted-foreground)}
+.road-chip{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600;
+  letter-spacing:.04em; padding:2px 9px; border-radius:99px; white-space:nowrap}
+.road-exp{background:var(--primary); color:var(--primary-foreground)}
+.road-gen{background:transparent; color:var(--primary); border:1.5px solid var(--primary)}
+.road-toll{background:transparent; color:var(--accent); border:1.5px dashed var(--accent)}
+.road-name{font-variant-numeric:tabular-nums}
+.road-fee{display:inline-flex; align-items:center; font-size:12px; font-weight:700;
+  color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:0;
+  padding:2px 8px; border-radius:99px; background:color-mix(in srgb,var(--accent) 10%,transparent);
+  white-space:nowrap}
+
+/* Google マップへのナビリンク */
+.navlink{display:inline-flex; align-items:center; gap:5px; min-height:32px;
+  padding:0 12px; margin-top:var(--space-3);
+  border:1px solid var(--border); border-radius:99px; background:var(--card);
+  font-size:13px; font-weight:600; letter-spacing:.02em; color:var(--primary);
+  text-decoration:none; white-space:nowrap;
+  transition:background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out)}
+.navlink:hover{background:var(--muted); border-color:var(--primary)}
+.navlink svg{width:14px; height:14px; flex:0 0 auto}
+@media (min-width:768px){ .navlink{min-height:34px} }
+
+.popup-nav{display:inline-block; margin-top:6px; font-weight:700; color:#1e4d54}
+
+/* 夜の過ごし方 */
+.night{margin-top:var(--space-12); border:1px solid var(--border); border-radius:var(--radius-lg);
+  overflow:hidden; background:var(--card)}
+.night-head{display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;
+  padding:var(--space-4) var(--space-6); background:#22303a; color:#e9edf0}
+.night-head h3{font-size:16px; color:inherit}
+.night-head .t{font-size:13px; opacity:.8; font-variant-numeric:tabular-nums}
+.night-body{padding:var(--space-6)}
+.night-body > * + *{margin-top:var(--space-4)}
+.night-body p{font-size:15px; color:var(--muted-foreground); max-width:var(--measure)}
+.night-list{list-style:none; padding:0; margin-top:var(--space-4)}
+.night-list li{display:grid; grid-template-columns:1fr; gap:2px;
+  padding:var(--space-3) 0; border-bottom:1px solid var(--border)}
+.night-list li:last-child{border-bottom:none}
+.night-list b{font-size:15px; color:var(--foreground)}
+.night-list span{font-size:14px; color:var(--muted-foreground)}
+.night-list .hrs{font-size:13px; color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums}
+
+/* 駐車 */
+.park{display:flex; gap:var(--space-3); align-items:flex-start;
+  margin-top:var(--space-6); padding:var(--space-4) var(--space-6);
+  background:var(--muted); border-radius:var(--radius-md)}
+.park .ic{flex:0 0 auto; font-size:13px; font-weight:700; color:var(--primary);
+  border:1.5px solid var(--primary); border-radius:99px; padding:1px 9px; margin-top:2px}
+.park p{font-size:15px; color:var(--muted-foreground); margin:0}
+
+/* クマ対策 */
+.bear{margin-top:var(--space-12); border:2px solid var(--accent); border-radius:var(--radius-lg);
+  overflow:hidden; background:var(--card)}
+.bear-head{padding:var(--space-4) var(--space-6); background:var(--accent);
+  color:var(--accent-foreground)}
+.bear-head h3{font-size:16px; color:inherit}
+.bear-head p{font-size:14px; margin-top:2px; opacity:.92; max-width:none}
+.bear-body{padding:var(--space-6)}
+.bear-body > * + *{margin-top:var(--space-6)}
+.bear-body h4{font-size:15px; letter-spacing:.02em}
+.bear-body p{font-size:15px; color:var(--muted-foreground); max-width:var(--measure)}
+.bear-body ul{margin-top:var(--space-3); padding-left:1.15em; font-size:15px;
+  color:var(--muted-foreground)}
+.bear-body li+li{margin-top:var(--space-2)}
+
+.risk{width:100%; border-collapse:collapse; font-size:15px; margin-top:var(--space-3)}
+.risk th,.risk td{text-align:left; padding:var(--space-2) var(--space-3);
+  border-bottom:1px solid var(--border); vertical-align:top}
+.risk th{font-size:13px; font-weight:600; letter-spacing:.06em; color:var(--muted-foreground);
+  text-transform:uppercase; white-space:nowrap}
+.risk .lv{font-weight:700; white-space:nowrap}
+.lv-hi{color:var(--accent)}
+.lv-md{color:#8a6a3f}
+.lv-lo{color:var(--muted-foreground)}
+
+.dodont{display:grid; gap:var(--space-4)}
+@media (min-width:768px){ .dodont{grid-template-columns:repeat(2,1fr)} }
+.dd{border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-4) var(--space-6)}
+.dd h4{margin-bottom:var(--space-2)}
+.dd-before{border-left:4px solid var(--primary)}
+.dd-after{border-left:4px solid var(--accent)}
+
+/* 昼食候補 */
+.meal{margin-top:var(--space-12); border:1px solid var(--border); border-radius:var(--radius-lg);
+  overflow:hidden; background:var(--card)}
+.meal-head{display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;
+  padding:var(--space-4) var(--space-6); background:var(--muted); border-bottom:1px solid var(--border)}
+.meal-head h3{font-size:16px}
+.meal-head .t{font-size:13px; color:var(--muted-foreground); font-variant-numeric:tabular-nums}
+.meal-body{padding:var(--space-6)}
+.meal-body > p{font-size:15px; color:var(--muted-foreground); max-width:var(--measure)}
+
+.shops{list-style:none; padding:0; margin-top:var(--space-6)}
+.shop{padding:var(--space-4) 0; border-bottom:1px solid var(--border)}
+.shop:last-child{border-bottom:none}
+.shop-top{display:flex; align-items:baseline; gap:var(--space-3); flex-wrap:wrap}
+.shop-top b{font-size:16px}
+.score{font-size:13px; font-weight:700; color:var(--primary);
+  font-variant-numeric:tabular-nums; letter-spacing:0}
+.pick{font-size:12px; font-weight:700; letter-spacing:.04em; padding:2px 9px;
+  border-radius:99px; background:var(--primary); color:var(--primary-foreground)}
+.shop-hrs{display:flex; gap:var(--space-4); flex-wrap:wrap; margin-top:var(--space-2);
+  font-size:13px; color:var(--muted-foreground); font-variant-numeric:tabular-nums}
+.shop-hrs .off{color:var(--accent); font-weight:600}
+.shop p{font-size:15px; color:var(--muted-foreground); margin-top:var(--space-2);
+  max-width:var(--measure)}
+
+/* プラン A / B */
+.plan{border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:var(--space-4) var(--space-6); margin-top:var(--space-4)}
+.plan-a{border-left:4px solid var(--primary)}
+.plan-b{border-left:4px solid var(--accent)}
+.plan-tag{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.06em;
+  padding:2px 10px; border-radius:99px; margin-bottom:var(--space-2)}
+.tag-a{background:var(--primary); color:var(--primary-foreground)}
+.tag-b{background:var(--accent); color:var(--accent-foreground)}
+.plan h4{font-size:16px}
+.plan p{font-size:15px; color:var(--muted-foreground); margin-top:var(--space-2);
+  max-width:var(--measure)}
+.plan dl{margin-top:var(--space-3); font-size:15px}
+.plan dt{font-size:14px; font-weight:600; color:var(--foreground); margin-top:var(--space-3)}
+.plan dt:first-child{margin-top:0}
+.plan dd{color:var(--muted-foreground); margin-top:2px}
+
+/* 予約要否の一覧 */
+.booking{width:100%; border-collapse:collapse; font-size:15px; margin-top:var(--space-4)}
+.booking th,.booking td{text-align:left; padding:var(--space-3);
+  border-bottom:1px solid var(--border); vertical-align:top}
+.booking th{font-size:13px; font-weight:600; letter-spacing:.06em;
+  color:var(--muted-foreground); text-transform:uppercase; white-space:nowrap}
+.need{font-weight:700; color:var(--accent); white-space:nowrap}
+.free{font-weight:700; color:var(--primary); white-space:nowrap}
+
+/* 地図凡例 */
+.map-legend{display:flex; gap:var(--space-4); flex-wrap:wrap; align-items:center;
+  margin-top:var(--space-3); font-size:13px; color:var(--muted-foreground)}
+.lg{display:inline-flex; align-items:center; gap:6px}
+.lg i{display:inline-block; width:26px; height:0; border-top-width:3px; border-radius:2px}
+.lg-exp i{border-top-style:solid; border-top-color:#8fa6ae}
+.lg-gen i{border-top-style:solid; border-top-color:#1e4d54}
+.lg-toll i{border-top-style:dashed; border-top-color:#a8471a}
+
+/* 道路構成バー */
+.roadbar{margin-top:var(--space-6)}
+.roadbar-track{display:flex; height:10px; border-radius:99px; overflow:hidden; background:var(--muted)}
+.roadbar-exp{background:#8fa6ae}
+.roadbar-gen{background:var(--primary)}
+.roadbar-toll{background:var(--accent)}
+.roadbar-labels{display:flex; gap:var(--space-4); flex-wrap:wrap; margin-top:var(--space-2);
+  font-size:13px; color:var(--muted-foreground); font-variant-numeric:tabular-nums}
+.roadbar-labels b{color:var(--foreground)}
+
+.tl.is-fuel{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.tl.is-bed{background:color-mix(in srgb,#3f5d20 6%,transparent)}
+
+/* カード群 */
+.cards{display:grid; gap:var(--space-4); margin-top:var(--space-12)}
+@media (min-width:768px){ .cards-2{grid-template-columns:repeat(2,1fr)} }
+.card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:var(--space-6)}
+.card h3{font-size:15px; letter-spacing:.02em}
+.card h3 .ic{color:var(--accent)}
+.card ul{margin-top:var(--space-3); padding-left:1.1em; font-size:15px; color:var(--muted-foreground)}
+.card li+li{margin-top:var(--space-2)}
+.card dl{margin-top:var(--space-3); font-size:15px}
+.card dt{font-size:13px; color:var(--muted-foreground); letter-spacing:.04em}
+.card dd{margin-bottom:var(--space-3); color:var(--foreground)}
+.card dd:last-child{margin-bottom:0}
+
+/* 注意ボックス */
+.warn{border-left:3px solid var(--accent); background:color-mix(in srgb,var(--accent) 6%,transparent);
+  padding:var(--space-4) var(--space-6); border-radius:0 var(--radius-md) var(--radius-md) 0;
+  margin-top:var(--space-6)}
+.warn h3{font-size:15px; letter-spacing:.02em}
+.warn p, .warn li{font-size:15px; color:var(--muted-foreground); margin-top:var(--space-2)}
+.warn ul{padding-left:1.1em; margin-top:var(--space-2)}
+
+/* 表 */
+.table-wrap{overflow-x:auto; margin-top:var(--space-4); -webkit-overflow-scrolling:touch}
+table{width:100%; border-collapse:collapse; font-size:15px; min-width:460px}
+th,td{text-align:left; padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--border);
+  vertical-align:top}
+th{font-size:13px; font-weight:600; letter-spacing:.06em; color:var(--muted-foreground);
+  text-transform:uppercase; white-space:nowrap}
+td.n{font-variant-numeric:tabular-nums; letter-spacing:0; white-space:nowrap}
+tfoot td{font-weight:700; border-bottom:none; border-top:2px solid var(--foreground)}
+
+/* 全体セクション */
+.summary{background:var(--muted); border-top:1px solid var(--border); padding-block:var(--space-section)}
+.summary h2{font-size:clamp(20px,2.8vw,28px)}
+.checklist{list-style:none; padding:0; margin-top:var(--space-6); display:grid; gap:var(--space-3)}
+@media (min-width:768px){ .checklist{grid-template-columns:repeat(2,1fr)} }
+.checklist li{display:flex; gap:var(--space-3); font-size:15px; background:var(--card);
+  border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-4)}
+.checklist .cb{flex:0 0 auto; width:18px; height:18px; border:2px solid var(--muted-foreground);
+  border-radius:4px; margin-top:3px}
+
+footer{padding-block:var(--space-12); font-size:13px; color:var(--muted-foreground)}
+
+/* 印刷 */
+@media print{
+  .no-print{display:none!important}
+  body{background:#fff; color:#000; font-size:10.5pt; line-height:1.65}
+  .day[hidden]{display:block!important}
+  .day{break-before:page; padding-block:12pt}
+  .day:first-of-type{break-before:auto}
+  .map{display:none}
+  .card,.checklist li{border:1px solid #bbb; break-inside:avoid}
+  .tl{break-inside:avoid}
+  .tabs{display:none}
+  .warn{border-left:3px solid #000; background:#f4f4f4}
+}
+</style>
+</head>
+<body>
+
+<!-- ヒーロー -->
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow">Touring Plan · 2026.08.08 – 08.11</p>
+    <h1>信州＋日本海<br class="pc-br"> 大回りループ</h1>
+    <p class="lead">高原・北アルプス・日本海・火山高山道・峠。日ごとに景色が入れ替わる、走り戻りのない 4 日間。</p>
+
+    <dl class="stats">
+      <div class="stat"><dt>総走行距離</dt><dd>約1,050<small>km</small></dd></div>
+      <div class="stat"><dt>高速料金（二輪）</dt><dd>約6,900<small>円</small></dd></div>
+      <div class="stat"><dt>給油回数</dt><dd>5<small>回 / 約34L</small></dd></div>
+      <div class="stat"><dt>最高地点</dt><dd>2,172<small>m 渋峠</small></dd></div>
+    </dl>
+  </div>
+</header>
+
+<!-- タブ -->
+<nav class="tabs no-print" aria-label="日程">
+  <div class="container">
+    <div class="tabs-inner" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="d0" id="t0">全体<span class="d">4日・約1,050km</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="d1" id="t1">Day 1<span class="d">8/8 土</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="d2" id="t2">Day 2<span class="d">8/9 日</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="d3" id="t3">Day 3<span class="d">8/10 月</span></button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="d4" id="t4">Day 4<span class="d">8/11 火</span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ===================== 全体 ===================== -->
+<section class="day" id="d0" role="tabpanel" aria-labelledby="t0">
+  <div class="container">
+    <div class="day-head">
+      <h2>全体ルート</h2>
+      <div class="day-meta">
+        <span>8月8日<b>（土）</b>〜11日<b>（火・祝）</b></span>
+        <span>総距離 <b>約1,050km</b></span>
+        <span>うち高速 <b>約300km</b></span>
+      </div>
+    </div>
+
+    <div class="roadbar"><div class="roadbar-track">
+      <div class="roadbar-exp" style="flex:300"></div>
+      <div class="roadbar-toll" style="flex:16"></div>
+      <div class="roadbar-gen" style="flex:734"></div></div>
+      <div class="roadbar-labels">
+        <span><b>高速 約300km</b>（29%）</span>
+        <span><b>有料 約16km</b></span>
+        <span><b>一般道 約734km</b>（71%）</span>
+      </div>
+    </div>
+
+    <div id="map0" class="map no-print"></div>
+    <div class="map-legend no-print">
+      <span class="lg" style="color:#1e4d54"><i style="border-top-color:#1e4d54;border-top-style:solid"></i>Day 1</span>
+      <span class="lg" style="color:#3a7484"><i style="border-top-color:#3f7d8c;border-top-style:solid"></i>Day 2</span>
+      <span class="lg" style="color:#8a6a3f"><i style="border-top-color:#8a6a3f;border-top-style:solid"></i>Day 3</span>
+      <span class="lg" style="color:#a8471a"><i style="border-top-color:#a8471a;border-top-style:solid"></i>Day 4</span>
+    </div>
+    <p style="font-size:14px;color:var(--muted-foreground);margin-top:var(--space-2)">
+      大きい丸数字は各日の出発地、<b>油</b>は給油、<b>泊</b>は宿泊、小さい点は立ち寄り先。宿と翌日の出発地は同じ場所なので1つにまとめてある（タップすると両方表示）。
+      どのピンもタップすると Google マップのナビが開く。</p>
+
+    <ol class="timeline">
+      <li class="tl">
+        <div class="tl-time">Day 1</div>
+        <div class="tl-badge pin-stop">1</div>
+        <div class="tl-body">
+          <h3>ビーナスラインと高原 — 約320km</h3>
+          <p>東京 → 中央道 → ビーナスライン → 美ヶ原 → 松本 → 塩尻。<b>唯一の長距離高速区間はこの日の午前だけ。</b>関東平野を抜けるためだけに使う。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">Day 2</div>
+        <div class="tl-badge pin-stop">2</div>
+        <div class="tl-body">
+          <h3>北アルプスから日本海へ — 約300km</h3>
+          <p>塩尻 → 大町 → 白馬 → 糸魚川 → 親不知 → 渋温泉。<b>この旅の白眉。</b>朝は3,000m級の山、昼には日本海。全区間一般道。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">Day 3</div>
+        <div class="tl-badge pin-stop">3</div>
+        <div class="tl-body">
+          <h3>秋山郷と渋峠 — 約170km</h3>
+          <p>湯田中 → 津南 → 秋山郷 → 奥志賀林道 → 渋峠（2,172m）→ 草津温泉。<b>この旅で最も人に会わない日。</b>平家の落人伝説の秘境と、大型車通行止めのブナ林の林道。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">Day 4</div>
+        <div class="tl-badge pin-stop">4</div>
+        <div class="tl-body">
+          <h3>浅間山と碓氷峠 — 約260km</h3>
+          <p>草津 → 鬼押出し → 軽井沢 → 旧碓氷峠 → 東京。<b>情緒的な終点はめがね橋。</b>その後の関越道は純粋な帰路。</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="warn">
+      <h3>このルートの設計</h3>
+      <p><b>反時計回りのループで、一度も同じ道を戻らない。</b>高原 → 北アルプス → 日本海 → 火山高山道 → 峠と、日ごとに景色の種類が入れ替わる。
+      高速は関東平野を出入りする2区間のみ。中三日の景色はすべて一般道の上にある。</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================== DAY 1 ===================== -->
+<section class="day" id="d1" role="tabpanel" aria-labelledby="t1" hidden>
+  <div class="container">
+    <div class="day-head">
+      <h2>Day 1 — ビーナスラインと高原</h2>
+      <div class="day-meta">
+        <span>8月8日<b>（土）</b></span>
+        <span>走行 <b>約320km</b></span>
+        <span>行動 <b>07:00–16:00</b></span>
+        <span>うち高速 <b>約180km</b></span>
+      </div>
+    </div>
+
+    <div class="roadbar"><div class="roadbar-track"><div class="roadbar-exp" style="flex:180"></div><div class="roadbar-gen" style="flex:140"></div></div><div class="roadbar-labels"><span><b>高速 約180km</b>（中央道）</span><span><b>一般道 約140km</b>（ビーナスライン・国道19号ほか）</span></div></div>
+
+    <div id="map1" class="map no-print"></div>
+    <div class="map-legend no-print"><span class="lg lg-gen"><i></i>一般道・県道</span><span class="lg lg-exp"><i></i>高速道路</span><span class="lg lg-toll"><i></i>有料道路</span></div>
+
+    <ol class="timeline">
+      <li class="tl">
+        <div class="tl-time">07:00</div>
+        <div class="tl-badge pin-stop">1</div>
+        <div class="tl-body">
+          <h3>東京発（北区）</h3>
+          <p>一般道で調布ICへ。<b>前夜のうちに満タンにしておくこと</b>——7時台はまだ開いていないスタンドが多い。首都高を使わず一般道で調布ICまで行けば約900円節約できる。</p>
+        </div>
+      </li>
+      <li class="tl is-fuel">
+        <div class="tl-time">09:30</div>
+        <div class="tl-badge pin-fuel">油</div>
+        <div class="tl-body">
+          <h3>中央道 諏訪湖SA<span class="tl-tag tag-fuel">給油 ①</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">北区→調布IC 約20km</span><span class="road-chip road-exp">高速</span><span class="road-name">中央道 調布IC→諏訪IC 約170km</span><span class="road-fee">二輪 約3,850円</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=中央道+諏訪湖SA+下り&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p class="tl-km">累計 約170km</p>
+          <p>SAのスタンドは24時間営業。ビーナスラインには給油所がほぼ無いので、ここでの給油は必須。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">10:00</div>
+        <div class="tl-badge pin-stop">2</div>
+        <div class="tl-body">
+          <h3>ビーナスライン（車山高原）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道152号 → 県道40号（ビーナスライン）</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.1031229,138.1968477&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>白樺湖 → 車山 → 霧ヶ峰。リフトで車山山頂（1,925m）まで上がれる。<b>10時発だと遠景の山（富士山・南アルプス）は霞み始める。</b>草原・道・近景は一日中変わらないので、遠景まで見たい場合のみ2時間早く出る。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">12:00</div>
+        <div class="tl-badge pin-stop">3</div>
+        <div class="tl-body">
+          <h3>美ヶ原高原美術館</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">県道194号（ビーナスライン後半）</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.2308382,138.1402043&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>標高2,000m の屋外彫刻公園、350点。ビーナスラインの終点。1時間ほど。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">13:30</div>
+        <div class="tl-badge pin-stop">4</div>
+        <div class="tl-body">
+          <h3>松本城・中町通り</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">県道62号 → 国道254号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.238653,137.9688674&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>国宝天守。登閣は16:30受付終了。昼食は中町通り・縄手通りの蔵造りの町並みで。</p>
+        </div>
+      </li>
+      <li class="tl is-bed">
+        <div class="tl-time">16:00</div>
+        <div class="tl-badge pin-bed">泊</div>
+        <div class="tl-body">
+          <h3>信州健康ランド（塩尻）<span class="tl-tag tag-bed">宿泊</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道19号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.1708353,137.9543218&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>24時間営業・予約不要。約3,080円（アプリ会員でさらに約500円引き）。リクライナールームにテレビとUSB電源あり。<b>深夜0時をまたぐと深夜料金 約1,000円が加算されるので、夕方のうちに入館する。</b></p>
+        </div>
+      </li>
+    </ol>
+
+<div class="night"><div class="night-head"><h3>夜の過ごし方</h3><span class="t">16:00 着 — 約6時間</span></div><div class="night-body"><p>信州健康ランドは<b>塩尻の郊外にあり、歩いて行ける温泉街や商店街はない</b>。この日は320km走った後なので、外に出ずに館内で済ませて早く寝るのが正解。翌日も300kmある。</p><ul class="night-list"><li><b>大浴場・炭酸泉・露天・サウナ</b><span class="hrs">24時間</span><span>複数の浴槽とサウナ。時間を気にせず何度でも入れる</span></li><li><b>岩盤浴</b><span class="hrs">要確認</span><span>別料金。疲労回復にはこちらのほうが効く</span></li><li><b>館内レストラン</b><span class="hrs">深夜〜早朝も営業</span><span>数店舗あり。夕食も朝食もここで済む</span></li><li><b>リクライナールーム</b><span>テレビとUSB電源つき。長時間いても苦にならない</span></li></ul><div class="park"><span class="ic">駐車</span><p>ロードサイドの大型施設なので駐車場は広い。バイクの駐輪位置は受付で確認すること。</p></div></div></div>
+
+    <div class="warn">
+      <h3>この日の注意</h3>
+      <ul>
+        <li>ビーナスラインは 76km にわたって給油所がほぼ無い。諏訪湖SAで必ず満タンに。</li>
+        <li>標高2,000mの朝は8月でも10℃前後。フリースか薄手のダウンを1枚。</li>
+        <li>7時発なら夜間走行はないが、山道の鹿・猪は日中も出る。茅野に下りてからは速度を落とす。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DAY 2 ===================== -->
+<section class="day" id="d2" role="tabpanel" aria-labelledby="t2" hidden>
+  <div class="container">
+    <div class="day-head">
+      <h2>Day 2 — 北アルプスから日本海へ</h2>
+      <div class="day-meta">
+        <span>8月9日<b>（日）</b></span>
+        <span>走行 <b>約300km</b></span>
+        <span>行動 <b>07:30–17:30</b></span>
+        <span>高速 <b>なし</b></span>
+      </div>
+    </div>
+
+    <div class="roadbar"><div class="roadbar-track"><div class="roadbar-gen" style="flex:300"></div></div><div class="roadbar-labels"><span><b>一般道 約300km</b>（国道148号・国道8号・国道18号）</span><span>高速はオプションのみ（上越→妙高 約30km）</span></div></div>
+
+    <div id="map2" class="map no-print"></div>
+    <div class="map-legend no-print"><span class="lg lg-gen"><i></i>一般道・県道</span><span class="lg lg-exp"><i></i>高速道路</span><span class="lg lg-toll"><i></i>有料道路</span></div>
+
+    <ol class="timeline">
+      <li class="tl is-fuel">
+        <div class="tl-time">07:30</div>
+        <div class="tl-badge pin-fuel">油</div>
+        <div class="tl-body">
+          <h3>塩尻発 — 出発前に満タン<span class="tl-tag tag-fuel">給油 ②</span></h3>
+          <p class="tl-km">累計 約320km</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">09:30</div>
+        <div class="tl-badge pin-stop">1</div>
+        <div class="tl-body">
+          <h3>仁科三湖（青木湖）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道19号 → 国道147号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.6093261,137.8514279&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>安曇野の北アルプスパノラマロードを経由。青木湖・中綱湖・木崎湖の湖畔ワインディング。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">10:30</div>
+        <div class="tl-badge pin-stop">2</div>
+        <div class="tl-body">
+          <h3>白馬大橋</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道148号（千国街道）</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.707805,137.8464844&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>白馬三山を正面に見るビューポイント。時間があれば白馬岩岳マウンテンハーバー（ゴンドラ）も。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">12:00</div>
+        <div class="tl-badge pin-stop">3</div>
+        <div class="tl-body">
+          <h3>糸魚川・ヒスイ海岸</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道148号 — 姫川沿いに海まで下る</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=糸魚川+ヒスイ海岸&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>国道148号（千国街道）で姫川沿いに一気に下る。<b>朝は3,000m級の山、昼には日本海</b>——この落差がこのルートの白眉。海岸に打ち上がった翡翠は誰でも拾って持ち帰れる（河川区域と小滝川ヒスイ峡は採取厳禁）。昼食はこの下の候補から。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">13:30</div>
+        <div class="tl-badge pin-stop">4</div>
+        <div class="tl-body">
+          <h3>親不知</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道8号（断崖沿い）</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.995456,137.7033191&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>断崖絶壁の真下を走る国道8号。道の駅 親不知ピアパークには102トンの世界最大級のヒスイ輝石岩がある。</p>
+        </div>
+      </li>
+      <li class="tl is-fuel">
+        <div class="tl-time">14:30</div>
+        <div class="tl-badge pin-fuel">油</div>
+        <div class="tl-body">
+          <h3>上越市内<span class="tl-tag tag-fuel">給油 ③</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道8号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=上越市+国道8号+ガソリンスタンド&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p class="tl-km">累計 約500km</p>
+          <p><b>日曜日は地方のスタンドが休業していることが多い。</b>国道沿いの大きな店を選ぶこと。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">16:00</div>
+        <div class="tl-badge pin-stop">5</div>
+        <div class="tl-body">
+          <h3>苗名滝（妙高）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道18号</span><span class="road-chip road-exp">高速</span><span class="road-name">オプション：上越高田IC→妙高高原IC 約30km</span><span class="road-fee">二輪 約700円</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=苗名滝&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>日本の滝百選、落差55m。駐車場から徒歩15分の林道を歩くので、<b>クマ鈴を付けるか音を出しながら歩くこと。</b><b>疲れていれば省略可</b>——上越高田IC → 妙高高原IC で高速に乗れば40分短縮できる（二輪 約700円）。</p>
+        </div>
+      </li>
+      <li class="tl is-bed">
+        <div class="tl-time">17:30</div>
+        <div class="tl-badge pin-bed">泊</div>
+        <div class="tl-body">
+          <h3>ホテルゆだなか（湯田中温泉）<span class="tl-tag tag-bed">宿泊</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道18号 → 国道292号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.7428424,138.4127858&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>24時間営業の健康ランド併設。<b>仮眠室（リクライニング／スキーヤーズベッド）は入館500円〜</b>で、<b>予約不要</b>——連休で宿が高騰・満室になっていても飛び込める。源泉かけ流しの大浴場あり。疲れていれば当日フロントで客室（和室）に切り替えられる。志賀高原の入口なので翌朝の出発が楽。<br>館内は古めで、廊下や客室の古さを指摘する声がある（★3.3）。ただし大浴場の評価は高く、<b>この日の目的は湯に入って寝ることなので実害は小さい</b>。</p>
+        </li>
+    </ol>
+
+<div class="meal">
+      <div class="meal-head">
+        <h3>昼食 — 糸魚川の寿司</h3>
+        <span class="t">12:00 着 — 1時間</span>
+      </div>
+      <div class="meal-body">
+        <p>ここは日本海に面した港町で、<b>白馬からわざわざ車で食べに来る人がいる</b>レベルの店が揃っている。
+        金沢・富山までは行かない行程だが、海鮮を食べるならこの1時間がその機会。</p>
+
+        <ul class="shops">
+          <li class="shop">
+            <div class="shop-top">
+              <b>寿し活</b><span class="score">★4.4 / 311件</span><span class="pick">推奨</span>
+            </div>
+            <div class="shop-hrs">
+              <span>11:00–14:00 / 17:00–22:00</span>
+              <span class="off">月曜定休（8/9は日曜なので営業）</span>
+              <span>℡ 025-552-9257</span>
+            </div>
+            <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.041800,137.848017&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+            <p>カウンターに座ると、職人が一貫ずつ出しながら魚の説明をしてくれる。
+            <b>2,600円のコースで握り9貫＋巻物1本</b>と量も十分。「今まで食べた中で最高の寿司」という評価や、
+            白馬から寿司のためだけに来たという声がある。英語はほぼ通じない。</p>
+          </li>
+
+          <li class="shop">
+            <div class="shop-top">
+              <b>田平（Denbei）</b><span class="score">★4.2 / 394件</span>
+            </div>
+            <div class="shop-hrs">
+              <span>11:30–14:00 / 17:00–21:00</span>
+              <span class="off">木曜定休</span>
+              <span>℡ 025-553-2661</span>
+            </div>
+            <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.047719,137.878720&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+            <p>海鮮食堂寄り。握りが通常より大きめでかなり腹にたまる。魚のスープの評価が特に高い。
+            <b>ただし平日の昼に45分待ったという報告がある</b>——14時前に出たいなら余裕を見ること。</p>
+          </li>
+
+          <li class="shop">
+            <div class="shop-top">
+              <b>ととやのはなれ</b><span class="score">★4.1 / 108件</span>
+            </div>
+            <div class="shop-hrs">
+              <span>11:00–14:30 / 17:00–21:00</span>
+              <span>無休</span>
+              <span>℡ 025-556-6589</span>
+            </div>
+            <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.043936,137.860381&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+            <p>「津本式究極の血抜き」の認定士が3名在籍しており、魚の処理の質が高い。
+            旬の魚で内容が変わる。入口が目立たず、通りかかっただけでは営業しているように見えないとの声。</p>
+          </li>
+
+          <li class="shop">
+            <div class="shop-top">
+              <b>漁火（Isaribi）</b><span class="score">★3.8 / 493件</span>
+              <span class="t">親不知ピアパーク内・13:30に寄る場合</span>
+            </div>
+            <div class="shop-hrs">
+              <span>11:00–14:30</span>
+              <span class="off">火曜定休（8/9は日曜なので営業）</span>
+              <span>℡ 025-561-7291</span>
+            </div>
+            <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.003936,137.731514&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+            <p>道の駅 親不知ピアパークの中。<b>席から日本海のパノラマが見える。</b>紅ズワイガニが名物で、天ぷらの評価も高い。
+            親不知の立ち寄りと重なるので駐車の手間がない一方、評点は糸魚川市街の店より一段下がる。</p>
+          </li>
+        </ul>
+
+        <div class="park">
+          <span class="ic">判断</span>
+          <p><b>糸魚川市街で「寿し活」、親不知は駐車して景色だけ見るのがいい。</b>
+          この日は300kmと全行程で最長なので、昼食が伸びると後半が押す。
+          待ち時間の報告がある店は避けたほうが安全。
+          <b>日曜の昼は満席になる。前日に電話で予約しておくこと。</b></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="night"><div class="night-head"><h3>夜の過ごし方</h3><span class="t">17:30 着 — 約4時間半</span></div><div class="night-body"><p>ホテルゆだなかは<b>健康ランドなので館内で完結する</b>。300km走った後なので、無理に外に出ず湯に入って早く寝るのが正解。翌日は6:30発で秋山郷へ向かう。</p><ul class="night-list"><li><b>源泉かけ流しの大浴場</b><span class="hrs">24時間</span><span>この宿で評価が一番高いのがここ。何度でも入れる</span></li><li><b>湯田中温泉の外湯</b><span class="hrs">要確認</span><span>湯田中にも共同浴場がある。フロントで場所と利用可否を聞く</span></li><li><b>駅周辺の飲食店</b><span>駅から近く、歩ける範囲に数軒。夕食はこのあたりで</span></li><li><b>朝食</b><span class="hrs">付き</span><span>基本的なパン中心。6:30発なら早めに食べられるか前夜に確認しておく</span></li></ul><div class="park"><span class="ic">駐車</span><p>ホテルの駐車場を利用できる。<b>ただし規模の割に台数が少なく、夕方は埋まっているという声がある。</b>バイクなら隙間に停められるはずだが、到着時にフロントで駐輪位置を確認すること。<b>渋温泉のような有料駐車場（バイク300円）は不要になる。</b></p></div></div></div></div>
+
+    <div class="warn">
+      <h3>この日の注意</h3>
+      <ul>
+        <li>この日が最長（約300km）。上越で状態を見て、高速に乗るか一般道で行くか決めればいい。判断は現地で構わない。</li>
+        <li>国道8号 親不知は落石が多く、大雨で通行止めになる。出発前に新潟県の道路情報を確認。</li>
+        <li>白馬〜糸魚川、妙高〜野尻湖はスタンドの間隔が30〜40km空くことがある。針が半分で給油。</li>
+        <li><b>ホテルゆだなかは24時間営業で予約不要。</b>仮眠室（入館500円〜）で足りなければ、当日フロントで客室に切り替えられる。℡ 0269-33-5888</li>
+        <li>連休中は周辺の宿が高騰・満室になる。<b>予約不要で飛び込める宿を1つ確保しておくこと自体が保険になる。</b></li>
+      </ul>
+    </div>
+
+    <div class="cards cards-2">
+      <div class="card">
+        <h3>宿の代替（湯田中・渋温泉）</h3>
+        <dl>
+          <dt>ZEN hostel and Bar（湯田中）— 評価4.2</dt>
+          <dd>駅から近い。部屋は簡素だが布団は快適、トイレ・シャワーは清潔との評価。古い家屋で壁が薄い。要予約。</dd>
+          <dt>Maruka ryokan（湯田中）— 評価4.1</dt>
+          <dd>老夫婦が経営。「周辺の新しい宿はずっと高いが、ここは値段以上」との声。館内の清掃状態にはばらつきあり。要予約。</dd>
+          <dt>小石屋旅館（渋温泉）</dt>
+          <dd>ドミトリー素泊まりが安いのは<b>30日前早割を使った場合</b>。連休中の直前予約では1万円前後まで上がる。渋温泉の外湯「九湯めぐり」が無料になるのは魅力だが、今回の日程・予算では合わない。</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h3>ショートカット判断</h3>
+        <dl>
+          <dt>そのまま一般道</dt>
+          <dd>17:30着。苗名滝に寄れる。追加費用なし。</dd>
+          <dt>上越高田IC → 妙高高原IC</dt>
+          <dd>約30km・二輪 約700円。40分短縮。苗名滝は妙高高原IC付近なので寄れる。</dd>
+          <dt>上越高田IC → 信州中野IC</dt>
+          <dd>約70km・二輪 約1,500円。1時間短縮。体力が明らかに落ちている時だけ。</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DAY 3 ===================== -->
+<section class="day" id="d3" role="tabpanel" aria-labelledby="t3" hidden>
+  <div class="container">
+    <div class="day-head">
+      <h2>Day 3 — 秋山郷と渋峠</h2>
+      <div class="day-meta">
+        <span>8月10日<b>（月）</b></span>
+        <span>走行 <b>約170km</b></span>
+        <span>行動 <b>06:30–14:30</b></span>
+        <span>高速 <b>なし</b></span>
+      </div>
+    </div>
+
+    <div class="roadbar"><div class="roadbar-track">
+      <div class="roadbar-gen" style="flex:170"></div></div>
+      <div class="roadbar-labels">
+        <span><b>一般道 約170km</b>（国道117号・国道405号・県道502号・国道292号）</span>
+        <span>高速・有料道路なし</span>
+      </div>
+    </div>
+
+    <div id="map3" class="map no-print"></div>
+    <div class="map-legend no-print"><span class="lg lg-gen"><i></i>一般道・県道</span><span class="lg lg-exp"><i></i>高速道路</span><span class="lg lg-toll"><i></i>有料道路</span></div>
+
+    <ol class="timeline">
+      <li class="tl is-fuel">
+        <div class="tl-time">06:30</div>
+        <div class="tl-badge pin-fuel">油</div>
+        <div class="tl-body">
+          <h3>湯田中発 — 必ず満タンに<span class="tl-tag tag-fuel">給油 ④</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道292号 → 国道117号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.7428424,138.4127858&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p class="tl-km">累計 約590km</p>
+          <p><b>秋山郷から先、草津までスタンドは一切ない。</b>ここで満タンにすること。津南が最後の給油チャンス。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">07:45</div>
+        <div class="tl-badge pin-stop">1</div>
+        <div class="tl-body">
+          <h3>津南（最後のスタンド）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道117号 — 千曲川・信濃川沿い</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=37.0234175,138.6392522&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>飯山から千曲川沿いに北上。ここから国道405号に入って秋山郷へ。<b>不安があればここで給油しておく。</b></p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">08:30</div>
+        <div class="tl-badge pin-stop">2</div>
+        <div class="tl-body">
+          <h3>秋山郷・小赤沢</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道405号 — 中津川渓谷沿い</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.865118,138.639552&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>平家の落人伝説が残る長野県最北の秘境。中津川の渓谷に沿って12の集落が点在する。
+          <b>国道405号は舗装されているが荒れ気味で、すれ違いが難しい箇所がある</b>——飛ばす道ではない。
+          小赤沢温泉「楽養館」は鉄分の強い赤褐色の湯（600〜800円、10:00開店・水曜定休）。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">09:30</div>
+        <div class="tl-badge pin-stop">3</div>
+        <div class="tl-body">
+          <h3>切明温泉</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道405号 終点</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.8086357,138.6199429&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>河原を自分でスコップで掘ると湯が湧く野湯。商業化されていない、自然そのままの温泉。
+          <b>ただし水量次第で掘っても浸かれないことがある</b>し、源泉は火傷するほど熱い。無理はしないこと。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">11:00</div>
+        <div class="tl-badge pin-stop">4</div>
+        <div class="tl-body">
+          <h3>奥志賀高原（奥志賀林道経由）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">林道秋山線 → 県道502号 奥志賀公園栄線</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.7659475,138.514592&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>通称「奥志賀スーパー林道」。舗装路だが幅員が狭く、大型車は通年通行止め。ガードレールのない区間もある。
+          <b>交通量が極端に少なく、ブナ林の中をひたすら走る</b>——この旅で最も人に会わない区間。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">12:30</div>
+        <div class="tl-badge pin-stop">5</div>
+        <div class="tl-body">
+          <h3>横手山ドライブイン</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道292号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.6691203,138.5186375&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>スカイレーター＋リフトで標高2,307mへ。<b>日本一高い場所にあるパン屋</b>「横手山頂ヒュッテ」。8:40開店、水曜定休（8/10は月曜なので営業）。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">13:00</div>
+        <div class="tl-badge pin-stop">6</div>
+        <div class="tl-body">
+          <h3>渋峠 — 国道最高地点 2,172m</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道292号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.66065,138.53522&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>日本国道最高地点の碑。<b>火山ガス帯のため二輪の停車が禁止されている区間がある</b>ので、標識に従うこと。</p>
+        </div>
+      </li>
+      <li class="tl is-bed">
+        <div class="tl-time">14:30</div>
+        <div class="tl-badge pin-bed">泊</div>
+        <div class="tl-body">
+          <h3>草津温泉着<span class="tl-tag tag-bed">宿泊</span></h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道292号</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.6229647,138.5967231&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>湯畑周辺に無料の共同浴場が十数か所。西の河原露天風呂（800円）は500㎡の大露天で、pH1.7の強酸性。
+          洗い場もドライヤーも無いので純粋に浸かるだけ。夜は湯畑のライトアップ。</p>
+        </div>
+      </li>
+    </ol>
+
+<div class="night"><div class="night-head"><h3>夜の過ごし方</h3><span class="t">14:30 着 — 約8時間</span></div><div class="night-body"><p><b>この日だけ午後がまるごと空いている。</b>草津は渋温泉より温泉街が大きく、外湯も飲食店も選択肢が多い。予定を詰めず、湯畑を中心に歩き回るのがいい。</p><ul class="night-list"><li><b>無料共同浴場（十数か所）</b><span class="hrs">概ね日中</span><span>湯畑周辺に点在。地元の人が日常的に使っている。これが草津の本体</span></li><li><b>西の河原露天風呂</b><span class="hrs">要確認</span><span>800円・500㎡の大露天。pH1.7の強酸性。洗い場もドライヤーもなく、浸かるだけ。営業時間変更の告知が出ているので当日確認</span></li><li><b>熱乃湯 湯もみショー</b><span class="hrs">要確認</span><span>湯を板でかき混ぜて冷ます伝統芸。14:30着なら最終回に間に合う可能性あり</span></li><li><b>湯畑のライトアップ</b><span class="hrs">日没後</span><span>泊まらないと見られない。夜の湯畑は昼と別物</span></li><li><b>温泉街での夕食</b><span>渋温泉より店数が多い。ここが四日間で一番まともに食事を選べる夜</span></li></ul><div class="park"><span class="ic">駐車</span><p>草津も湯畑周辺は道が狭い。<b>宿の駐車場の有無は予約時に必ず確認すること</b>——田島屋旅館はバスターミナル斜向かい、民宿みやまは湯畑まで約600m。町営の有料駐車場もあるが、バイク料金は現地表示で確認。</p></div></div></div>
+
+<div class="bear">
+      <div class="bear-head">
+        <h3>クマ対策 — この日が最も危険</h3>
+        <p>長野県は「県内の森林は全てクマの生息域。目撃がない地域でも出会う可能性がある」としている。志賀高原も生息域に明記されている。</p>
+      </div>
+      <div class="bear-body">
+
+        <div>
+          <h4>現状（長野県公式・2026年7月31日更新）</h4>
+          <p>出没<b>警報・注意報はいずれも「なし」</b>。ただし今年は5月22日に松本地域、6月3日に松本・北アルプス地域、6月12日に木曽地域へ注意報が出ており（6月18日に延長）、2026年の出没情報は累計377件。</p>
+        </div>
+
+        <div>
+          <h4>区間別のリスク</h4>
+          <p><b>バイクに乗っている間はほぼ問題ない</b>——エンジン音でクマは離れる。危険は<b>降りて歩くとき</b>に集中している。</p>
+          <table class="risk">
+            <thead><tr><th>場所</th><th>リスク</th><th>理由</th></tr></thead>
+            <tbody>
+              <tr><td>切明温泉</td><td class="lv lv-hi">最高</td><td>河原まで降りる。谷底で人がいない</td></tr>
+              <tr><td>奥志賀林道</td><td class="lv lv-hi">最高</td><td>ブナ林・大型車通行止め・交通量が極端に少ない</td></tr>
+              <tr><td>秋山郷</td><td class="lv lv-hi">高</td><td>集落と集落の間は全て森</td></tr>
+              <tr><td>志賀高原 大沼池</td><td class="lv lv-md">中</td><td>山道を歩く</td></tr>
+              <tr><td>苗名滝（Day2）</td><td class="lv lv-md">中</td><td>駐車場から徒歩15分の林道</td></tr>
+              <tr><td>八島ヶ原湿原・めがね橋</td><td class="lv lv-lo">低</td><td>人が多い</td></tr>
+            </tbody>
+          </table>
+          <p>さらに条件が二つ重なる。<b>単独行動である</b>こと（県は「できるだけ複数人で」としている）、
+          そして<b>この日は6:30発</b>で、明け方はクマが最も活発な時間帯であること。</p>
+        </div>
+
+        <div class="dodont">
+          <div class="dd dd-before">
+            <h4>遭遇する前 — 音を出す</h4>
+            <ul>
+              <li><b>クマ鈴</b>を降りて歩くときだけバッグに付ける（走行中は鳴りっぱなしで邪魔）</li>
+              <li>スマホでラジオや音楽を流す。県の推奨は「鈴やラジオなど音の出るもの」</li>
+              <li>藪に近づかない。見通しの悪い場所では特に音を出す</li>
+            </ul>
+          </div>
+          <div class="dd dd-after">
+            <h4>遭遇した後 — 逆に静かにする</h4>
+            <ul>
+              <li><b>走らない。</b>背を向けて逃げると追跡本能を引き起こす</li>
+              <li><b>大声を出さない。</b>県内自治体は「大声や急な動きはクマの反応が予測できない。落ち着いて静かにその場を立ち去る」としている</li>
+              <li>クマを見たまま、ゆっくり後退する</li>
+              <li><b>子グマを見たら即座に離れる</b>——母グマが必ず近くにいて、最も攻撃的な状態にある</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <h4>バイク特有の注意</h4>
+          <ul>
+            <li><b>クマ撃退スプレーは高圧缶。</b>夏の直射日光下でシート下収納やトップケースに入れたままにすると破裂の危険がある。バッグに入れて、停車時は持って降りる</li>
+            <li><b>食料とゴミを車体に残さない。</b>クマの嗅覚は非常に鋭い。シート下に食べ物の匂いが残ると誘引する</li>
+            <li>クマも路上に飛び出す。万座ハイウェーも「動物の飛び出しによる衝突事故に注意」と告知している。奥志賀林道・国道405号・国道292号は速度を落とす</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>この行程での具体的な判断</h4>
+          <ul>
+            <li><b>切明温泉に他に人がいなければ、河原まで降りない。</b>上から見て引き返す。谷底は電波も届かず、何かあっても誰も気づかない</li>
+            <li><b>奥志賀林道では停車して林の中に入らない。</b>走り抜ければいい。景色は道の上にある</li>
+            <li>秋山郷の集落内は人家も商店もあるので問題ない</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>出発前に確認できるもの</h4>
+          <ul>
+            <li><b>長野県 ツキノワグマ情報マップ</b>（県公式・7月31日更新）——直近の目撃地点が見られる</li>
+            <li><b>栄村秋山郷観光協会 <span class="num">0269-87-3333</span></b>——秋山郷の現地状況を直接聞ける。これが一番正確</li>
+            <li>宿の人に聞く。地元の人が最も詳しい</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+        <div class="warn">
+      <h3>出発当日の朝に必ず確認</h3>
+      <ul>
+        <li><b>県道502号 奥志賀公園栄線</b>——冬期閉鎖は2026年5月に全区間解除済み、6月22日〜7月17日の橋梁工事も終了しており通行可。ただし大雨や落石で突然閉まる。志賀高原公式サイトの道路情報を朝に確認。</li>
+        <li><b>志賀草津道路（国道292号）</b>——2026年5月29日に全面開通したが、白根山の火山活動で突然通行止めになる。志賀高原公式サイト、または北信建設事務所 <span class="num">0269-22-3139</span>。</li>
+        <li>草津白根山（湯釜）は現在も立入禁止措置が継続中。火口湖は見られない。</li>
+        <li>大滝乃湯が改修工事、西の河原露天風呂も営業時間変更の告知が出ている。草津温泉観光協会のサイトで最新を確認。</li>
+      </ul>
+    </div>
+
+    <div class="cards cards-2">
+      <div class="card">
+        <h3>宿（草津）— 唯一、予約が必要な日</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+        8/11が山の日で、8/10の休みを取って四連休にする人が多い。<b>月曜の夜でも埋まる可能性がある。</b>
+        ただしこの日は14:30着なので、<b>万一取れていなくても日没まで動ける時間がある</b>。</p>
+
+        <div class="plan plan-a">
+          <span class="plan-tag tag-a">PLAN A — 事前予約</span>
+          <dl>
+            <dt>田島屋旅館 — 評価4.2　℡ 0279-88-3392</dt>
+            <dd>湯畑まで徒歩3分、バスターミナル斜向かい。畳の個室＋大浴場。「値段の割に価値が高い」との評価多数。タオル・歯ブラシは持参。</dd>
+            <dt>民宿みやま — 最安クラス　℡ 0279-88-1160</dt>
+            <dd>湯畑まで約600m。トイレ・浴室は全て共用。設備には期待しないこと（評価3.1）。</dd>
+          </dl>
+          <p><b>電話するとき必ず聞く2点：</b>①駐車場の有無（湯畑周辺は道が狭い）
+          ②支払い方法。給料日が8/10なので、現金のみなら「現地払い」で押さえて当日朝にATMで下ろす。</p>
+        </div>
+
+        <div class="plan plan-b">
+          <span class="plan-tag tag-b">PLAN B — 取れなかった場合</span>
+          <dl>
+            <dt>① 草津温泉旅館協同組合に紹介してもらう　℡ 0279-88-3722</dt>
+            <dd><b>草津の130軒以上の宿から空いているところを探して紹介してくれる。</b>
+            バスターミナルの真向かいにあり、窓口は10:00–12:00 / 13:00–17:00。
+            14:30着なら窓口が閉まる前に間に合う。<b>これが最も確実なプランB。</b></dd>
+
+            <dt>② 万座温泉まで上がる（約20km・30分）</dt>
+            <dd>Day4で鬼押ハイウェーを通るので、<b>そのままルート上にある</b>。
+            翌朝の出発がむしろ楽になる。ただしリゾートホテル中心で草津の安宿より高い。</dd>
+
+            <dt>③ 軽井沢・佐久方面に下る（約60〜70km）</dt>
+            <dd>Day4の行程を前倒しする形。宿の選択肢は増えるが、この日の「午後をまるごと湯に使う」という設計が崩れる。<b>最後の手段。</b></dd>
+          </dl>
+          <p><b>判断の期限は17:00。</b>組合の窓口が閉まる時刻。それを過ぎたら②か③に切り替えて、
+          暗くなる前に移動を終えること。<b>山道の夜間走行は避ける。</b></p>
+        </div>
+      </div>
+      <div class="card">
+        <h3>秋山郷を入れたことの代償</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          <b>渋峠の通過が午前11時台から13時に遅れる。</b>夏は午後になるほど水蒸気で遠景が霞み、積雲も湧く。
+          2,172mからの展望を最優先するなら、秋山郷は外して渋峠を午前に持ってくるべき。</p>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          それでも入れる理由は、<b>秋山郷と奥志賀林道が「他では代替できない」から</b>。
+          高原の展望はDay1のビーナスライン、Day2の白馬でも得られるが、人のいない秘境の道はここにしかない。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DAY 4 ===================== -->
+<section class="day" id="d4" role="tabpanel" aria-labelledby="t4" hidden>
+  <div class="container">
+    <div class="day-head">
+      <h2>Day 4 — 浅間山と碓氷峠</h2>
+      <div class="day-meta">
+        <span>8月11日<b>（火・山の日）</b></span>
+        <span>走行 <b>約260km</b></span>
+        <span>行動 <b>08:00–16:00</b></span>
+        <span>うち高速 <b>約116km</b></span>
+      </div>
+    </div>
+
+    <div class="roadbar"><div class="roadbar-track"><div class="roadbar-toll" style="flex:13"></div><div class="roadbar-gen" style="flex:130"></div><div class="roadbar-exp" style="flex:116"></div></div><div class="roadbar-labels"><span><b>有料 約16km</b>（鬼押ハイウェー・普通車約650円）</span><span><b>一般道 約130km</b>（旧碓氷峠ほか）</span><span><b>高速 約116km</b>（上信越道・関越道）</span></div></div>
+
+    <div id="map4" class="map no-print"></div>
+    <div class="map-legend no-print"><span class="lg lg-gen"><i></i>一般道・県道</span><span class="lg lg-exp"><i></i>高速道路</span><span class="lg lg-toll"><i></i>有料道路</span></div>
+
+    <ol class="timeline">
+      <li class="tl is-fuel">
+        <div class="tl-time">08:00</div>
+        <div class="tl-badge pin-fuel">油</div>
+        <div class="tl-body">
+          <h3>草津発 — 満タンで東京まで無給油<span class="tl-tag tag-fuel">給油 ⑤</span></h3>
+          <p class="tl-km">累計 約680km</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">09:00</div>
+        <div class="tl-badge pin-stop">1</div>
+        <div class="tl-body">
+          <h3>鬼押ハイウェー・鬼押出し園</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道292号</span><span class="road-chip road-toll">有料</span><span class="road-name">鬼押ハイウェー 全線 約16km</span><span class="road-fee">普通車 約650円</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=鬼押出し園&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>1783年の浅間山大噴火でできた溶岩原。黒い岩が一面に広がり、背後に浅間山。料金は普通車で峰の茶屋〜鬼押出し280円＋鬼押出し〜三原370円。二輪はこれより安いが、正確な額は現地表示で確認すること。<b>2025年7月からETCGOによるキャッシュレス決済に対応</b>、軽井沢方面の料金所は無人オートゲート。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">10:30</div>
+        <div class="tl-badge pin-stop">2</div>
+        <div class="tl-body">
+          <h3>白糸の滝</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">県道43号 → 白糸ハイランドウェイ</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=%E8%BB%BD%E4%BA%95%E6%B2%A2+%E7%99%BD%E7%B3%B8%E3%81%AE%E6%BB%9D&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>岩壁から染み出す幅70mの簾状の滝。駐車場から徒歩3分。<b>旧軽井沢銀座は外した</b>——買い物をしないなら、連休最終日の混雑した商店街に行く理由がない。
+          浮いた時間は旧碓氷峠に回す。<br>
+          代替候補の雲場池は紅葉期が本番で、<b>夏は蚊が多く水も濁るという声がある</b>ため今回は外した。</p>
+        </li>
+      <li class="tl">
+        <div class="tl-time">12:00</div>
+        <div class="tl-badge pin-stop">3</div>
+        <div class="tl-body">
+          <h3>めがね橋（碓氷第三橋梁）</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道18号旧道（旧碓氷峠・184カーブ）</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=36.3580585,138.6982782&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>旧碓氷峠・国道18号旧道の184カーブの途中。明治期の煉瓦アーチ橋。廃線跡の遊歩道「アプトの道」で橋の上まで歩ける。<b>軽井沢からわずか6kmだが、峠道なので30分かかる——この道自体が目的。</b></p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">13:00</div>
+        <div class="tl-badge pin-stop">4</div>
+        <div class="tl-body">
+          <h3>横川「峠の釜めし」</h3>
+          <div class="tl-road"><span class="road-chip road-gen">一般道</span><span class="road-name">国道18号旧道</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=おぎのや+横川本店&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>おぎのや本店。1958年から続く陶器の器の釜めし。東京に帰る前の最後の一食。<b>この旅の情緒的な終点はめがね橋まで。</b>ここから先の関越道は純粋な帰路として割り切る。</p>
+        </div>
+      </li>
+      <li class="tl">
+        <div class="tl-time">14:00</div>
+        <div class="tl-badge pin-stop">5</div>
+        <div class="tl-body">
+          <h3>松井田妙義IC → 上信越道・関越道 → 東京</h3>
+          <div class="tl-road"><span class="road-chip road-exp">高速</span><span class="road-name">上信越道 → 関越道 松井田妙義IC→練馬IC 約116km</span><span class="road-fee">二輪 約2,720円</span><span class="road-chip road-gen">一般道</span><span class="road-name">練馬IC→北区</span></div>
+          <a class="navlink" href="https://www.google.com/maps/dir/?api=1&amp;destination=松井田妙義IC&amp;travelmode=driving" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>Google マップでナビ</a>
+          <p>連休最終日。<b>夕方の渋滞前に抜ける。</b>練馬ICまで約116km。</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="warn">
+      <h3>この日の注意</h3>
+      <ul>
+        <li>山の日の連休最終日。関越道の下り方向は夕方から激しく渋滞する。14時までに高速に乗ること。</li>
+        <li>旧軽井沢銀座は行程から外してある。立ち寄る場合は連休最終日の混雑を覚悟すること。</li>
+        <li>4日間の疲労が最も溜まっている日。高速では無理をせず、SAでこまめに休む。</li>
+        <li><b>鬼押・万座ハイウェーは7月27日〜9月8日に路盤工事。</b>一部区間が片側交互通行になる可能性がある。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===================== 全体まとめ ===================== -->
+<section class="summary">
+  <div class="container">
+    <h2>給油計画</h2>
+    <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+      満タン10L × 30km/L = <b>航続300km</b>。山間部はスタンドが少なく日曜休業も多いため、<b>200km走ったら給油</b>を原則とし、常に100kmの余裕を残す。</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>地点</th><th>累計</th><th>備考</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="n">0</td><td>東京（<b>8/7 夜</b>）</td><td class="n">0km</td><td>早朝はスタンドが開いていない。前夜に満タン</td></tr>
+          <tr><td class="n">①</td><td>中央道 諏訪湖SA</td><td class="n">170km</td><td>SAは24時間営業。ビーナスライン前の最終給油</td></tr>
+          <tr><td class="n">②</td><td>塩尻市内（Day2 朝）</td><td class="n">320km</td><td>出発前に満タン</td></tr>
+          <tr><td class="n">③</td><td>上越市内</td><td class="n">500km</td><td>日曜。国道沿いの大型店を選ぶ</td></tr>
+          <tr><td class="n">④</td><td>湯田中（Day3 朝）</td><td class="n">590km</td><td><b>秋山郷〜草津は給油所なし。</b>津南が最後のチャンス</td></tr>
+          <tr><td class="n">⑤</td><td>草津（Day4 朝）</td><td class="n">760km</td><td>満タンで東京まで無給油</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td></td><td>合計</td><td class="n">約1,050km</td><td>約35L・ガソリン代 約6,200円</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h2 style="margin-top:var(--space-16)">高速料金（二輪＝軽自動車等）</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>区間</th><th>普通車</th><th>二輪</th></tr></thead>
+        <tbody>
+          <tr><td>Day1 中央道 高井戸→諏訪IC（179km）</td><td class="n">4,810円</td><td class="n"><b>約3,850円</b></td></tr>
+          <tr><td>Day2・Day3 一般道のみ</td><td class="n">—</td><td class="n">0円</td></tr>
+          <tr><td>Day4 鬼押ハイウェー（全線 約16km）</td><td class="n">約650円</td><td class="n">現地表示で確認</td></tr>
+          <tr><td>Day4 松井田妙義IC→練馬IC（116km）</td><td class="n">3,400円</td><td class="n"><b>約2,720円</b></td></tr>
+        </tbody>
+        <tr><td>Day2 上越高田IC→妙高高原IC（オプション）</td><td class="n">—</td><td class="n">約700円</td></tr><tfoot><tr><td>合計（オプション除く）</td><td class="n">—</td><td class="n">約7,200円</td></tr></tfoot>
+      </table>
+    </div>
+    <p style="font-size:14px;color:var(--muted-foreground);margin-top:var(--space-4)">
+      二輪は「軽自動車等」区分。上表の二輪料金は普通車の実測値から0.8で換算した概算。出発前にNEXCOのドラぷらで「軽自動車等」を選んで再確認すること。ETCがあれば土日祝の二輪車定率割引（37.5%off）で約4,110円になり、<b>この1回だけで約2,460円の差</b>。</p>
+
+    <h2 style="margin-top:var(--space-16)">高速か、国道か</h2>
+    <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+      全1,050kmのうち <b>高速は約300km（29%）</b>、残り約750kmは一般道。高速は関東平野を出入りするためだけに使い、中三日の景色は全て一般道の上にある。判断は次の4点で決めている。</p>
+
+    <div class="cards cards-2" style="margin-top:var(--space-6)">
+      <div class="card">
+        <h3>① その道自体が目的か</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          ビーナスライン、国道148号、国道8号親不知、志賀草津道路、旧碓氷峠——これらは走ること自体が目的。<b>何時間かかっても一般道。</b></p>
+      </div>
+      <div class="card">
+        <h3>② 単なる位置移動か</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          関東平野から長野までは市街と農地が続くだけ。国道20号で5時間かけても中央道で2時間でも、見えるものは変わらない。<b>この区間の時間は純粋な損失。高速を使う。</b></p>
+      </div>
+      <div class="card">
+        <h3>③ 疲れ方の質が違う</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          高速の疲れは風圧と単調さ——予測でき、SAで回復できる。一般道の疲れは信号の発進停止と市街地の通過——蓄積が速く、回復点がない。
+          <b>「一般道なのに景色がない」が最悪の組み合わせ。</b>上越→妙高の国道18号がまさにそれ。</p>
+      </div>
+      <div class="card">
+        <h3>④ 時間の機会費用</h3>
+        <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+          Day1に国道20号を使えば諏訪着が3〜4時間遅れ、ビーナスラインの午前を丸ごと失う。<b>3,850円を節約するために、この旅の中心にある景色を捨てることになる。</b>割に合わない。</p>
+      </div>
+    </div>
+
+    <div class="warn" style="margin-top:var(--space-8)">
+      <h3>現地で決めていい区間がひとつだけある</h3>
+      <p><b>上越 → 妙高（約30km・二輪 約700円）。</b>高速に乗れば40分短縮、一般道なら苗名滝（日本の滝百選・落差55m）に寄れる。
+      高速の入口は国道沿いにあるので、8/9の午後に上越へ着いた時点の体調で決めればいい。前もって決めておく必要はない。</p>
+    </div>
+
+    <h2 style="margin-top:var(--space-16)">宿の予約要否</h2>
+    <p style="font-size:15px;color:var(--muted-foreground);margin-top:var(--space-3)">
+      3泊のうち<b>事前予約が必要なのは8/10の草津だけ</b>。他の2泊は24時間営業の健康ランドで、飛び込みで入れる。
+      連休中に「予約なしで泊まれる宿」を2つ確保している構成そのものが保険になっている。</p>
+
+    <div class="table-wrap">
+      <table class="booking">
+        <thead><tr><th>日付</th><th>宿</th><th>予約</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>8/8（土）</td>
+            <td><b>信州健康ランド</b>（塩尻）</td>
+            <td class="free">不要</td>
+            <td>24時間営業。約3,080円、アプリ会員でさらに約500円引き。深夜0時をまたぐと深夜料金 約1,000円が加算されるので夕方のうちに入館</td>
+          </tr>
+          <tr>
+            <td>8/9（日）</td>
+            <td><b>ホテルゆだなか</b>（湯田中）</td>
+            <td class="free">不要</td>
+            <td>24時間営業の健康ランド併設。仮眠室 入館500円〜。疲れていれば当日フロントで客室に切替可。℡ 0269-33-5888</td>
+          </tr>
+          <tr>
+            <td>8/10（月）</td>
+            <td><b>草津温泉</b></td>
+            <td class="need">要予約</td>
+            <td><b>今日中に電話すること。</b>取れなければ現地で草津温泉旅館協同組合（℡ 0279-88-3722・窓口〜17:00）に紹介してもらう</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:var(--space-16)">出発前チェックリスト</h2>
+    <ul class="checklist">
+      <li><span class="cb"></span><span><b>8/7 夜に満タン給油</b>——これを忘れると初日から詰む</span></li>
+      <li><span class="cb"></span><span><b>志賀草津道路の通行状況</b>を8/10朝に確認</span></li>
+      <li><span class="cb"></span><span><b>国道8号 親不知</b>の通行状況（新潟県道路情報）</span></li>
+      <li><span class="cb"></span><span><b>天気予報の再確認</b>——8/7夜の予報が実用的な精度</span></li>
+      <li><span class="cb"></span><span>雨具（8月の山は午後の雷雨が常態）</span></li>
+      <li><span class="cb"></span><span><b>クマ鈴</b>（1,000〜2,000円）——降りて歩くときに付ける</span></li>
+      <li><span class="cb"></span><span><b>クマ撃退スプレー</b>（6,000〜12,000円）——切明・奥志賀林道に行くなら。高圧缶なので炎天下の収納に入れない</span></li>
+      <li><span class="cb"></span><span>食料とゴミを車体に残さない（匂いがクマを誘引する）</span></li>
+      <li><span class="cb"></span><span>フリースか薄手のダウン（高原の朝は10℃前後）</span></li>
+      <li><span class="cb"></span><span>現金——8/8〜8/9で約6,000円。宿と高速はカードで足りる</span></li>
+      <li><span class="cb"></span><span>8/10朝にコンビニATMで補充（給料日）</span></li>
+      <li><span class="cb"></span><span><b>8/9のホテルゆだなかは予約不要</b>——連休で他が満室でも飛び込める</span></li>
+      <li><span class="cb"></span><span><b>8/10の草津の宿を今日中に予約</b>——駐車場の有無と支払い方法も一緒に確認</span></li>
+      <li><span class="cb"></span><span>草津温泉旅館協同組合 <b>0279-88-3722</b> を連絡先に入れておく（当日の空室紹介・窓口〜17:00）</span></li>
+    </ul>
+
+    <div class="warn" style="margin-top:var(--space-12)">
+      <h3>この行程の原則</h3>
+      <p><b>高いところの景色は午前中にしか無い。</b>夏は空気に水蒸気が多く、遠景の山は10時を過ぎると白く霞む。Day1の8時発ビーナスライン、Day3の11時渋峠という順番は、そのために組んである。ここだけは崩さないこと。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>2026年8月6日時点の情報で作成。道路状況・営業時間・料金は変動するため、出発前に各公式サイトで確認すること。</p>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- タブ ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var maps = {};
+
+  // パネル id と地図 id の対応
+  var PANEL_TO_MAP = {d0:'map0', d1:'map1', d2:'map2', d3:'map3', d4:'map4'};
+
+  function show(id){
+    tabs.forEach(function(t){
+      var sel = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', sel ? 'true' : 'false');
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !sel;
+    });
+    // 非表示のコンテナでは Leaflet がサイズを算出できない。
+    // 表示に切り替わってから再計算し、範囲を取り直す。
+    var m = maps[PANEL_TO_MAP[id]];
+    if (m) {
+      requestAnimationFrame(function(){
+        m.map.invalidateSize();
+        m.map.fitBounds(m.bounds, {padding:[36,36]});
+      });
+    }
+  }
+
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(){ show(t.getAttribute('aria-controls')); });
+    t.addEventListener('keydown', function(e){
+      var i = tabs.indexOf(t), n = null;
+      if (e.key === 'ArrowRight') n = tabs[(i+1) % tabs.length];
+      if (e.key === 'ArrowLeft')  n = tabs[(i-1+tabs.length) % tabs.length];
+      if (n) { e.preventDefault(); n.focus(); show(n.getAttribute('aria-controls')); }
+    });
+  });
+
+  /* ---------- 地図 ---------- */
+  if (typeof L === 'undefined') {
+    Array.prototype.forEach.call(document.querySelectorAll('.map'), function(el){
+      el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;'
+        + 'padding:24px;text-align:center;font-size:15px;color:#5c6169">'
+        + '地図の読み込みにはインターネット接続が必要です。<br>行程表は下にそのまま表示されます。</div>';
+    });
+    return;
+  }
+
+  var DAYS = {
+    map1: [
+      {n:'1',  t:'stop', ll:[35.7528,139.7336], name:'東京（北区）', sub:'07:00発・前夜に満タン'},
+      {n:'油', t:'fuel', road:'exp', ll:[36.0500,138.1000], nav:'中央道 諏訪湖SA 下り', name:'諏訪湖SA', sub:'給油① 累計170km<br>中央道（高速）'},
+      {n:'2',  t:'stop', road:'gen', ll:[36.1031,138.1968], name:'車山高原', sub:'10:00 ビーナスライン<br>国道152号→県道40号'},
+      {n:'3',  t:'stop', road:'gen', ll:[36.2308,138.1402], name:'美ヶ原高原美術館', sub:'12:00 標高2,000m<br>県道194号'},
+      {n:'4',  t:'stop', road:'gen', ll:[36.2387,137.9689], name:'松本城', sub:'13:30 昼食<br>県道62号→国道254号'},
+      {n:'泊', t:'bed',  road:'gen', ll:[36.1708,137.9543], name:'信州健康ランド', sub:'16:00着・約3,080円<br>国道19号'}
+    ],
+    map2: [
+      {n:'油', t:'fuel', ll:[36.1708,137.9543], name:'塩尻発', sub:'給油② 07:30・満タンに'},
+      {n:'1',  t:'stop', road:'gen', ll:[36.6093,137.8514], name:'青木湖（仁科三湖）', sub:'09:30<br>国道19号→147号'},
+      {n:'2',  t:'stop', road:'gen', ll:[36.7078,137.8465], name:'白馬大橋', sub:'10:30 白馬三山<br>国道148号'},
+      {n:'3',  t:'stop', road:'gen', ll:[37.0435,137.8616], nav:'糸魚川 ヒスイ海岸', name:'糸魚川・ヒスイ海岸', sub:'12:00 昼食・翡翠拾い<br>国道148号（千国街道）'},
+      {n:'4',  t:'stop', road:'gen', ll:[36.9955,137.7033], name:'親不知', sub:'13:30 断崖絶壁<br>国道8号'},
+      {n:'油', t:'fuel', road:'gen', ll:[37.1481,138.2361], nav:'上越市 国道8号 ガソリンスタンド', name:'上越市内', sub:'給油③ 14:30・日曜休業に注意<br>国道8号'},
+      {n:'5',  t:'stop', road:'gen', ll:[36.8600,138.1900], nav:'苗名滝', name:'苗名滝', sub:'16:00 落差55m・省略可<br>国道18号（高速に振替可）'},
+      {n:'泊', t:'bed',  road:'gen', ll:[36.7428,138.4128], name:'ホテルゆだなか', sub:'17:30着・24時間健康ランド<br>国道18号→292号'}
+    ],
+    map3: [
+      {n:'油', t:'fuel', road:'gen', ll:[36.7428424,138.4127858], nav:'湯田中温泉', name:'湯田中発', sub:'給油④ 06:30・この先給油所なし'},
+      {n:'1',  t:'stop', road:'gen', ll:[37.0234175,138.6392522], name:'津南', sub:'07:45 最後のスタンド<br>国道117号'},
+      {n:'2',  t:'stop', road:'gen', ll:[36.865118,138.639552], name:'秋山郷・小赤沢', sub:'08:30 平家の落人伝説の秘境<br>国道405号'},
+      {n:'3',  t:'stop', road:'gen', ll:[36.8086357,138.6199429], name:'切明温泉', sub:'09:30 河原を掘る野湯<br>国道405号終点'},
+      {n:'4',  t:'stop', road:'gen', ll:[36.7659475,138.514592], name:'奥志賀高原', sub:'11:00 奥志賀林道経由<br>県道502号'},
+      {n:'5',  t:'stop', road:'gen', ll:[36.6691203,138.5186375], name:'横手山ドライブイン', sub:'12:30 日本一高いパン屋<br>国道292号'},
+      {n:'6',  t:'stop', road:'gen', ll:[36.66065,138.53522], name:'渋峠', sub:'13:00 国道最高地点 2,172m<br>国道292号'},
+      {n:'泊', t:'bed',  road:'gen', ll:[36.6229647,138.5967231], name:'草津温泉', sub:'14:30着・午後はまるごと湯<br>国道292号'}
+    ],
+    map4: [
+      {n:'油', t:'fuel', ll:[36.6230,138.5967], name:'草津発', sub:'給油⑤ 08:00・東京まで無給油'},
+      {n:'1',  t:'stop', road:'toll', ll:[36.4489,138.5397], nav:'鬼押出し園', name:'鬼押出し園', sub:'09:00 浅間山の溶岩原<br>鬼押ハイウェー（有料・二輪約300円）'},
+      {n:'2',  t:'stop', road:'gen', ll:[36.3575,138.6344], name:'旧軽井沢銀座', sub:'10:30 混雑注意<br>県道43号'},
+      {n:'3',  t:'stop', road:'gen', ll:[36.3581,138.6983], name:'めがね橋', sub:'12:00 旧碓氷峠184カーブ<br>国道18号旧道'},
+      {n:'4',  t:'stop', road:'gen', ll:[36.3320,138.6870], nav:'おぎのや 横川本店', name:'横川', sub:'13:00 峠の釜めし<br>国道18号旧道'},
+      {n:'5',  t:'stop', road:'exp', ll:[35.7528,139.7336], name:'東京', sub:'16:00着<br>上信越道→関越道（高速）'}
+    ]
+  };
+
+  var CLS = {stop:'pin-stop', fuel:'pin-fuel', bed:'pin-bed'};
+
+  Object.keys(DAYS).forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    var map = L.map(el, {scrollWheelZoom:false, attributionControl:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var pts = DAYS[id];
+    var latlngs = pts.map(function(p){ return p.ll; });
+
+    // 区間ごとに道路種別で描き分ける。
+    // 一般道＝太い実線（この旅の目的）、高速＝細い薄線（単なる移動）、有料＝破線。
+    var STYLE = {
+      gen:  {color:'#1e4d54', weight:4,   opacity:.85},
+      exp:  {color:'#8fa6ae', weight:3,   opacity:.9, dashArray:'2 7', lineCap:'round'},
+      toll: {color:'#a8471a', weight:3.5, opacity:.85, dashArray:'10 6'}
+    };
+    for (var i = 0; i < pts.length - 1; i++) {
+      var kind = pts[i+1].road || 'gen';
+      L.polyline([pts[i].ll, pts[i+1].ll], STYLE[kind]).addTo(map);
+    }
+
+    pts.forEach(function(p){
+      L.marker(p.ll, {
+        icon: L.divIcon({
+          className:'',
+          html:'<div class="pin ' + CLS[p.t] + '">' + p.n + '</div>',
+          iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-14]
+        })
+      }).addTo(map).bindPopup(
+        '<b>' + p.name + '</b><br>' + p.sub +
+        '<br><a class="popup-nav" target="_blank" rel="noopener" href="' +
+        'https://www.google.com/maps/dir/?api=1&destination=' +
+        encodeURIComponent(p.nav || (p.ll[0] + ',' + p.ll[1])) +
+        '&travelmode=driving">▸ Google マップでナビ</a>'
+      );
+    });
+
+    var bounds = L.latLngBounds(latlngs);
+    map.fitBounds(bounds, {padding:[36,36]});
+    maps[id] = {map:map, bounds:bounds};
+  });
+
+  // ---------- 全体マップ ----------
+  // 日ごとに色を変える。マップは情報表示なので、
+  // 4 色は「日を見分ける」という機能上の必要から使っている。
+  (function(){
+    var el = document.getElementById('map0');
+    if (!el) return;
+
+    var DAY_COLOR = {map1:'#1e4d54', map2:'#3f7d8c', map3:'#8a6a3f', map4:'#a8471a'};
+    var DAY_NUM   = {map1:'1', map2:'2', map3:'3', map4:'4'};
+
+    var map = L.map(el, {scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 同じ座標に複数の地点が重なる（前夜の宿＝翌日の出発地）。
+    // 座標でグループ化し、1 つのマーカーにまとめてから描く。
+    var all = [], groups = {}, order = [];
+
+    ['map1','map2','map3','map4'].forEach(function(k){
+      var pts = DAYS[k];
+      if (!pts) return;
+      var lls = pts.map(function(p){ return p.ll; });
+      all = all.concat(lls);
+      L.polyline(lls, {color:DAY_COLOR[k], weight:4, opacity:.8}).addTo(map);
+
+      pts.forEach(function(p, idx){
+        var key = p.ll[0].toFixed(4) + ',' + p.ll[1].toFixed(4);
+        if (!groups[key]) {
+          groups[key] = {ll:p.ll, nav:p.nav, entries:[], kind:'dot', day:k};
+          order.push(key);
+        }
+        var g = groups[key];
+        g.entries.push('<b>Day ' + DAY_NUM[k] + '</b> — ' + p.name + '<br>' + p.sub);
+        if (!g.nav && p.nav) g.nav = p.nav;
+
+        // アイコンの優先度：各日の起点 > 宿泊 > 給油 > 立ち寄り
+        var rank = {dot:0, fuel:1, bed:2, start:3};
+        var mine = idx === 0 ? 'start' : (p.t === 'fuel' ? 'fuel' : (p.t === 'bed' ? 'bed' : 'dot'));
+        if (rank[mine] > rank[g.kind]) { g.kind = mine; g.day = k; }
+        if (mine === 'start') g.startDay = DAY_NUM[k];
+      });
+    });
+
+    order.forEach(function(key){
+      var g = groups[key];
+      var col = DAY_COLOR[g.day];
+      var popup = g.entries.join('<hr style="border:none;border-top:1px solid #ddd;margin:6px 0">') +
+        '<br><a class="popup-nav" target="_blank" rel="noopener" href="' +
+        'https://www.google.com/maps/dir/?api=1&destination=' +
+        encodeURIComponent(g.nav || (g.ll[0] + ',' + g.ll[1])) +
+        '&travelmode=driving">▸ Google マップでナビ</a>';
+
+      if (g.kind === 'start') {
+        L.marker(g.ll, {
+          icon: L.divIcon({className:'',
+            html:'<div class="pin" style="background:' + col + '">' + g.startDay + '</div>',
+            iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-15]}),
+          zIndexOffset: 1000
+        }).addTo(map).bindPopup(popup);
+      } else if (g.kind === 'fuel' || g.kind === 'bed') {
+        L.marker(g.ll, {
+          icon: L.divIcon({className:'',
+            html:'<div class="pin pin-sm" style="background:' + col + '">' +
+                 (g.kind === 'fuel' ? '油' : '泊') + '</div>',
+            iconSize:[20,20], iconAnchor:[10,10], popupAnchor:[0,-12]}),
+          zIndexOffset: 500
+        }).addTo(map).bindPopup(popup);
+      } else {
+        L.circleMarker(g.ll, {radius:5, color:'#ffffff', weight:2,
+          fillColor:col, fillOpacity:1}).addTo(map).bindPopup(popup);
+      }
+    });
+
+    var b = L.latLngBounds(all);
+    map.fitBounds(b, {padding:[30,30]});
+    maps['map0'] = {map:map, bounds:b};
+  })();
+
+  show('d0');
+})();
+</script>
+</body>
+</html>
