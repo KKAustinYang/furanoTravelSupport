@@ -449,7 +449,7 @@ const CLIP_SECONDS = 0;      // 各クリップを頭から何秒使うか。0 �
 // 空のままなら従来どおり 6 本を順に再生する（結合なしでも成立する設計を維持）。
 //   例: https://video-concat-xxxxxxxx-an.a.run.app
 // 動作確認用に ?concat=<URL> でも上書きできる。
-const CONCAT_API_DEFAULT = '';
+const CONCAT_API_DEFAULT = 'https://video-concat-bivydj2efa-an.a.run.app';
 const CONCAT_API = (new URLSearchParams(location.search).get('concat') || CONCAT_API_DEFAULT).trim().replace(/\/+$/, '');
 
 // カメラワークは全カット共通。
