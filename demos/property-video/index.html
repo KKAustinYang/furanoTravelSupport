@@ -3,524 +3,311 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>物件写真 → 内見動画 自動生成デモ | Aurora Mobile</title>
-<meta name="description" content="掲載中の物件写真をアップロードするだけで、AIが部屋ごとにカメラワークを付けた内見動画を自動生成します。撮影も編集も不要です。" />
+<title>物件写真から内見動画をつくる｜KINAKO</title>
+<meta name="description" content="掲載中の物件写真をアップロードすると、1枚ずつ動画にして、アップロード順に1本の内見動画へまとめます。" />
 <link rel="icon" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================================
-   物件写真 → 内見動画 自動生成デモ
-   デザイン方針: 白ベース ＋ ダークタイルの交互配置 / 単一アクセント色 / 余白多め
-   画像素材はゼロ。ヒーローの内見プレビューも全て CSS で描いている。
+   KINAKO ／ 物件写真 → 内見動画
+   演出は置かず、実際に動くもの（生成ツール）と、確認できる事実だけを載せる。
+   配色は社名から取った淡い黄粉色。ブランド指定があれば --primary 系を差し替える。
    ========================================================================== */
 :root{
-  /* --- 明タイル --- */
-  --background:#ffffff;
-  --parchment:#f5f7f8;
-  --foreground:#101416;
-  --muted-foreground:#556065;
-  --primary:#0f7a6f;
-  --primary-hover:#0c6a60;
-  --border:#e3e8ea;
-
-  /* --- 暗タイル --- */
-  --dark:#0f1618;
-  --dark-deep:#0a1012;
-  --on-dark:#ffffff;
-  --on-dark-muted:#adbbbe;
-  --primary-on-dark:#6fdcc9;
-  --border-on-dark:#222e31;
-
-  --amber:#b5761c;
-  --danger:#b4453f;
+  --bg:#fbfaf7;
+  --surface:#ffffff;
+  --tint:#f4efe5;          /* きなこ色の淡い面 */
+  --ink:#1a1815;
+  --ink-muted:#6b665c;
+  --line:#e7e1d6;
+  --line-strong:#d6cec0;
+  --primary:#7a5c34;       /* 濃いきなこ。白地でのコントラスト確保用 */
+  --primary-hover:#654a29;
+  --danger:#a4443c;
 
   --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
-  --space-8:32px; --space-12:48px; --space-16:64px; --space-24:96px; --space-32:128px;
-  --space-section:var(--space-32);
+  --space-8:32px; --space-12:48px; --space-16:64px; --space-24:96px;
+  --space-section:var(--space-24);
 
-  --radius-sm:8px; --radius-md:14px; --radius-lg:20px; --radius-xl:28px;
-  --shadow-hero:0 30px 80px rgba(4,10,12,.45);
-  --shadow-card:0 1px 2px rgba(16,20,22,.05);
-  --shadow-lift:0 12px 40px rgba(16,20,22,.10);
+  --radius-sm:8px; --radius-md:12px; --radius-lg:18px;
+  --shadow-card:0 1px 2px rgba(26,24,21,.05);
+  --shadow-lift:0 10px 34px rgba(26,24,21,.09);
 
   --ease-out:cubic-bezier(.16,1,.3,1);
   --dur-fast:150ms; --dur-base:260ms; --dur-slow:520ms;
-  --cut-dur:4200ms;
 
   --font-sans:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
-  --measure:33em; --container:1160px;
+  --font-serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --measure:34em; --container:1000px;
 }
 @media (max-width:820px){ :root{ --space-section:var(--space-16); } }
 
-/* ---------- リセット + 日本語ベースレイヤー ---------- */
 *,*::before,*::after{box-sizing:border-box}
 *{margin:0}
 html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
-body{
-  font-family:var(--font-sans); font-size:16px; line-height:1.8; letter-spacing:.02em;
-  color:var(--foreground); background:var(--background);
-  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-}
-h1,h2,h3,h4{line-height:1.42; letter-spacing:.01em; font-feature-settings:"palt" 1;
+body{font-family:var(--font-sans); font-size:16px; line-height:1.85; letter-spacing:.02em;
+  color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased}
+h1,h2,h3{line-height:1.45; letter-spacing:.01em; font-feature-settings:"palt" 1;
   text-wrap:balance; word-break:auto-phrase; font-weight:700}
-:where(p,li,h1,h2,h3,h4,dd,dt){line-break:strict; overflow-wrap:break-word}
-p{max-width:var(--measure); text-wrap:pretty; word-break:auto-phrase}
+h1,h2{font-family:var(--font-serif); font-weight:600; letter-spacing:.02em; line-height:1.55}
+:where(p,li,dd,dt){line-break:strict; overflow-wrap:break-word}
+p{max-width:var(--measure); text-wrap:pretty}
 img,svg,video{display:block; max-width:100%}
-a{color:inherit; text-underline-offset:.2em; text-decoration-thickness:1px}
 button,select,input{font:inherit}
+a{color:inherit}
 :focus-visible{outline:2px solid var(--primary); outline-offset:3px; border-radius:6px}
-.num{font-family:"Inter",sans-serif; font-variant-numeric:tabular-nums; letter-spacing:0}
-.pc-br{display:none} @media(min-width:820px){.pc-br{display:inline}}
 .hide{display:none!important}
+.num{font-variant-numeric:tabular-nums; letter-spacing:0}
 
-/* ---------- レイアウト ---------- */
 .container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--space-6)}
 section{padding-block:var(--space-section)}
-.tile-dark{background:var(--dark); color:var(--on-dark)}
-.tile-dark h2,.tile-dark h3{color:var(--on-dark)}
-.tile-parchment{background:var(--parchment)}
-.grid{display:grid; gap:var(--space-6)}
-@media(min-width:820px){
-  .grid-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
+.eyebrow{font-size:12.5px; font-weight:600; letter-spacing:.16em; color:var(--primary)}
+.lead{font-size:17px; color:var(--ink-muted); line-height:1.95}
+.small{font-size:14.5px; color:var(--ink-muted)}
 
-.eyebrow{font-size:13px; font-weight:600; letter-spacing:.16em; color:var(--primary)}
-.tile-dark .eyebrow,.hero .eyebrow,.cta .eyebrow{color:var(--primary-on-dark)}
-.display{font-size:clamp(29px,4.3vw,54px); line-height:1.3; letter-spacing:.005em}
-.h2{font-size:clamp(24px,3.2vw,38px)}
-.h3{font-size:19px}
-.lead{font-size:clamp(16px,1.5vw,18.5px); color:var(--muted-foreground); line-height:1.95}
-.tile-dark .lead,.hero .lead,.cta .lead{color:var(--on-dark-muted)}
-.small{font-size:15px; color:var(--muted-foreground); line-height:1.85}
-.tile-dark .small,.hero .small,.cta .small{color:var(--on-dark-muted)}
-.note-text{font-size:13px; color:var(--muted-foreground); line-height:1.8}
-
-.card{background:#fff; border:1px solid var(--border); border-radius:var(--radius-lg);
-  padding:var(--space-8); box-shadow:var(--shadow-card)}
-
-.btn{display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  min-height:52px; padding:0 var(--space-8); border-radius:999px;
-  border:1px solid transparent; font-weight:600; font-size:15px; letter-spacing:.03em;
-  line-height:1; text-decoration:none; cursor:pointer; white-space:nowrap;
-  transition:transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out),
-             background-color var(--dur-fast) var(--ease-out)}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  min-height:50px; padding:0 var(--space-8); border-radius:999px; border:1px solid transparent;
+  font-weight:600; font-size:15px; letter-spacing:.03em; line-height:1; text-decoration:none;
+  cursor:pointer; white-space:nowrap;
+  transition:transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out)}
 .btn:hover:not(:disabled){transform:translateY(-1px)}
-.btn:disabled{opacity:.38; cursor:not-allowed}
+.btn:disabled{opacity:.4; cursor:not-allowed}
 .btn-primary{background:var(--primary); color:#fff}
 .btn-primary:hover:not(:disabled){background:var(--primary-hover)}
-.btn-quiet{background:#fff; color:var(--foreground); border-color:var(--border); box-shadow:var(--shadow-card)}
-.btn-quiet:hover:not(:disabled){background:var(--parchment)}
-.btn-onDark{background:rgba(255,255,255,.10); color:#fff; border-color:rgba(255,255,255,.22)}
-.btn-onDark:hover:not(:disabled){background:rgba(255,255,255,.17)}
+.btn-quiet{background:var(--surface); color:var(--ink); border-color:var(--line-strong); box-shadow:var(--shadow-card)}
+.btn-quiet:hover:not(:disabled){background:var(--tint)}
 .btn-sm{min-height:44px; padding:0 var(--space-6); font-size:14px}
-.btn-xs{min-height:38px; padding:0 18px; font-size:13px}
+.btn-xs{min-height:38px; padding:0 17px; font-size:13px}
 
-.reveal{opacity:0; transform:translateY(20px);
+.reveal{opacity:0; transform:translateY(14px);
   transition:opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out)}
 .reveal.is-in{opacity:1; transform:none}
 
-/* ---------- グローバルナビ ---------- */
-.nav{position:sticky; top:0; z-index:80; background:rgba(10,16,18,.90);
-  backdrop-filter:blur(16px) saturate(1.4); border-bottom:1px solid rgba(255,255,255,.08)}
-.nav-in{display:flex; align-items:center; justify-content:space-between; height:60px; gap:var(--space-4)}
-.brand{display:inline-flex; align-items:center; gap:10px; color:#fff; font-weight:600; font-size:15px;
-  letter-spacing:.02em; text-decoration:none; min-height:44px}
-.brand .dot{width:9px; height:9px; border-radius:50%;
-  background:linear-gradient(120deg,var(--primary-on-dark),#5aa9ff); flex:0 0 auto}
-.nav-right{display:flex; align-items:center; gap:var(--space-4)}
-.nav-back{display:none; font-size:13.5px; color:#9fadb1; text-decoration:none; min-height:44px; align-items:center}
-.nav-back:hover{color:#fff}
-@media(min-width:600px){ .nav-back{display:inline-flex} }
+/* ---------- ヘッダー ---------- */
+.nav{position:sticky; top:0; z-index:40; background:rgba(251,250,247,.88);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+.nav-in{display:flex; align-items:center; justify-content:space-between; height:64px; gap:var(--space-4)}
+.brand{display:inline-flex; align-items:baseline; gap:11px; text-decoration:none; min-width:0}
+.brand .mark{font-weight:700; font-size:19px; letter-spacing:.22em}
+.brand .sub{font-size:12.5px; color:var(--ink-muted); letter-spacing:.08em; white-space:nowrap}
+@media(max-width:560px){ .brand .sub{display:none} }
+.nav .by{font-size:12.5px; color:var(--ink-muted); white-space:nowrap}
 
-/* ==========================================================================
-   ヒーロー: 内見動画プレビュー（画像素材ゼロ・全て CSS 描画）
-   ========================================================================== */
-.hero{background:var(--dark-deep); color:var(--on-dark); position:relative; overflow:hidden;
-  padding-top:var(--space-16); padding-bottom:var(--space-24)}
-.hero::before{content:""; position:absolute; top:-18%; left:50%; width:120%; max-width:1600px;
-  height:min(70%,760px); transform:translateX(-50%);
-  background:radial-gradient(52% 50% at 50% 50%, rgba(15,122,111,.28), transparent 72%);
-  pointer-events:none}
-@media(max-width:820px){
-  .hero::before{width:150%; height:min(46%,420px); top:-8%;
-    background:radial-gradient(50% 50% at 50% 40%, rgba(15,122,111,.22), transparent 72%)}
-}
-.hero-in{position:relative; z-index:1; text-align:center}
-.hero h1{margin-top:var(--space-4)}
-.hero .lead{margin:var(--space-6) auto 0; max-width:31em; text-wrap:balance; line-height:1.85}
-.hero-cta{display:flex; gap:var(--space-3); justify-content:center; flex-wrap:wrap; margin-top:var(--space-8)}
+/* ---------- 導入 ---------- */
+.intro{padding-block:var(--space-24) var(--space-16)}
+.intro .eyebrow{display:inline-flex; align-items:center; gap:10px}
+.intro .eyebrow::before{content:""; width:26px; height:1px; background:var(--primary); opacity:.55}
+.intro h1{font-size:clamp(28px,4vw,44px); margin-top:var(--space-4)}
+.intro .lead{margin-top:var(--space-6); max-width:30em}
+.intro-cta{margin-top:var(--space-8)}
+.facts{display:grid; gap:var(--space-6); margin-top:var(--space-16);
+  border-top:1px solid var(--line); padding-top:var(--space-6)}
+@media(min-width:700px){ .facts{grid-template-columns:repeat(3,1fr); gap:0} }
+.fact{padding-right:var(--space-6)}
+@media(min-width:700px){ .fact + .fact{border-left:1px solid var(--line); padding-left:var(--space-8)} }
+.fact dt{font-size:12px; color:var(--ink-muted); letter-spacing:.1em}
+.fact dd{font-size:19px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums;
+  font-family:var(--font-serif)}
+.fact dd small{font-size:12.5px; font-weight:400; color:var(--ink-muted); margin-left:6px;
+  font-family:var(--font-sans)}
 
-/* --- プレビュープレイヤー --- */
-.player-mock{margin:var(--space-12) auto 0; max-width:940px; border-radius:var(--radius-xl);
-  overflow:hidden; box-shadow:var(--shadow-hero); border:1px solid rgba(255,255,255,.10); background:#0c1315}
-.pm-bar{display:flex; align-items:center; gap:8px; padding:11px 16px;
-  background:rgba(255,255,255,.045); border-bottom:1px solid rgba(255,255,255,.07)}
-.pdot{width:8px; height:8px; border-radius:99px; background:rgba(255,255,255,.20)}
-.pm-title{margin-left:6px; font-size:13px; color:#9fadb1; letter-spacing:.04em; white-space:nowrap}
-.pt-detail{display:none}
-@media(min-width:600px){ .pt-detail{display:inline} }
-.pm-live{margin-left:auto; display:flex; align-items:center; gap:7px; font-size:13px; color:#8b989c}
-.pm-live i{width:6px; height:6px; border-radius:99px; background:#4ade80; display:block}
-
-.stage{position:relative; aspect-ratio:16/9; background:#05090a; overflow:hidden}
-.cut{position:absolute; inset:0; opacity:0; transition:opacity 700ms var(--ease-out)}
-.cut.is-on{opacity:1}
-.cut-img{position:absolute; inset:-6%}   /* カメラワークの余白 */
-
-/* 部屋そのものを CSS で描く */
-.rm{position:absolute; inset:0; filter:saturate(1.06)}
-.rm::after{content:""; position:absolute; inset:0; pointer-events:none;
-  background:radial-gradient(82% 82% at 50% 42%, transparent 44%, rgba(2,6,7,.40) 100%)}
-.rm-floor{position:absolute; left:0; right:0; bottom:0; height:34%}
-.rm-win{position:absolute; border-radius:4px; filter:blur(1.2px)}
-.rm-obj{position:absolute; border-radius:10px; filter:blur(.6px)}
-.rm-grain{position:absolute; inset:0; opacity:.5;
-  background:linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px) 0 0/120px 100%,
-             linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px) 0 0/100% 96px}
-
-/* 01 玄関 — 縦長・木質・奥へ進入 */
-.c1 .rm{background:linear-gradient(168deg,#7d6d5d 0%,#4c433a 52%,#2a2520 100%)}
-.c1 .rm-floor{background:linear-gradient(180deg,#5a4d40,#332c25)}
-.c1 .rm-win{left:41%; top:8%; width:18%; height:62%;
-  background:linear-gradient(160deg,rgba(255,246,232,.92),rgba(255,232,200,.35));
-  box-shadow:0 0 90px 30px rgba(255,236,206,.28)}
-.c1 .rm-obj{left:8%; top:22%; width:16%; height:52%; background:rgba(255,255,255,.11)}
-.c1 .rm-obj.b{left:76%; top:26%; width:15%; height:46%; background:rgba(255,255,255,.05)}
-.c1 .rm::before{content:""; position:absolute; left:38%; top:4%; width:24%; height:70%;
-  border:2px solid rgba(255,240,220,.26); border-bottom:none; border-radius:3px 3px 0 0}
-
-/* 02 LDK — 明るい・横に広い */
-.c2 .rm{background:linear-gradient(158deg,#6f7d80 0%,#3d4a4d 52%,#232c2e 100%)}
-.c2 .rm-floor{background:linear-gradient(180deg,#4e4335,#332c22)}
-.c2 .rm-win{left:6%; top:10%; width:34%; height:52%;
-  background:linear-gradient(150deg,rgba(255,251,242,.95),rgba(226,244,240,.45));
-  box-shadow:0 0 120px 44px rgba(240,250,247,.30)}
-.c2 .rm-obj{left:14%; bottom:16%; width:40%; height:14%; background:rgba(255,255,255,.20)}
-.c2 .rm-obj.b{left:60%; bottom:18%; width:22%; height:9%; background:rgba(255,255,255,.13)}
-.c2 .rm-obj.c{left:63%; top:16%; width:26%; height:34%; background:rgba(255,255,255,.06)}
-
-/* 03 キッチン — 寒色・金属・寄る */
-.c3 .rm{background:linear-gradient(172deg,#7d8a8c 0%,#4b5658 50%,#262d2e 100%)}
-.c3 .rm-floor{background:linear-gradient(180deg,#3b4244,#22262a)}
-.c3 .rm-win{right:7%; top:12%; width:22%; height:40%;
-  background:linear-gradient(150deg,rgba(246,252,251,.9),rgba(214,238,232,.4));
-  box-shadow:0 0 90px 30px rgba(226,246,240,.24)}
-.c3 .rm-obj{left:9%; top:44%; width:56%; height:11%; background:rgba(255,255,255,.30)}
-.c3 .rm-obj.b{left:9%; top:14%; width:44%; height:16%; background:rgba(255,255,255,.10)}
-.c3 .rm-obj.c{left:20%; top:57%; width:12%; height:6%; background:rgba(255,255,255,.16)}
-
-/* 04 洋室 — やわらかい採光・上へチルト */
-.c4 .rm{background:linear-gradient(178deg,#8e9ba0 0%,#525d61 46%,#2a3033 100%)}
-.c4 .rm-floor{background:linear-gradient(180deg,#4a4234,#2c2820)}
-.c4 .rm-win{left:56%; top:6%; width:32%; height:56%;
-  background:linear-gradient(155deg,rgba(255,253,248,.97),rgba(232,248,244,.5));
-  box-shadow:0 0 140px 50px rgba(245,252,250,.34)}
-.c4 .rm-obj{left:8%; bottom:14%; width:34%; height:16%; background:rgba(255,255,255,.18)}
-.c4 .rm-obj.b{left:10%; top:24%; width:22%; height:26%; background:rgba(255,255,255,.07)}
-
-/* 05 バルコニー — 空・引き */
-.c5 .rm{background:linear-gradient(180deg,#b7d8dd 0%,#7ba8b0 42%,#3c5257 78%,#222d30 100%)}
-.c5 .rm-floor{height:26%; background:linear-gradient(180deg,#4a5457,#2a3134)}
-.c5 .rm-obj{left:0; right:0; bottom:26%; height:3%; background:rgba(255,255,255,.28); border-radius:0}
-.c5 .rm-obj.b{left:6%; bottom:29%; width:88%; height:16%;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 2px,transparent 2px 26px)}
-.c5 .rm-win{display:none}
-
-/* カメラワーク（transform と opacity のみ） */
-@keyframes cam-dolly{ from{transform:scale(1.02)} to{transform:scale(1.20)} }
-@keyframes cam-pan  { from{transform:scale(1.16) translateX(3.5%)} to{transform:scale(1.16) translateX(-3.5%)} }
-@keyframes cam-push { from{transform:scale(1.03)} to{transform:scale(1.22) translateY(2%)} }
-@keyframes cam-tilt { from{transform:scale(1.14) translateY(3%)} to{transform:scale(1.14) translateY(-3.5%)} }
-@keyframes cam-pull { from{transform:scale(1.24)} to{transform:scale(1.02)} }
-.cut.is-on.c1 .cut-img{animation:cam-dolly var(--cut-dur) linear forwards}
-.cut.is-on.c2 .cut-img{animation:cam-pan   var(--cut-dur) linear forwards}
-.cut.is-on.c3 .cut-img{animation:cam-push  var(--cut-dur) linear forwards}
-.cut.is-on.c4 .cut-img{animation:cam-tilt  var(--cut-dur) linear forwards}
-.cut.is-on.c5 .cut-img{animation:cam-pull  var(--cut-dur) linear forwards}
-
-.stage-scrim{position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(to top, rgba(3,7,8,.90) 0%, rgba(3,7,8,.55) 22%, rgba(3,7,8,.10) 46%, transparent 66%)}
-.stage-meta{position:absolute; left:0; right:0; bottom:0; padding:22px 24px; z-index:2}
-.stage-row{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap}
-.stage-room{font-size:clamp(17px,2vw,22px); font-weight:700; letter-spacing:.02em; color:#fff}
-.stage-move{font-size:13px; color:#cbd8da; margin-top:2px}
-.stage-tags{display:flex; gap:8px; flex-wrap:wrap}
-.tag{font-size:12px; letter-spacing:.03em; padding:5px 11px; border-radius:999px;
-  background:rgba(255,255,255,.14); color:#fff; backdrop-filter:blur(8px)}
-.tag.brand{background:rgba(111,220,201,.20); color:#d6f6ee}
-
-.segs{display:flex; gap:5px; margin-bottom:16px}
-.segbar{flex:1; height:3px; border-radius:99px; background:rgba(255,255,255,.20); overflow:hidden}
-.segbar i{display:block; height:100%; width:0; background:#fff; border-radius:99px}
-.segbar.done i{width:100%}
-.segbar.on i{animation:segfill var(--cut-dur) linear forwards}
-@keyframes segfill{ from{width:0} to{width:100%} }
-@media(max-width:640px){
-  .stage-meta{padding:14px 14px 12px}
-  .segs{margin-bottom:10px}
-  .stage-room{font-size:16px}
-  .stage-move{font-size:12.5px}
-  .tag{font-size:11.5px; padding:4px 9px}
-  .t-wide{display:none}
-  .stage-row{align-items:center}
-}
-.pm-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-  padding:14px 20px; background:rgba(255,255,255,.035); border-top:1px solid rgba(255,255,255,.07);
-  font-size:13.5px; color:#9fadb1}
-.pm-foot b{color:#dae4e6; font-weight:600}
-.pm-cap{margin:var(--space-4) auto 0; font-size:12.5px; color:#7c8b8f; text-align:center; max-width:44em}
-
-/* ==========================================================================
-   デモ本体（STEP 1 - 3）
-   ========================================================================== */
+/* ---------- ツール ---------- */
 .step-head{display:flex; align-items:baseline; gap:var(--space-4); flex-wrap:wrap;
-  padding-bottom:var(--space-4); border-bottom:1px solid var(--border); margin-bottom:var(--space-8)}
-.step-no{font-family:"Inter",sans-serif; font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--primary)}
-.step-head h3{font-size:21px}
-.step-head .sub{font-size:13.5px; color:var(--muted-foreground)}
-.step-block + .step-block{margin-top:var(--space-24)}
+  padding-bottom:var(--space-4); border-bottom:1px solid var(--line); margin-bottom:var(--space-8)}
+.step-no{font-size:11.5px; font-weight:600; letter-spacing:.14em; color:var(--primary);
+  border:1px solid var(--line-strong); border-radius:999px; padding:4px 11px; line-height:1;
+  align-self:center; white-space:nowrap}
+.step-head h3{font-size:19px; font-family:var(--font-serif); font-weight:600}
+.step-head .sub{font-size:13.5px; color:var(--ink-muted)}
+.step-block + .step-block{margin-top:var(--space-16)}
 
-/* ドロップゾーン */
-.drop{border:1.5px dashed #cdd6d8; border-radius:var(--radius-lg); padding:var(--space-16) var(--space-8);
-  text-align:center; cursor:pointer; background:var(--parchment);
-  transition:border-color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out),
-             transform var(--dur-base) var(--ease-out)}
-.drop:hover,.drop.over{border-color:var(--primary); background:rgba(15,122,111,.05); transform:translateY(-1px)}
-.drop .ic{width:46px; height:46px; margin:0 auto var(--space-4); border-radius:50%;
-  display:grid; place-items:center; background:#fff; border:1px solid var(--border); color:var(--primary);
-  box-shadow:var(--shadow-card)}
-.drop b{display:block; font-size:17px; font-weight:700; color:var(--foreground); margin-bottom:6px}
-.drop span{font-size:13.5px; color:var(--muted-foreground)}
+.drop{border:1.5px dashed var(--line-strong); border-radius:var(--radius-lg);
+  padding:var(--space-12) var(--space-8); text-align:center; cursor:pointer; background:var(--tint);
+  transition:border-color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out)}
+.drop:hover,.drop.over{border-color:var(--primary); background:#efe7d8}
+.drop .ic{width:42px; height:42px; margin:0 auto var(--space-3); border-radius:50%;
+  display:grid; place-items:center; background:var(--surface); border:1px solid var(--line); color:var(--primary)}
+.drop b{display:block; font-size:16px; font-weight:700; margin-bottom:5px}
+.drop span{font-size:13.5px; color:var(--ink-muted)}
 
-/* 写真スロット */
-.grid-slots{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:var(--space-4);
-  margin-top:var(--space-6)}
-.slot{background:#fff; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;
-  box-shadow:var(--shadow-card); transition:box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)}
+.grid-slots{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:var(--space-4); margin-top:var(--space-6)}
+.slot{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
+  overflow:hidden; box-shadow:var(--shadow-card);
+  transition:box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out)}
 .slot:hover{box-shadow:var(--shadow-lift); transform:translateY(-2px)}
-.slot .thumb{aspect-ratio:16/10; background:var(--parchment); position:relative; overflow:hidden}
+.slot .thumb{aspect-ratio:16/10; background:var(--tint); position:relative; overflow:hidden}
 .slot .thumb img,.slot .thumb video{width:100%; height:100%; object-fit:cover}
-.slot .thumb .idx{position:absolute; left:9px; top:9px; z-index:2; font-family:"Inter",sans-serif;
-  font-size:11px; font-weight:700; letter-spacing:.08em; color:#fff; padding:3px 8px; border-radius:999px;
-  background:rgba(10,16,18,.55); backdrop-filter:blur(6px)}
-.slot .bar{height:3px; background:#eef2f3}
+.slot .cut{font-size:11.5px; font-weight:600; letter-spacing:.12em; color:var(--ink-muted)}
+.slot .bar{height:3px; background:var(--tint)}
 .slot .bar i{display:block; height:100%; width:0; background:var(--primary); transition:width .4s var(--ease-out)}
-.slot .meta{padding:11px 13px; display:flex; align-items:center; justify-content:space-between; gap:8px}
-.slot select{background:#fff; border:1px solid var(--border); color:var(--foreground); font-size:13px;
-  border-radius:8px; padding:6px 8px; max-width:106px; cursor:pointer}
+.slot .meta{padding:11px 14px 13px; display:flex; align-items:center; justify-content:space-between; gap:10px}
 .badge{font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; white-space:nowrap}
-.b-idle{background:var(--parchment); color:var(--muted-foreground)}
-.b-run{background:rgba(15,122,111,.10); color:var(--primary)}
-.b-ok{background:rgba(15,122,111,.14); color:var(--primary)}
-.b-ng{background:rgba(180,69,63,.10); color:var(--danger)}
+.b-idle{background:var(--tint); color:var(--ink-muted)}
+.b-run{background:rgba(122,92,52,.10); color:var(--primary)}
+.b-ok{background:rgba(122,92,52,.16); color:var(--primary)}
+.b-ng{background:rgba(164,68,60,.10); color:var(--danger)}
+
+/* API キー設定 */
+.keybox{border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface);
+  padding:var(--space-6); box-shadow:var(--shadow-card)}
+.key-label{display:block; font-size:12.5px; color:var(--ink-muted); letter-spacing:.06em;
+  margin-bottom:var(--space-3)}
+.key-row{display:flex; gap:var(--space-3); flex-wrap:wrap}
+.key-row input{flex:1 1 280px; min-width:0; height:44px; padding:0 15px; border-radius:999px;
+  border:1px solid var(--line-strong); background:var(--bg); color:var(--ink);
+  font-size:14px; letter-spacing:.04em; transition:border-color var(--dur-fast) var(--ease-out)}
+.key-row input:focus{outline:none; border-color:var(--primary)}
+.key-note{font-size:12.5px; color:var(--ink-muted); line-height:1.8; margin-top:var(--space-4); max-width:46em}
+.keybox-set{display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap}
+.key-state{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--primary)}
+.key-state i{width:7px; height:7px; border-radius:50%; background:var(--primary); display:block}
+.key-mask{font-size:13.5px; color:var(--ink-muted); letter-spacing:.08em}
 
 .row{display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); margin-top:var(--space-8)}
-.hint{font-size:13.5px; color:var(--muted-foreground)}
-.err{border:1px solid rgba(180,69,63,.28); background:rgba(180,69,63,.05); color:var(--danger);
-  border-radius:var(--radius-md); padding:14px 18px; font-size:14px; margin-top:var(--space-4); display:none}
+.hint{font-size:13.5px; color:var(--ink-muted)}
+.err{border:1px solid rgba(164,68,60,.28); background:rgba(164,68,60,.05); color:var(--danger);
+  border-radius:var(--radius-md); padding:13px 18px; font-size:14px; margin-top:var(--space-4); display:none}
 
-/* 進捗の数値 */
-.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:var(--space-4)}
-.stat{background:#fff; border:1px solid var(--border); border-radius:var(--radius-md); padding:var(--space-6);
-  box-shadow:var(--shadow-card)}
-.stat .k{font-size:12.5px; color:var(--muted-foreground); letter-spacing:.06em}
-.stat .v{font-family:"Inter",sans-serif; font-size:30px; font-weight:700; color:var(--foreground);
-  letter-spacing:0; line-height:1.3; margin-top:4px; font-variant-numeric:tabular-nums}
-.stat .v small{font-size:14px; font-weight:500; color:var(--muted-foreground); margin-left:5px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:var(--space-4)}
+.stat{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:var(--space-6); box-shadow:var(--shadow-card)}
+.stat .k{font-size:12.5px; color:var(--ink-muted); letter-spacing:.06em}
+.stat .v{font-size:29px; font-weight:600; line-height:1.3; margin-top:6px;
+  font-variant-numeric:tabular-nums; font-family:var(--font-serif)}
+.stat .v small{font-size:14px; font-weight:500; color:var(--ink-muted); margin-left:5px}
 .stat.acc .v{color:var(--primary)}
 
-/* 完成プレイヤー */
-.player{border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border);
-  box-shadow:var(--shadow-lift); background:#000}
-.player video{width:100%; aspect-ratio:16/9; background:#000}
-.pbar{display:flex; align-items:center; gap:var(--space-3); padding:14px 18px; background:#fff;
-  border-top:1px solid var(--border); flex-wrap:wrap}
+.player{border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--line);
+  box-shadow:var(--shadow-lift); background:#0f0e0c}
+.player video{width:100%; aspect-ratio:16/9; background:#0f0e0c}
+.pbar{display:flex; align-items:center; gap:var(--space-3); padding:13px 16px;
+  background:var(--surface); border-top:1px solid var(--line); flex-wrap:wrap}
 .seg{display:flex; gap:5px; flex:1; min-width:130px}
-.seg i{flex:1; height:4px; border-radius:99px; background:#e6ebec; transition:background var(--dur-base)}
-.seg i.done{background:rgba(15,122,111,.45)}
+.seg i{flex:1; height:4px; border-radius:99px; background:var(--tint)}
+.seg i.done{background:rgba(122,92,52,.4)}
 .seg i.cur{background:var(--primary)}
-.chip{font-size:12.5px; color:var(--muted-foreground); background:var(--parchment);
-  border:1px solid var(--border); border-radius:999px; padding:5px 12px; white-space:nowrap}
-.speed{display:inline-flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; background:#fff}
-.speed button{border:0; background:transparent; color:var(--muted-foreground); font-size:12.5px;
-  padding:7px 14px; cursor:pointer; transition:background var(--dur-fast), color var(--dur-fast)}
+.chip{font-size:12.5px; color:var(--ink-muted); background:var(--tint); border:1px solid var(--line);
+  border-radius:999px; padding:5px 12px; white-space:nowrap}
+.speed{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; background:var(--surface)}
+.speed button{border:0; background:transparent; color:var(--ink-muted); font-size:12.5px;
+  padding:7px 13px; cursor:pointer; transition:background var(--dur-fast), color var(--dur-fast)}
 .speed button.on{background:var(--primary); color:#fff; font-weight:600}
 
-.callout{border:1px solid var(--border); border-left:3px solid var(--amber); background:#fffdf7;
-  border-radius:0 var(--radius-md) var(--radius-md) 0; padding:16px 20px; font-size:13.5px;
-  color:var(--muted-foreground); line-height:1.85; margin-top:var(--space-6)}
-.callout b{color:var(--foreground); font-weight:700}
+.callout{border:1px solid var(--line); border-left:3px solid var(--primary); background:var(--surface);
+  border-radius:0 var(--radius-md) var(--radius-md) 0; padding:15px 20px; font-size:13.5px;
+  color:var(--ink-muted); line-height:1.85; margin-top:var(--space-6)}
+.callout b{color:var(--ink); font-weight:700}
 
-/* ==========================================================================
-   動線タイムライン / 表
-   ========================================================================== */
-.tl{display:grid; gap:2px; grid-template-columns:repeat(5,1fr); border-radius:var(--radius-md);
-  overflow:hidden; border:1px solid var(--border); background:var(--border)}
-@media(max-width:700px){ .tl{grid-template-columns:1fr} }
-.tl-c{background:#fff; padding:var(--space-4) var(--space-4) var(--space-6)}
-.tl-i{font-family:"Inter",sans-serif; font-size:12px; font-weight:700; letter-spacing:.1em; color:var(--primary)}
-.tl-th{position:relative; height:46px; border-radius:7px; margin:10px 0 12px; overflow:hidden}
-.tl-th .rm{filter:none}
-.tl-th .rm::after{background:radial-gradient(80% 80% at 50% 40%, transparent 40%, rgba(2,6,7,.4) 100%)}
-.tl-r{font-size:15px; font-weight:700}
-.tl-m{font-size:13px; color:var(--muted-foreground); line-height:1.7; margin-top:2px}
-.tl-s{font-size:12px; color:var(--muted-foreground); margin-top:8px; font-family:"Inter",sans-serif}
+/* ---------- 仕様 ---------- */
+.tile{background:var(--tint); border-block:1px solid var(--line)}
+.cols{display:grid; gap:var(--space-16)}
+@media(min-width:860px){ .cols{grid-template-columns:minmax(0,340px) minmax(0,1fr)} }
+.spec{border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden; background:var(--surface)}
+.spec div{display:flex; justify-content:space-between; gap:14px; padding:13px 18px;
+  font-size:14.5px; color:var(--ink-muted); border-bottom:1px solid var(--line)}
+.spec div:last-child{border-bottom:none}
+.spec b{color:var(--ink); font-weight:600; text-align:right; font-variant-numeric:tabular-nums}
 
-table{width:100%; border-collapse:collapse; font-size:15px}
-th,td{text-align:left; padding:15px 16px; border-bottom:1px solid var(--border); vertical-align:top}
-th{font-weight:600; background:var(--parchment); white-space:nowrap; font-size:14px}
+.table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius-md); background:var(--surface)}
+table{width:100%; border-collapse:collapse; font-size:14.5px; min-width:460px}
+th,td{text-align:left; padding:13px 18px; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-size:12.5px; font-weight:600; letter-spacing:.06em; color:var(--ink-muted); white-space:nowrap}
 td:first-child{white-space:nowrap; font-weight:600}
 tr:last-child td{border-bottom:none}
-.table-wrap{overflow-x:auto}
 
-/* ==========================================================================
-   仕様・数値
-   ========================================================================== */
-.spec{display:grid; gap:2px; border-radius:var(--radius-md); overflow:hidden;
-  border:1px solid var(--border-on-dark); background:var(--border-on-dark)}
-@media(min-width:700px){ .spec{grid-template-columns:repeat(2,1fr)} }
-.spec div{background:var(--dark); padding:18px 20px; display:flex; justify-content:space-between; gap:16px;
-  font-size:14.5px; color:var(--on-dark-muted)}
-.spec b{color:#fff; font-weight:600; text-align:right}
-.stat-big{font-family:"Inter",sans-serif; font-size:clamp(36px,4.4vw,52px); font-weight:700;
-  letter-spacing:0; line-height:1.15; color:var(--primary)}
-
-.steps{counter-reset:s; display:grid; gap:var(--space-8)}
-@media(min-width:820px){ .steps{grid-template-columns:repeat(3,minmax(0,1fr))} }
-.step{position:relative; padding-top:var(--space-8)}
-.step::before{counter-increment:s; content:"0" counter(s); position:absolute; top:0; left:0;
-  font-family:"Inter",sans-serif; font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--primary)}
-.step::after{content:""; position:absolute; top:7px; left:30px; right:0; height:1px; background:var(--border)}
-
-/* ==========================================================================
-   CTA / フッター
-   ========================================================================== */
-.cta{background:var(--dark-deep); color:#fff; position:relative; overflow:hidden; text-align:center}
-.cta::before{content:""; position:absolute; bottom:-45%; left:50%; width:110%; height:100%;
-  transform:translateX(-50%);
-  background:radial-gradient(50% 50% at 50% 50%, rgba(15,122,111,.32), transparent 72%)}
-.cta-in{position:relative; z-index:1}
-.cta h2{margin-inline:auto; max-width:24em}
-
-footer{padding-block:var(--space-16); border-top:1px solid var(--border)}
-.foot{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-6)}
-.foot-brand{display:inline-flex; align-items:center; gap:10px; font-weight:600; font-size:15px}
-.foot-brand .dot{width:9px; height:9px; border-radius:50%;
-  background:linear-gradient(120deg,var(--primary),#3f8fd0)}
-.foot-nav{display:flex; gap:var(--space-2); flex-wrap:wrap}
-.foot-nav a{display:inline-flex; align-items:center; min-height:44px; padding-inline:10px;
-  font-size:13.5px; color:var(--muted-foreground); text-decoration:none}
+footer{border-top:1px solid var(--line); padding-block:var(--space-12)}
+.foot{display:flex; justify-content:space-between; gap:var(--space-6); flex-wrap:wrap; align-items:baseline}
+.foot .mark{font-weight:700; letter-spacing:.22em}
+.foot .note{font-size:12.5px; color:var(--ink-muted); max-width:44em}
 
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important;
-    transition-duration:.01ms!important}
+  *,*::before,*::after{animation-duration:.01ms!important; transition-duration:.01ms!important}
   html{scroll-behavior:auto}
   .reveal{opacity:1; transform:none}
-  .segbar.on i{width:100%}
 }
 @media print{
   .nav,.btn,.drop{display:none!important}
-  body{background:#fff; color:#000; font-size:10.5pt; line-height:1.7}
-  section{padding-block:16pt; break-inside:avoid}
-  .tile-dark,.hero,.cta{background:#fff!important; color:#000!important}
-  .tile-dark .lead,.hero .lead,.cta .lead{color:#333!important}
-  .tile-dark h2,.tile-dark h3{color:#000!important}
-  .card{box-shadow:none; border:1px solid #ccc}
+  body{background:#fff; font-size:10.5pt}
+  section{padding-block:14pt; break-inside:avoid}
 }
 </style>
 </head>
 <body>
 
-<!-- ============ グローバルナビ ============ -->
 <header class="nav">
   <div class="container nav-in">
-    <a class="brand" href="#top"><span class="dot"></span>Aurora Mobile</a>
-    <div class="nav-right">
-      <a class="nav-back" href="/">デモ一覧へ</a>
-      <a class="btn btn-primary btn-sm" href="#tool">写真を選ぶ</a>
-    </div>
+    <a class="brand" href="#top">
+      <span class="mark">KINAKO</span>
+      <span class="sub">AI 内見動画</span>
+    </a>
+    <span class="by">Powered by Aurora Mobile</span>
   </div>
 </header>
 
-<!-- ============ 01 ヒーロー（暗タイル） ============ -->
-<section id="top" class="hero">
-  <div class="container hero-in">
-    <p class="eyebrow">AURORA MOBILE ／ AI 内見動画</p>
-    <h1 class="display">物件写真が、<br class="pc-br">そのまま内見動画になる。</h1>
-    <p class="lead">掲載中の写真をアップロードするだけ。AI が部屋ごとに内見の動線に沿ったカメラワークを付け、1 本の内見動画として続けて再生します。撮影も編集も必要ありません。</p>
-    <div class="hero-cta">
-      <a href="#tool" class="btn btn-primary">この場で生成してみる</a>
-      <a href="#flow" class="btn btn-onDark">運鏡の設計を見る</a>
-    </div>
+<section class="intro" id="top">
+  <div class="container">
+    <p class="eyebrow">DEMO</p>
+    <h1>物件写真から、内見動画をつくる。</h1>
+    <p class="lead">
+      掲載中の写真をアップロードすると、1 枚ずつ動画にして、アップロードした順に 1 本へまとめます。
+      撮影も編集も行いません。
+    </p>
+    <div class="intro-cta"><a class="btn btn-primary" href="#tool">写真を選んで試す</a></div>
 
-    <!-- 内見動画プレビュー（CSS描画・イメージ） -->
-    <div class="player-mock" aria-label="内見動画のイメージ">
-      <div class="pm-bar">
-        <span class="pdot"></span><span class="pdot"></span><span class="pdot"></span>
-        <span class="pm-title">内見動画<span class="pt-detail"> ／ 2LDK・駅徒歩 7 分</span></span>
-        <span class="pm-live"><i></i>自動生成</span>
-      </div>
-
-      <div class="stage" id="stage">
-        <div class="cut c1"><div class="cut-img"><div class="rm"><span class="rm-grain"></span><span class="rm-floor"></span><span class="rm-win"></span><span class="rm-obj"></span><span class="rm-obj b"></span></div></div></div>
-        <div class="cut c2"><div class="cut-img"><div class="rm"><span class="rm-grain"></span><span class="rm-floor"></span><span class="rm-win"></span><span class="rm-obj"></span><span class="rm-obj b"></span><span class="rm-obj c"></span></div></div></div>
-        <div class="cut c3"><div class="cut-img"><div class="rm"><span class="rm-grain"></span><span class="rm-floor"></span><span class="rm-win"></span><span class="rm-obj"></span><span class="rm-obj b"></span><span class="rm-obj c"></span></div></div></div>
-        <div class="cut c4"><div class="cut-img"><div class="rm"><span class="rm-grain"></span><span class="rm-floor"></span><span class="rm-win"></span><span class="rm-obj"></span><span class="rm-obj b"></span></div></div></div>
-        <div class="cut c5"><div class="cut-img"><div class="rm"><span class="rm-grain"></span><span class="rm-floor"></span><span class="rm-obj"></span><span class="rm-obj b"></span></div></div></div>
-
-        <span class="stage-scrim"></span>
-        <div class="stage-meta">
-          <div class="segs" id="segs">
-            <span class="segbar"><i></i></span><span class="segbar"><i></i></span><span class="segbar"><i></i></span>
-            <span class="segbar"><i></i></span><span class="segbar"><i></i></span>
-          </div>
-          <div class="stage-row">
-            <div>
-              <div class="stage-room" id="mock-room">玄関</div>
-              <div class="stage-move" id="mock-move">ドアから室内へ進入</div>
-            </div>
-            <div class="stage-tags">
-              <span class="tag brand" id="mock-cut">CUT 01 / 05</span>
-              <span class="tag">6.0s</span>
-              <span class="tag t-wide">768P</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pm-foot">
-        <span>入力: 物件写真 <b>6 枚</b> ／ 出力: <b>36 秒</b>の内見動画（2倍速で 18 秒）</span>
-        <span>生成時間 <b>約 4 分</b></span>
-      </div>
-    </div>
-    <p class="pm-cap">※ 上は完成イメージです。実際の生成結果は、この下のデモでお手持ちの写真からご確認いただけます。</p>
+    <dl class="facts">
+      <div class="fact"><dt>1 カットの尺</dt><dd>6<small>秒</small></dd></div>
+      <div class="fact"><dt>完成尺</dt><dd>6 秒 × 枚数<small>そのまま</small></dd></div>
+      <div class="fact"><dt>出力</dt><dd>1280×720<small>30fps / mp4</small></dd></div>
+    </dl>
   </div>
 </section>
 
-<!-- ============ 02 デモ本体（明タイル） ============ -->
-<section id="tool">
+<section id="tool" style="padding-top:0">
   <div class="container">
-    <p class="eyebrow reveal">デモ</p>
-    <h2 class="h2 reveal" style="margin-top:var(--space-3);max-width:22em">お手持ちの写真で、いますぐ試せます。</h2>
-    <p class="lead reveal" style="margin-top:var(--space-6)">
-      すでにポータルや自社サイトに掲載している写真が、そのまま素材になります。
-      部屋の割り当てはあとから変更できるので、ファイル名の整理や並べ替えは不要です。
-    </p>
 
-    <!-- STEP 1 -->
-    <div class="step-block reveal" style="margin-top:var(--space-16)">
+    <div class="step-block reveal">
+      <div class="step-head">
+        <span class="step-no">STEP 0</span>
+        <h3>API キーを設定する</h3>
+        <span class="sub">生成は貴社の Modellix アカウントで実行されます</span>
+      </div>
+
+      <div class="keybox">
+        <div class="keybox-set hide" id="keySet">
+          <span class="key-state"><i></i>設定済み</span>
+          <span class="key-mask num" id="keyMask">—</span>
+          <button class="btn btn-quiet btn-xs" id="keyEdit">変更</button>
+          <button class="btn btn-quiet btn-xs" id="keyClear">削除</button>
+        </div>
+
+        <div class="keybox-form" id="keyForm">
+          <label class="key-label" for="keyInput">Modellix API キー</label>
+          <div class="key-row">
+            <input id="keyInput" type="password" inputmode="text" autocomplete="off"
+                   spellcheck="false" placeholder="sk-…" aria-label="Modellix API キー">
+            <button class="btn btn-primary btn-sm" id="keySave">保存</button>
+          </div>
+          <p class="key-note">
+            キーはこのブラウザ（localStorage）にのみ保存され、サーバーには保存も記録もされません。
+            生成のたびに Modellix へ中継するだけです。共用端末では、お帰りの前に「削除」を押してください。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-block reveal">
       <div class="step-head">
         <span class="step-no">STEP 1</span>
         <h3>物件写真を選ぶ</h3>
-        <span class="sub">最大 6 枚・アップロード順に内見の動線へ並びます</span>
+        <span class="sub">最大 20 枚・アップロードした順に並びます</span>
       </div>
 
       <div class="drop" id="drop">
         <div class="ic" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 16V4M12 4 7 9M12 4l5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
           </svg>
         </div>
@@ -539,22 +326,19 @@ footer{padding-block:var(--space-16); border-top:1px solid var(--border)}
       <div class="err" id="err"></div>
     </div>
 
-    <!-- STEP 2 -->
     <div class="step-block hide" id="sec2">
       <div class="step-head">
         <span class="step-no">STEP 2</span>
-        <h3>AI が生成中</h3>
-        <span class="sub">全カットを同時に処理しています</span>
+        <h3>生成中</h3>
+        <span class="sub">最大 10 カットずつ並列で処理しています</span>
       </div>
       <div class="stats">
         <div class="stat"><div class="k">経過時間</div><div class="v" id="st-time">0:00</div></div>
         <div class="stat"><div class="k">完了</div><div class="v" id="st-done">0<small>/ 0</small></div></div>
-        <div class="stat acc"><div class="k">推定コスト</div><div class="v" id="st-cost">$0.00</div></div>
-        <div class="stat"><div class="k">従来の撮影・編集</div><div class="v" style="color:var(--muted-foreground)">¥30,000<small>〜</small></div></div>
+        <div class="stat acc"><div class="k">生成コスト（実費）</div><div class="v" id="st-cost">$0.00</div></div>
       </div>
     </div>
 
-    <!-- STEP 3 -->
     <div class="step-block hide" id="sec3">
       <div class="step-head">
         <span class="step-no">STEP 3</span>
@@ -563,15 +347,25 @@ footer{padding-block:var(--space-16); border-top:1px solid var(--border)}
       </div>
       <div class="player">
         <video id="v" playsinline controls></video>
-        <div class="pbar">
+        <div class="pbar" id="pbar">
           <div class="seg" id="seg"></div>
           <span class="chip" id="now">—</span>
           <div class="speed" id="speed">
-            <button data-s="1">1x</button>
+            <button data-s="1" class="on">1x</button>
             <button data-s="1.5">1.5x</button>
-            <button data-s="2" class="on">2x</button>
+            <button data-s="2">2x</button>
           </div>
           <button class="btn btn-quiet btn-xs" id="replay">最初から</button>
+        </div>
+        <div class="pbar hide" id="mergebar">
+          <span class="chip" id="m-info"><b>1 本に結合済み</b></span>
+          <div class="speed" id="mspeed">
+            <button data-s="1" class="on">1x</button>
+            <button data-s="1.5">1.5x</button>
+            <button data-s="2">2x</button>
+            <button data-s="3">3x</button>
+          </div>
+          <button class="btn btn-primary btn-xs" id="dlMerged">この速度で MP4 を保存</button>
         </div>
       </div>
       <div class="row">
@@ -583,226 +377,58 @@ footer{padding-block:var(--space-16); border-top:1px solid var(--border)}
         掲載時は「AI 生成による参考映像」である旨の表示を推奨します。
       </div>
     </div>
+
   </div>
 </section>
 
-<!-- ============ 03 運鏡設計（parchment） ============ -->
-<section id="flow" class="tile-parchment">
-  <div class="container">
-    <p class="eyebrow reveal">運鏡の設計</p>
-    <h2 class="h2 reveal" style="margin-top:var(--space-3);max-width:20em">
-      写真を動かしているのではなく、<br class="pc-br">内見の順路を再現しています。
-    </h2>
-    <p class="lead reveal" style="margin-top:var(--space-6)">
-      玄関で立ち止まり、リビングで視線が横に流れ、キッチンでは設備に近づく。
-      実際の内見でお客様の視線が動く順番を、そのままカメラワークに置き換えています。
-      水回りのような狭い空間ほど動きを小さくし、部屋の構造が崩れないようにしています。
-    </p>
-
-    <div class="tl reveal" style="margin-top:var(--space-16)">
-      <div class="tl-c">
-        <div class="tl-i">CUT 01</div>
-        <div class="tl-th c1"><div class="rm" style="border-radius:7px;overflow:hidden"><span class="rm-floor"></span><span class="rm-win"></span></div></div>
-        <div class="tl-r">玄関</div>
-        <div class="tl-m">ドアから室内へ進入</div>
-        <div class="tl-s">6.0s ／ dolly-in</div>
-      </div>
-      <div class="tl-c">
-        <div class="tl-i">CUT 02</div>
-        <div class="tl-th c2"><div class="rm" style="border-radius:7px;overflow:hidden"><span class="rm-floor"></span><span class="rm-win"></span></div></div>
-        <div class="tl-r">LDK</div>
-        <div class="tl-m">左から右へゆっくりパン</div>
-        <div class="tl-s">6.0s ／ pan</div>
-      </div>
-      <div class="tl-c">
-        <div class="tl-i">CUT 03</div>
-        <div class="tl-th c3"><div class="rm" style="border-radius:7px;overflow:hidden"><span class="rm-floor"></span><span class="rm-win"></span></div></div>
-        <div class="tl-r">キッチン</div>
-        <div class="tl-m">設備へ寄る</div>
-        <div class="tl-s">6.0s ／ push-in</div>
-      </div>
-      <div class="tl-c">
-        <div class="tl-i">CUT 04</div>
-        <div class="tl-th c4"><div class="rm" style="border-radius:7px;overflow:hidden"><span class="rm-floor"></span><span class="rm-win"></span></div></div>
-        <div class="tl-r">洋室</div>
-        <div class="tl-m">窓側へチルトアップ</div>
-        <div class="tl-s">6.0s ／ tilt-up</div>
-      </div>
-      <div class="tl-c">
-        <div class="tl-i">CUT 05</div>
-        <div class="tl-th c5"><div class="rm" style="border-radius:7px;overflow:hidden"><span class="rm-floor"></span></div></div>
-        <div class="tl-r">バルコニー</div>
-        <div class="tl-m">引いて街並みを見せる</div>
-        <div class="tl-s">6.0s ／ pull-out</div>
-      </div>
+<section class="tile">
+  <div class="container cols">
+    <div>
+      <p class="eyebrow reveal">仕様</p>
+      <h2 class="reveal" style="font-size:25px;margin-top:var(--space-4)">確認できる数字だけを載せています</h2>
+      <p class="small reveal" style="margin-top:var(--space-4)">
+        生成は 1 カットずつ並列で走ります。表示しているコストは実際の課金額で、演出用の推定値ではありません。
+      </p>
     </div>
-
-    <div class="card reveal" style="margin-top:var(--space-12);padding:0;overflow:hidden">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th style="width:140px">部屋</th><th>カメラワーク</th><th>意図</th></tr></thead>
-          <tbody>
-            <tr><td>玄関</td><td>ドアから室内へ進入</td><td>物件に入る体験の入口をつくる</td></tr>
-            <tr><td>DK・LDK</td><td>左から右へゆっくりパン</td><td>間口の広がりと明るさを伝える</td></tr>
-            <tr><td>キッチン</td><td>設備へ寄る</td><td>グレード感を具体的に見せる</td></tr>
-            <tr><td>洋室</td><td>窓側へチルトアップ</td><td>採光と天井高を印象づける</td></tr>
-            <tr><td>洗面・浴室・トイレ</td><td>ごく小さな寄り</td><td>狭い空間での構造の破綻を避ける</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p class="note-text reveal" style="margin-top:var(--space-6)">
-      カメラワークは部屋ごとに固定のプリセットで、生成のたびに変わりません。
-      「間取りを変えない」という制約をプロンプトの中心に置いているため、存在しないドアや壁が足されるリスクを抑えています。
-    </p>
-  </div>
-</section>
-
-<!-- ============ 04 仕様と効果（暗タイル） ============ -->
-<section class="tile-dark">
-  <div class="container">
-    <div class="grid grid-2" style="gap:var(--space-16);align-items:center">
-      <div>
-        <p class="eyebrow reveal">出力</p>
-        <h2 class="h2 reveal" style="margin-top:var(--space-3)">掲載当日に、動画を出せます。</h2>
-        <p class="lead reveal" style="margin-top:var(--space-6)">
-          撮影者の日程調整も鍵の段取りも発生しません。写真を渡してから数分で、そのまま掲載できる状態の内見動画が揃います。
-        </p>
-        <p class="small reveal" style="margin-top:var(--space-6)">
-          担当者による当たり外れがなくなるのも利点です。カットの並びとカメラワークが規格化されているため、物件ごとに品質がぶれません。
-        </p>
-      </div>
+    <div>
       <div class="spec reveal">
         <div><span>モデル</span><b>hailuo-2.3-fast-i2v</b></div>
         <div><span>1 カットの尺</span><b>6 秒</b></div>
-        <div><span>解像度</span><b>768P（16:9）</b></div>
-        <div><span>同時生成</span><b>最大 6 カット</b></div>
-        <div><span>生成時間の目安</span><b>約 4 分</b></div>
+        <div><span>入力 / 出力</span><b>768P → 1280×720</b></div>
+        <div><span>1 カットの費用</span><b>$0.24</b></div>
         <div><span>結果の保持期間</span><b>7 日間</b></div>
       </div>
     </div>
-
-    <div class="grid grid-3" style="margin-top:var(--space-24)">
-      <div class="reveal">
-        <p class="stat-big num">約 4 分</p>
-        <p class="small" style="margin-top:var(--space-2)">アップロードから<br>生成完了までの目安</p>
-      </div>
-      <div class="reveal">
-        <p class="stat-big num">¥220</p>
-        <p class="small" style="margin-top:var(--space-2)">6 カット 1 セットあたりの<br>生成コスト目安（従来 ¥30,000〜）</p>
-      </div>
-      <div class="reveal">
-        <p class="stat-big num">0 人</p>
-        <p class="small" style="margin-top:var(--space-2)">必要な撮影スタッフ<br>掲載済みの写真だけで完結</p>
-      </div>
-    </div>
-    <p class="note-text reveal" style="margin-top:var(--space-12);color:var(--on-dark-muted)">
-      ※ 記載の数値は想定値です。写真の枚数・画質・混雑状況により変動します。正確な実費は生成ごとの課金明細でご確認いただけます。
-    </p>
-  </div>
-</section>
-
-<!-- ============ 05 運用（明タイル） ============ -->
-<section>
-  <div class="container">
-    <p class="eyebrow reveal">運用</p>
-    <h2 class="h2 reveal" style="margin-top:var(--space-3)">いまの掲載フローに、そのまま乗ります。</h2>
-
-    <div class="steps reveal" style="margin-top:var(--space-16)">
-      <div class="step">
-        <h3 class="h3">写真をまとめて渡す</h3>
-        <p class="small" style="margin-top:var(--space-3)">1 物件あたり 6 枚まで。既存の掲載写真をそのままお使いいただけます。</p>
-      </div>
-      <div class="step">
-        <h3 class="h3">動線に沿って自動構成</h3>
-        <p class="small" style="margin-top:var(--space-3)">部屋ごとにカメラワークを割り当て、内見の順路どおりに並べます。割り当ては画面上で変更できます。</p>
-      </div>
-      <div class="step">
-        <h3 class="h3">その場で再生・保存</h3>
-        <p class="small" style="margin-top:var(--space-3)">1 本の内見動画として連続再生。各シーンはそのままダウンロードできます。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 06 CTA（暗タイル） ============ -->
-<section class="cta">
-  <div class="container cta-in">
-    <h2 class="h2">貴社の物件写真で、<br class="pc-br">仕上がりをご確認ください。</h2>
-    <p class="lead" style="margin:var(--space-6) auto 0;max-width:30em">
-      写真を 1 セットご用意いただければ、この画面でそのまま生成してご覧いただけます。
-    </p>
-    <div style="margin-top:var(--space-8)"><a href="#tool" class="btn btn-primary">写真を選んで生成する</a></div>
   </div>
 </section>
 
 <footer>
   <div class="container foot">
-    <span class="foot-brand"><span class="dot"></span>Aurora Mobile 株式会社</span>
-    <nav class="foot-nav">
-      <a href="/">デモ一覧</a>
-      <a href="#tool">デモを試す</a>
-      <a href="#flow">運鏡の設計</a>
-    </nav>
-  </div>
-  <div class="container" style="margin-top:var(--space-6)">
-    <p class="note-text">Modellix（hailuo-2.3-fast-i2v）／ 6 秒 × 768P　生成結果は AI による参考映像です。</p>
+    <span class="mark">KINAKO</span>
+    <span class="note">
+      本デモの映像は AI が静止画から生成した参考映像です。実在の間取り・寸法・設備を保証するものではありません。<br>
+      生成基盤: Modellix（hailuo-2.3-fast-i2v）／ 提供: Aurora Mobile 株式会社
+    </span>
   </div>
 </footer>
 
 <script>
-/* ==========================================================================
-   演出（スクロールリビール / ヒーローのプレビュー再生）
-   ========================================================================== */
+/* スクロールに合わせて要素を出す（それ以外の演出は置かない） */
 (function () {
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!reduce) {
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e, i) {
-        if (e.isIntersecting) {
-          setTimeout(function () { e.target.classList.add('is-in'); }, i * 80);
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -50px' });
-    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
-  } else {
+  if (reduce) {
     document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('is-in'); });
+    return;
   }
-
-  // ヒーローのイメージ再生（CSS 描画のカットを順に切り替える）
-  var MOCK = [
-    { room: '玄関',       move: 'ドアから室内へ進入' },
-    { room: 'LDK',        move: '左から右へゆっくりパン' },
-    { room: 'キッチン',   move: '設備へ寄る' },
-    { room: '洋室',       move: '窓側へチルトアップ' },
-    { room: 'バルコニー', move: '引いて街並みを見せる' }
-  ];
-  var cuts = document.querySelectorAll('#stage .cut');
-  var bars = document.querySelectorAll('#segs .segbar');
-  var mRoom = document.getElementById('mock-room');
-  var mMove = document.getElementById('mock-move');
-  var mCut  = document.getElementById('mock-cut');
-  var n = 0;
-
-  function showCut(k) {
-    cuts.forEach(function (c, i) { c.classList.toggle('is-on', i === k); });
-    bars.forEach(function (b, i) {
-      b.classList.remove('on', 'done');
-      if (i < k) b.classList.add('done');
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e, i) {
+      if (e.isIntersecting) {
+        setTimeout(function () { e.target.classList.add('is-in'); }, i * 70);
+        io.unobserve(e.target);
+      }
     });
-    // アニメーションを確実に再生させるため次フレームで on を付ける
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () { bars[k].classList.add('on'); });
-    });
-    mRoom.textContent = MOCK[k].room;
-    mMove.textContent = MOCK[k].move;
-    mCut.textContent  = 'CUT 0' + (k + 1) + ' / 05';
-  }
-
-  showCut(0);
-  if (!reduce) setInterval(function () { n = (n + 1) % MOCK.length; showCut(n); }, 4200);
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
 })();
 
 /* ==========================================================================
@@ -813,20 +439,24 @@ const MODEL = 'minimax/hailuo-2.3-fast-i2v';
 const DURATION = 6;          // API制約: 6 または 10
 const RESOLUTION = '768P';   // 10秒は768Pのみ / 1080Pは6秒のみ
 const USD_PER_SEC = 0.04;    // 768P。実費は課金明細が正
-const MAX_FILES = 6;
+const MAX_FILES = 20;        // 物件1件の掲載写真をひととおり受けられる枚数
+const PARALLEL = 10;         // 同時に走らせる生成数（Modellix の並行上限は 20。半分を上限にして余裕を残す）
+const PLAY_SPEED = 1;        // 再生時の既定速度。等倍＝6秒×枚数がそのまま完成尺になる
+const CLIP_SECONDS = 0;      // 各クリップを頭から何秒使うか。0 なら全尺（＝6秒をそのまま使う）
 
-// 部屋ごとの運鏡。水回りなど狭い空間ほど動きを小さくして破綻を防ぐ
-const ROOMS = [
-  { key:'genkan',   label:'玄関',   move:'Slow forward dolly, entering the entrance hall' },
-  { key:'dk',       label:'DK',     move:'Slow horizontal pan from left to right across the kitchen' },
-  { key:'living',   label:'リビング', move:'Slow horizontal pan from left to right across the living room' },
-  { key:'yoshitsu', label:'洋室',   move:'Slow dolly-in toward the window' },
-  { key:'washroom', label:'洗面',   move:'Very slight forward dolly, minimal movement' },
-  { key:'bath',     label:'浴室',   move:'Slow pan with a gentle upward tilt' },
-  { key:'toilet',   label:'トイレ', move:'Minimal slow dolly-in, almost static' },
-  { key:'other',    label:'その他', move:'Slow, smooth forward dolly movement through the room' },
-];
-const DEFAULT_ORDER = ['genkan','dk','yoshitsu','washroom','bath','toilet'];
+// 結合サービス（Cloud Run / services/video-concat）の URL。
+// 設定すると、生成後に 1 本の mp4 へ結合して 2 倍速にしたものを再生・保存できる。
+// 空のままなら従来どおり 6 本を順に再生する（結合なしでも成立する設計を維持）。
+//   例: https://video-concat-xxxxxxxx-an.a.run.app
+// 動作確認用に ?concat=<URL> でも上書きできる。
+const CONCAT_API_DEFAULT = '';
+const CONCAT_API = (new URLSearchParams(location.search).get('concat') || CONCAT_API_DEFAULT).trim().replace(/\/+$/, '');
+
+// カメラワークは全カット共通。
+// 写真がどの部屋かは判定していない（アップロード順しか手掛かりが無い）ので、
+// 部屋ごとに動きを変えると「玄関のつもりでキッチンに進入する」ような取り違えが起きる。
+// どの部屋でも破綻しない、ごく小さな前進だけに統一している。
+const MOVE = 'Slow, smooth forward dolly movement through the room';
 
 // 構造を変えさせないことを最優先にしたプロンプト（誇大広告リスクの回避）
 const PROMPT = (move) => `${move}, as if a person is walking in during a property viewing. `
@@ -834,10 +464,25 @@ const PROMPT = (move) => `${move}, as if a person is walking in during a propert
   + `- do not add, remove, or reshape anything. Photorealistic real estate footage, `
   + `natural indoor lighting, no people, steady tripod-like motion.`;
 
+/* ---------- API キー（お客様ご自身のもの） ----------
+   サーバーには置かない。このブラウザの localStorage にだけ持ち、
+   リクエストごとに X-Modellix-Key ヘッダで同源プロキシへ渡す。
+   プロキシは中継するだけで、保存も記録もしない。URL には絶対に載せない
+   （URL はアクセスログや履歴に残るため）。 */
+const KEY_STORE = 'modellix_api_key';
+let apiKey = '';
+try { apiKey = localStorage.getItem(KEY_STORE) || ''; } catch { apiKey = ''; }
+
+function authHeaders(extra) {
+  const h = Object.assign({}, extra || {});
+  if (apiKey) h['X-Modellix-Key'] = apiKey;
+  return h;
+}
+
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const scrollTo = (el) => { try { el.scrollIntoView({ behavior:'smooth', block:'start' }); } catch {} };
-const items = [];   // { file, dataUrl, room, status, videoUrl, elapsed, el }
+const items = [];   // { file, dataUrl, status, videoUrl, elapsed, el }
 
 /* ---------- 画像の読み込み・縮小 ---------- */
 // File API（1チーム10ファイル上限）は使わず、Base64 Data URL で直接渡す。
@@ -880,10 +525,11 @@ async function submit(dataUrl, prompt) {
   for (let i = 0; i < 5; i++) {
     const r = await fetch(`${API}/${MODEL}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(body),
     });
     if (r.status === 429) { await sleep(Math.min(2 ** i, 20) * 1000); continue; }
+    if (r.status === 401 || r.status === 403) throw new Error('API キーが受け付けられませんでした。STEP 0 で設定し直してください');
     const t = await r.text();
     let j; try { j = JSON.parse(t); } catch { throw new Error('プロキシ応答が不正です: ' + t.slice(0, 80)); }
     if (!r.ok || !j.data || !j.data.task_id) throw new Error(j.message || '送信に失敗しました');
@@ -897,7 +543,7 @@ async function poll(url, onTick) {
   while (Date.now() < deadline) {
     await sleep(3000);
     onTick && onTick();
-    const r = await fetch(url);
+    const r = await fetch(url, { headers: authHeaders() });
     if (r.status === 429) continue;
     const t = await r.text();
     let j; try { j = JSON.parse(t); } catch { throw new Error('結果取得に失敗しました'); }
@@ -921,23 +567,30 @@ function render() {
   items.forEach((it, i) => {
     const el = document.createElement('div');
     el.className = 'slot';
-    const opts = ROOMS.map(r => `<option value="${r.key}"${r.key === it.room ? ' selected' : ''}>${r.label}</option>`).join('');
     el.innerHTML = `
-      <div class="thumb"><span class="idx">CUT ${String(i + 1).padStart(2, '0')}</span><img src="${it.dataUrl}" alt=""></div>
+      <div class="thumb"><img src="${it.dataUrl}" alt=""></div>
       <div class="bar"><i></i></div>
       <div class="meta">
-        <select data-i="${i}" aria-label="部屋">${opts}</select>
+        <span class="cut">CUT ${String(i + 1).padStart(2, '0')}</span>
         <span class="badge b-idle">待機中</span>
       </div>`;
-    el.querySelector('select').onchange = (e) => { items[i].room = e.target.value; };
     box.appendChild(el);
     it.el = el;
   });
-  $('go').disabled = items.length === 0;
+  syncGo();
   $('clear').disabled = items.length === 0;
   $('cost').textContent = items.length
     ? `${items.length}シーン × ${DURATION}秒 ＝ 推定 $${(items.length * DURATION * USD_PER_SEC).toFixed(2)}`
     : '';
+}
+
+// 生成は「キーがある」かつ「写真がある」ときだけ押せる
+function syncGo() {
+  const ready = !!apiKey && items.length > 0;
+  const go = $('go');
+  if (!go) return;
+  go.disabled = !ready;
+  go.title = apiKey ? '' : 'STEP 0 で API キーを設定してください';
 }
 
 function setState(it, cls, text, pct) {
@@ -955,24 +608,66 @@ async function addFiles(list) {
   for (const f of files) {
     try {
       const dataUrl = await shrink(f);
-      const room = DEFAULT_ORDER[items.length] || 'other';
-      items.push({ file: f, dataUrl, room, status: 'idle' });
+      items.push({ file: f, dataUrl, status: 'idle' });
     } catch (e) {
       showErr(`${f.name}: ${e.message}`);
     }
   }
-  render();
+  renderKey();
+render();
 }
 function showErr(m) { const e = $('err'); e.textContent = m; e.style.display = 'block'; }
+
+/* ---------- キーの入力UI ---------- */
+function maskKey(k) {
+  if (k.length <= 10) return '••••••';
+  return k.slice(0, 4) + '••••••••' + k.slice(-4);
+}
+function renderKey() {
+  const has = !!apiKey;
+  $('keySet').classList.toggle('hide', !has);
+  $('keyForm').classList.toggle('hide', has);
+  if (has) $('keyMask').textContent = maskKey(apiKey);
+  syncGo();
+}
+function saveKey(v) {
+  apiKey = v.trim();
+  try { apiKey ? localStorage.setItem(KEY_STORE, apiKey) : localStorage.removeItem(KEY_STORE); } catch {}
+  renderKey();
+}
+$('keySave').onclick = () => {
+  const v = $('keyInput').value.trim();
+  if (v.length < 16) { showErr('API キーの形式が正しくないようです。Modellix のコンソールからコピーしてください'); return; }
+  $('err').style.display = 'none';
+  $('keyInput').value = '';
+  saveKey(v);
+};
+$('keyInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('keySave').click(); });
+$('keyEdit').onclick = () => { $('keySet').classList.add('hide'); $('keyForm').classList.remove('hide'); $('keyInput').focus(); };
+$('keyClear').onclick = () => saveKey('');
 
 $('drop').onclick = () => $('file').click();
 $('file').onchange = (e) => { addFiles(e.target.files); e.target.value = ''; };
 ['dragenter', 'dragover'].forEach(t => $('drop').addEventListener(t, e => { e.preventDefault(); $('drop').classList.add('over'); }));
 ['dragleave', 'drop'].forEach(t => $('drop').addEventListener(t, e => { e.preventDefault(); $('drop').classList.remove('over'); }));
 $('drop').addEventListener('drop', e => addFiles(e.dataTransfer.files));
-$('clear').onclick = () => { items.length = 0; render(); $('sec2').classList.add('hide'); $('sec3').classList.add('hide'); };
+$('clear').onclick = () => { items.length = 0; renderKey();
+render(); $('sec2').classList.add('hide'); $('sec3').classList.add('hide'); };
 
-/* ---------- 生成（6件を並列） ---------- */
+/* ---------- 生成（同時実行数を絞って並列） ---------- */
+// 空いたワーカーが次のインデックスを取りに行くだけの単純なプール。
+// Promise.all で全部投げると、枚数が多いときに 429 が連鎖する。
+async function runPool(list, limit, task) {
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, list.length) }, async () => {
+    while (next < list.length) {
+      const i = next++;
+      await task(list[i], i);
+    }
+  });
+  await Promise.all(workers);
+}
+
 let timer = null;
 $('go').onclick = async () => {
   $('err').style.display = 'none';
@@ -991,14 +686,14 @@ $('go').onclick = async () => {
   upd();
   timer = setInterval(upd, 1000);
 
-  // Modellixの並行上限は20（現行プラン）。6件同時は余裕で収まる。
-  await Promise.all(items.map(async (it) => {
-    const room = ROOMS.find(r => r.key === it.room) || ROOMS[ROOMS.length - 1];
+  // 枚数が増えても Modellix の並行上限（20）を食い潰さないよう、同時実行数を絞って流す。
+  // 先頭から順に空いたスロットへ投入するので、進捗は左のカードから埋まっていく。
+  await runPool(items, PARALLEL, async (it, i) => {
     const start = Date.now();
     let pct = 6;
     try {
       setState(it, 'b-run', '送信中', pct);
-      const pollUrl = await submit(it.dataUrl, PROMPT(room.move));
+      const pollUrl = await submit(it.dataUrl, PROMPT(MOVE));
       setState(it, 'b-run', '生成中 0s', pct = 12);
       const url = await poll(pollUrl, () => {
         const s = Math.round((Date.now() - start) / 1000);
@@ -1017,20 +712,126 @@ $('go').onclick = async () => {
       it.status = 'ng';
       it.error = e.message;
       setState(it, 'b-ng', '失敗', 100);
-      showErr(`${room.label}: ${e.message}`);
+      showErr(`CUT ${String(i + 1).padStart(2, '0')}: ${e.message}`);
     }
-  }));
+  });
 
   clearInterval(timer); upd();
   const ok = items.filter(i => i.status === 'ok');
-  if (ok.length) buildPlayer(ok);
+  if (ok.length) {
+    if (CONCAT_API) await mergeThenPlay(ok);
+    else buildPlayer(ok);
+  }
   $('go').disabled = false; $('clear').disabled = false;
 };
 
+/* ---------- 結合（Cloud Run 上の ffmpeg で 1 本の mp4 にする） ----------
+   Vercel Functions では ffmpeg を動かせないため、結合だけを別サービスに出している。
+
+   結合は「等倍で 1 本にするだけ」に留め、再生速度はブラウザ側の playbackRate で変える。
+   こうすると速度を変えるたびに再エンコードを待たずに済む。
+   保存だけは焼き込みが要るので、そのときだけ選択中の速度でサーバーに作り直させる。
+
+   結合できなかった場合は従来の連続再生に落とす（デモが止まらないように）。 */
+let merged = false, viewRate = PLAY_SPEED, mergedClips = [];
+const mergedFiles = {};        // speed -> objectURL（一度作ったものは使い回す）
+
+async function requestConcat(clips, speed) {
+  const r = await fetch(`${CONCAT_API}/concat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clips, speed, clip_seconds: CLIP_SECONDS || undefined }),
+  });
+  if (!r.ok) {
+    let m = '';
+    try { m = (await r.json()).error; } catch {}
+    throw new Error(m || `結合サーバーが ${r.status} を返しました`);
+  }
+  return r.blob();
+}
+
+async function mergeThenPlay(ok) {
+  $('sec3').classList.remove('hide');
+  scrollTo($('sec3'));
+  const t0 = Date.now();
+  const tick = setInterval(() => {
+    $('p-sub').textContent = `${ok.length}シーンを1本に結合中… ${Math.round((Date.now() - t0) / 1000)}s`;
+  }, 500);
+  $('p-sub').textContent = `${ok.length}シーンを1本に結合中…`;
+
+  try {
+    const blob = await requestConcat(ok.map(i => i.videoUrl), 1);   // 等倍で作る
+    clearInterval(tick);
+    mergedFiles[1] = URL.createObjectURL(blob);
+    buildMerged(ok, blob.size, Math.round((Date.now() - t0) / 1000));
+  } catch (e) {
+    clearInterval(tick);
+    showErr(`結合に失敗したため、シーンごとの連続再生に切り替えました（${e.message}）`);
+    buildPlayer(ok);
+  }
+}
+
+function buildMerged(ok, bytes, sec) {
+  merged = true;
+  mergedClips = ok.map(i => i.videoUrl);
+  playlist = ok;               // 「各シーンを保存」は結合後も使えるように保持する
+
+  const v = $('v');
+  v.src = mergedFiles[1];
+  v.playbackRate = viewRate;
+  v.play().catch(() => {});
+
+  $('pbar').classList.add('hide');
+  $('mergebar').classList.remove('hide');
+  $('m-info').innerHTML = `<b>1 本に結合済み</b>　1280×720 ・ ${(bytes / 1024 / 1024).toFixed(1)} MB ・ 結合 ${sec}s`;
+  updateMergedSub(ok.length);
+}
+
+function updateMergedSub(n) {
+  const full = n * (CLIP_SECONDS || DURATION);
+  $('p-sub').textContent =
+    `${n}シーン・実尺 ${full}秒 → ${viewRate}倍速で約${Math.round(full / viewRate)}秒`;
+}
+
+// 速度切替：再生中の動画にその場で反映する（再エンコードなし）
+$('mspeed').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  viewRate = parseFloat(b.dataset.s);
+  [...$('mspeed').children].forEach(x => x.classList.toggle('on', x === b));
+  $('v').playbackRate = viewRate;
+  updateMergedSub(playlist.length);
+};
+
+// 保存：選択中の速度を焼き込んだ mp4 が必要なので、等倍以外はサーバーに作らせる
+$('dlMerged').onclick = async () => {
+  const btn = $('dlMerged');
+  if (btn.disabled) return;
+  try {
+    if (!mergedFiles[viewRate]) {
+      btn.disabled = true;
+      btn.textContent = `${viewRate}倍速で書き出し中…`;
+      const blob = await requestConcat(mergedClips, viewRate);
+      mergedFiles[viewRate] = URL.createObjectURL(blob);
+    }
+    const a = document.createElement('a');
+    a.href = mergedFiles[viewRate];
+    a.download = `walkthrough_${String(viewRate).replace('.', '_')}x.mp4`;
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) {
+    showErr(`書き出しに失敗しました（${e.message}）`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'この速度で MP4 を保存';
+  }
+};
+
 /* ---------- 連続再生（ffmpeg不要。6本を順に再生して1本に見せる） ---------- */
-let playlist = [], idx = 0, rate = 2;
+let playlist = [], idx = 0, rate = PLAY_SPEED;
 function buildPlayer(ok) {
   playlist = ok; idx = 0;
+  merged = false;
+  $('pbar').classList.remove('hide');
+  $('mergebar').classList.add('hide');
   $('sec3').classList.remove('hide');
   $('p-sub').textContent = `${ok.length}シーン・実尺 ${ok.length * DURATION}秒（${rate}倍速で約${Math.round(ok.length * DURATION / rate)}秒）`;
   const seg = $('seg'); seg.innerHTML = ok.map(() => '<i></i>').join('');
@@ -1045,8 +846,7 @@ function play(i) {
   v.src = it.videoUrl;
   v.playbackRate = rate;
   v.play().catch(() => {});
-  const room = ROOMS.find(r => r.key === it.room);
-  $('now').textContent = `${i + 1} / ${playlist.length}　${room ? room.label : ''}`;
+  $('now').textContent = `${i + 1} / ${playlist.length}`;
   markSeg(i);
 }
 function markSeg(cur) {
@@ -1054,8 +854,8 @@ function markSeg(cur) {
     el.className = i < cur ? 'done' : (i === cur ? 'cur' : '');
   });
 }
-$('v').addEventListener('ended', () => play(idx + 1));
-$('v').addEventListener('loadedmetadata', () => { $('v').playbackRate = rate; });
+$('v').addEventListener('ended', () => { if (!merged) play(idx + 1); });
+$('v').addEventListener('loadedmetadata', () => { if (!merged) $('v').playbackRate = rate; });
 $('replay').onclick = () => play(0);
 $('speed').onclick = (e) => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1070,8 +870,7 @@ $('speed').onclick = (e) => {
 $('dl').onclick = async () => {
   for (let i = 0; i < playlist.length; i++) {
     const it = playlist[i];
-    const room = ROOMS.find(r => r.key === it.room);
-    const name = `${String(i + 1).padStart(2, '0')}_${room ? room.key : 'scene'}.mp4`;
+    const name = `${String(i + 1).padStart(2, '0')}_scene.mp4`;
     try {
       const b = await (await fetch(it.videoUrl)).blob();
       const a = document.createElement('a');
@@ -1085,7 +884,9 @@ $('dl').onclick = async () => {
   }
 };
 
+renderKey();
 render();
+
 </script>
 </body>
 </html>

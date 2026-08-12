@@ -11,7 +11,7 @@
 
 ## 1. アーキテクチャの前提（重要・変更前に必読）
 
-### ffmpeg はサーバー側で使えない → 使わない設計にしてある
+### ffmpeg は Vercel では動かない → 結合だけ Cloud Run に出してある
 
 Vercel Functions では ffmpeg を動かせない。
 
@@ -19,34 +19,55 @@ Vercel Functions では ffmpeg を動かせない。
 - Edge runtime に `child_process` が無い
 - Vercel 公式も "not recommended" と明言
 
-**そのため、動画の結合処理は一切していない。**
-6本のクリップを `<video>` で順番に再生し、`playbackRate = 2` を掛けることで、
-「結合済み・2倍速の1本の動画」と視覚的に同じ体験を実現している。
+そのため結合処理だけを別サービスに切り出している: **`services/video-concat/`（Cloud Run・Python + ffmpeg）**。
+クリップの URL を POST すると、1本に結合して倍速化した mp4 のバイト列が返る。
+詳細は [`services/video-concat/README.md`](../../services/video-concat/README.md)。
+
+```
+ブラウザ → POST https://video-concat-....run.app/concat {clips:[...], speed:1}
+        ← 200 video/mp4（1280x720 / 30fps / 音声なし）
+```
+
+**再生速度は焼き込まない。** 結合は等倍で行い、視聴時の速度は `playbackRate` で変える
+（1x / 1.5x / 2x / 3x を切り替えても再エンコードを待たない）。保存を押したときだけ、
+選択中の速度で同じ API を呼び直して焼き込んだ mp4 を作る（速度ごとにキャッシュする）。
+各クリップを 5 秒に揃えたい場合は `clip_seconds` を渡す（生成 API 側は 6 秒か 10 秒しか作れない）。
+
+**結合サービスは任意。** フロントの `CONCAT_API_DEFAULT` が空なら、従来どおり
+6本のクリップを `<video>` で順に再生し `playbackRate = 2` を掛けて
+「結合済み・2倍速の1本」に見せる方式で動く。結合に失敗した場合もこの方式に自動で落ちる。
 
 ```js
-// 1本終わったら次を再生する。これだけで連結動画に見える
-$('v').addEventListener('ended', () => play(idx + 1));
+// 1本終わったら次を再生する。これだけで連結動画に見える（フォールバック経路）
+$('v').addEventListener('ended', () => { if (!merged) play(idx + 1); });
 ```
 
-> ffmpeg を導入したくなったら、それは Vercel の外（Railway / Render / Fly.io 等の
-> 常駐ワーカー）に置く必要がある。Vercel Functions 内で解決しようとしないこと。
+> Vercel Functions 内で ffmpeg を解決しようとしないこと。
 > ブラウザ内 ffmpeg.wasm という選択肢もあるが約30MBのロードが発生する。
 
-### API キーは絶対にブラウザに出さない
+### API キーは「お客様のものを預かる」方式。サーバーには置かない
 
-このリポジトリには既にサーバー側プロキシがある。**新しくキーを扱うコードを書かないこと。**
+このデモは**お客様ご自身の Modellix キーで生成する**（生成費はお客様負担）。
+画面の STEP 0 で入力し、**そのブラウザの localStorage にだけ**保持する。
 
 ```
-ブラウザ  →  /api/v1/...  →  api/proxy.js（MODELLIX_KEY を注入）  →  https://api.modellix.ai/api/v1/...
+ブラウザ  →  /api/v1/...                      →  api/proxy.js       →  https://api.modellix.ai/api/v1/...
+             X-Modellix-Key: <お客様の鍵>          そのまま中継（保存も記録もしない）
 ```
 
-- 本番: `vercel.json` の rewrite `/api/:path*` → `/api/proxy?__path=:path*`
-- ローカル: `vite.config.js` の dev proxy が同じことをする
-- キーの置き場所: `.env.local`（ローカル）／ Vercel → Settings → Environment Variables（本番）
-- 変数名: `MODELLIX_KEY`（`VITE_` プレフィックスを付けてはいけない。付けるとブラウザに露出する）
+守ること:
 
-フロントから叩くURLは必ず `/api/v1/...` の相対パス。Modellix が返す絶対URLは
-`toProxyPath()` でパスだけ取り出して同源に戻すこと（CORS回避の要）。
+- **鍵は必ずヘッダ（`X-Modellix-Key`）で渡す。クエリ文字列に載せない**
+  （URL はアクセスログ・ブラウザ履歴・Referer に残る）
+- プロキシで鍵をログ出力しない。レスポンスに含めない
+- サーバーに保存しない。`localStorage` 以外に書かない
+- 401/403 はリトライしない。キーの入れ直しを促す（課金前に弾かれる）
+
+`api/proxy.js` の優先順位は **①ヘッダの鍵 → ②`MODELLIX_KEY`（環境変数）**。
+②は観光デモなど「こちらが費用を持つデモ」用に残してあるので、消さないこと。
+`VITE_` プレフィックスを付けてはいけないのも従来どおり（付けるとビルド成果物に焼き込まれる）。
+
+Modellix が返す絶対URLは `toProxyPath()` でパスだけ取り出して同源に戻すこと（CORS回避の要）。
 
 ```js
 function toProxyPath(u) {
@@ -151,17 +172,20 @@ const PROMPT = (move) => `${move}, as if a person is walking in during a propert
   + `natural indoor lighting, no people, steady tripod-like motion.`;
 ```
 
-`move` は部屋ごとに変える。**狭い空間ほど動きを小さくする**（水回りは破綻しやすい）。
+`move` は**全カット共通**にしている。
 
-| 部屋 | 運鏡 |
-|---|---|
-| 玄関 | `Slow forward dolly, entering the entrance hall` |
-| DK | `Slow horizontal pan from left to right across the kitchen` |
-| リビング | `Slow horizontal pan from left to right across the living room` |
-| 洋室 | `Slow dolly-in toward the window` |
-| 洗面 | `Very slight forward dolly, minimal movement` |
-| 浴室 | `Slow pan with a gentle upward tilt` |
-| トイレ | `Minimal slow dolly-in, almost static` |
+```js
+const MOVE = 'Slow, smooth forward dolly movement through the room';
+```
+
+以前は部屋ごとに運鏡を変えていた（玄関は進入、LDKはパン、水回りはほぼ静止…）が、
+**写真がどの部屋かを判定する手段が無い**ため取りやめた。手掛かりはアップロード順しかなく、
+順番が違えばキッチンの写真に「玄関へ進入する」プロンプトが当たる。
+部屋を取り違えた運鏡は、破綻（実在しないドアや通路の生成）に直結する。
+
+部屋ごとに戻すのは、**部屋種別を判定できるようになってから**。
+GPTBots の vision で画像から推定するのが本命（「5. 未実装」参照）。
+判定できるまでは、どの部屋でも壊れにくい小さな前進だけに寄せておくのが安全側。
 
 大きなカメラワークを指定すると幻覚（壁の歪み・家具の変形・存在しないドア）が増える。
 プロンプトを「派手に」する方向の変更は避けること。
@@ -190,7 +214,7 @@ Modellix にはファイルアップロードAPI（`POST /api/v1/media/files`）
 | $500 | 50 | 500 |
 | $1,000 | 100 | 1,000 |
 
-現在は**並行20 / RPM 200**。6枚同時投入は余裕（3組の同時デモでも18で収まる）。
+現在は**並行20 / RPM 200**。フロントは同時10件に絞ってあるので、2組が同時にデモしても上限内に収まる。
 現在値は https://www.modellix.ai/console/team/entitlements で確認できる。
 
 ### 2-7. エラーハンドリング
@@ -246,7 +270,10 @@ UI では推定値を表示しているが、正確な実費は `data.billing.am
 { file, dataUrl, room, status: 'idle'|'ok'|'ng', videoUrl, elapsed, error, el }
 ```
 
-生成は `Promise.all` で6件同時。1件失敗しても他は継続し、成功したものだけ再生する。
+生成は `runPool(items, PARALLEL, ...)` で**同時 10 件まで**。1件失敗しても他は継続し、成功したものだけ再生する。
+
+`Promise.all` で全部投げないのは、20枚アップロードされたときに Modellix の並行上限（20）を
+1セッションで食い潰し、429 が連鎖するため。空いたワーカーが次を取りに行くだけの単純なプールにしてある。
 
 ### Vercel のリクエストボディ上限（4.5MB）
 
@@ -283,12 +310,15 @@ npm run build   # build:demos → build:showcase
 
 ### 実装済み
 
-- 写真アップロード（ドラッグ＆ドロップ / ファイル選択、最大6枚）
+- API キーの入力・保存・削除（localStorage、マスク表示。未設定なら生成ボタンは押せない）
+- 写真アップロード（ドラッグ＆ドロップ / ファイル選択、最大20枚）
 - クライアント側リサイズ＋API制約の事前検証
-- 部屋の自動割当（玄関→DK→洋室→洗面→浴室→トイレ）とプルダウンでの変更
-- 6件並列生成、カードの進捗表示（送信中 / 生成中 Ns / 完了 Ns / 失敗）
+- 並列生成（同時 10 件のプール）、カードの進捗表示（送信中 / 生成中 Ns / 完了 Ns / 失敗）
 - 経過時間・完了数・推定コスト・従来撮影費との対比
 - 連続再生（1x / 1.5x / 2x 切替、シーンインジケータ、最初から）
+- **1本の mp4 への結合**（`services/video-concat` の Cloud Run を設定した場合）。
+  再生速度は 1x/1.5x/2x/3x で即時切替、選択中の速度で mp4 を書き出せる。
+  未設定・失敗時は連続再生に自動で落ちる
 - 各シーンの個別ダウンロード（CORS失敗時は新規タブにフォールバック）
 - AI生成である旨の注意書き
 
@@ -303,9 +333,10 @@ npm run build   # build:demos → build:showcase
    生成が失敗・タイムアウトした部屋は、静止画をゆっくりズーム/パンさせた擬似動画で代替すれば
    デモが途中で崩れない。ブラウザなら CSS アニメーション or Canvas で代替可能（ffmpeg不要）。
 
-3. **完成動画の1ファイル書き出し**
-   ffmpeg.wasm をブラウザで動かして結合 mp4 を作る。約30MBのロードが発生するので、
-   「ダウンロード」ボタンを押した時に初めて読み込む遅延ロードにすること。
+3. **結合サービスの本番運用**
+   結合自体は `services/video-concat`（Cloud Run）で実装済み。残っているのは運用面:
+   `ALLOWED_HOST_SUFFIXES` に生成結果CDNのホストを設定して取得先を絞ること、
+   `ALLOWED_ORIGINS` を本番ドメインに限定すること、BGM・テロップの焼き込みを足すかの判断。
 
 4. **縦型 9:16 出力**
    Instagram / TikTok 用。不動産クライアントの反応が良い機能。
@@ -314,8 +345,9 @@ npm run build   # build:demos → build:showcase
 5. **物件情報テロップ**
    価格・駅徒歩・間取りを動画上にオーバーレイ表示（DOM重ねで十分、焼き込み不要）。
 
-6. **部屋の自動判定**
-   現状はアップロード順。GPTBots の vision モデルで画像から部屋種別を推定できる。
+6. **部屋の自動判定**（これができたら運鏡の出し分けを復活させる）
+   GPTBots の vision モデルで画像から部屋種別を推定する。判定できないうちは
+   部屋ごとに運鏡を変えてはいけない（`2-4` 参照）。
 
 ---
 

@@ -26,8 +26,13 @@ export default defineConfig(({ mode }) => {
           secure: true,
           followRedirects: true,
           configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq) => {
-              if (key) proxyReq.setHeader('Authorization', 'Bearer ' + key)
+            proxy.on('proxyReq', (proxyReq, req) => {
+              // 本番の api/proxy.js と同じ優先順位。
+              // 画面から渡された鍵があればそれを使い、無ければサーバー側の鍵を使う。
+              const fromClient = req.headers['x-modellix-key']
+              if (fromClient) proxyReq.setHeader('Authorization', 'Bearer ' + fromClient)
+              else if (key) proxyReq.setHeader('Authorization', 'Bearer ' + key)
+              proxyReq.removeHeader('x-modellix-key')
             })
             proxy.on('proxyRes', (proxyRes) => {
               const loc = proxyRes.headers['location']

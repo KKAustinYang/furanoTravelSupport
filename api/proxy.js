@@ -4,9 +4,14 @@
 // every /api/* request (any depth) to this single function, which injects the
 // secret key and forwards to https://api.modellix.ai/api/*.
 //
-// The key lives ONLY on the server — it is never shipped to the browser:
-//   - local dev : .env.local            ->  MODELLIX_KEY=...   (via the Vite dev proxy)
-//   - production: Vercel → Settings → Environment Variables → MODELLIX_KEY
+// Two ways to authenticate, in this order:
+//   1. X-Modellix-Key header — the caller (customer) supplies their OWN key.
+//      Used by demos where the customer pays for their own generations.
+//      The key is only relayed: it is never logged, stored, or echoed back.
+//   2. MODELLIX_KEY on the server — our own key, for demos we host and pay for.
+//      - local dev : .env.local            ->  MODELLIX_KEY=...   (via the Vite dev proxy)
+//      - production: Vercel → Settings → Environment Variables → MODELLIX_KEY
+// Never accept a key from the query string: URLs end up in logs and history.
 //
 // Why a plain function + rewrite instead of api/[...path].js?
 // Vercel's catch-all ([...path]) detection under the Vite preset is unreliable
@@ -15,10 +20,20 @@
 
 const UPSTREAM = 'https://api.modellix.ai'
 
+// Header values must be safe to put on the wire. Anything outside printable
+// ASCII (or an implausible length) is a mistake or an injection attempt.
+const KEY_RE = /^[\x21-\x7e]{16,200}$/
+
 export default async function handler(req, res) {
-  const key = process.env.MODELLIX_KEY
+  const clientKey = req.headers['x-modellix-key']
+  if (clientKey != null && !KEY_RE.test(String(clientKey))) {
+    res.status(400).json({ message: 'X-Modellix-Key is not a valid API key.' })
+    return
+  }
+
+  const key = clientKey ? String(clientKey) : process.env.MODELLIX_KEY
   if (!key) {
-    res.status(500).json({ message: 'MODELLIX_KEY is not configured on the server.' })
+    res.status(401).json({ message: 'API key is missing. Set it in the demo, or configure MODELLIX_KEY on the server.' })
     return
   }
 
