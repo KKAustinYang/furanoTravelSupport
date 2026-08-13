@@ -368,10 +368,6 @@ footer{border-top:1px solid var(--line); padding-block:var(--space-12)}
           <button class="btn btn-primary btn-xs" id="dlMerged">この速度で MP4 を保存</button>
         </div>
       </div>
-      <div class="row">
-        <button class="btn btn-quiet btn-sm" id="dl">各シーンを保存</button>
-        <span class="hint">生成結果は 7 日間のみ保持されます。必要な動画はお早めに保存してください。</span>
-      </div>
       <div class="callout">
         <b>ご注意</b>　本動画は AI が静止画から生成した参考映像です。実際の間取り・寸法・設備を保証するものではありません。
         掲載時は「AI 生成による参考映像」である旨の表示を推奨します。
@@ -774,7 +770,7 @@ async function mergeThenPlay(ok) {
 function buildMerged(ok, bytes, sec) {
   merged = true;
   mergedClips = ok.map(i => i.videoUrl);
-  playlist = ok;               // 「各シーンを保存」は結合後も使えるように保持する
+  playlist = ok;               // 尺の表示（updateMergedSub）で本数を使う
 
   const v = $('v');
   v.src = mergedFiles[1];
@@ -864,24 +860,6 @@ $('speed').onclick = (e) => {
   $('v').playbackRate = rate;
   if (playlist.length) $('p-sub').textContent =
     `${playlist.length}シーン・実尺 ${playlist.length * DURATION}秒（${rate}倍速で約${Math.round(playlist.length * DURATION / rate)}秒）`;
-};
-
-/* ---------- 保存（CORSで失敗したら新規タブで開く） ---------- */
-$('dl').onclick = async () => {
-  for (let i = 0; i < playlist.length; i++) {
-    const it = playlist[i];
-    const name = `${String(i + 1).padStart(2, '0')}_scene.mp4`;
-    try {
-      const b = await (await fetch(it.videoUrl)).blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(b); a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    } catch {
-      window.open(it.videoUrl, '_blank');
-    }
-    await sleep(400);
-  }
 };
 
 renderKey();
