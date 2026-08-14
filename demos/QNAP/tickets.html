@@ -190,6 +190,35 @@ tbody tr.row-main:hover{background:#f2f5f8}
 .notice li+li{margin-top:var(--sp-3)}
 .form-actions{display:flex; justify-content:flex-end; margin-top:var(--sp-8)}
 
+/* ---------- 思考中・ストリーミング ---------- */
+#msgs > * + *{margin-top:var(--sp-4)}
+.aicard.thinking .aicard-body{color:var(--ink-3)}
+.think{display:flex; align-items:center; gap:11px; font-size:13.5px}
+.think .dots{display:inline-flex; gap:5px}
+.think .dots i{width:7px; height:7px; border-radius:50%; background:var(--accent); display:block;
+  animation:bounce 1.1s infinite}
+.think .dots i:nth-child(2){animation-delay:.15s}
+.think .dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{opacity:.3; transform:translateY(0)} 30%{opacity:1; transform:translateY(-4px)}}
+.think .phase{position:relative; overflow:hidden}
+.think .phase span{display:inline-block; animation:phaseIn .4s var(--ease)}
+@keyframes phaseIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+.skeleton{margin-top:var(--sp-4); display:grid; gap:9px}
+.skeleton i{display:block; height:10px; border-radius:5px;
+  background:linear-gradient(90deg,#eef1f4 25%,#e2e7ec 37%,#eef1f4 63%); background-size:400% 100%;
+  animation:shim 1.3s ease infinite}
+.skeleton i:nth-child(1){width:92%} .skeleton i:nth-child(2){width:78%} .skeleton i:nth-child(3){width:86%}
+@keyframes shim{0%{background-position:100% 50%} 100%{background-position:0 50%}}
+.streamed .caret{display:inline-block; width:2px; height:1em; background:var(--accent);
+  vertical-align:-2px; margin-left:2px; animation:blink .9s steps(1) infinite}
+.streamed h4{font-size:14.5px; color:var(--ink); margin:16px 0 6px}
+.streamed h4:first-child{margin-top:0}
+.streamed p+p{margin-top:10px}
+.streamed ul{margin:8px 0 0; padding-left:1.25em}
+.streamed li{margin-top:5px}
+.streamed strong{color:var(--ink); font-weight:700}
+@keyframes blink{50%{opacity:0}}
+
 /* ---------- 添付ファイル ---------- */
 .files{display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-top:var(--sp-3)}
 .files:empty{display:none}
@@ -390,6 +419,7 @@ tbody tr.row-main:hover{background:#f2f5f8}
         </div>
 
         <div class="thread" id="thread">
+          <div id="msgs">
           <div class="msg">
             <div class="msg-head">
               <span class="who">
@@ -404,6 +434,8 @@ tbody tr.row-main:hover{background:#f2f5f8}
               </span>
             </div>
             <div class="msg-body">AuroraMobileのテストです。ご返信不要でございます。</div>
+          </div>
+
           </div>
 
           <h2 class="reply-title">返信</h2>
@@ -704,10 +736,10 @@ tbody tr.row-main:hover{background:#f2f5f8}
   });
 
   /* ---- 一覧 ⇄ 作成フォーム ---- */
-  function show(view) {
+  function show(view, keepScroll) {
     $('view-list').classList.toggle('hide', view !== 'list');
     $('view-create').classList.toggle('hide', view !== 'create');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!keepScroll) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   $('btnCreate').addEventListener('click', function () { show('create'); });
 
@@ -930,22 +962,28 @@ tbody tr.row-main:hover{background:#f2f5f8}
     return out.join('\n');
   }
 
-  async function askAgent(content) {
-    if (!agentConv) {
-      var c = await fetch(AGENT_API + '/v1/conversation', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: 'qnap-portal-demo' }),
-      });
-      if (!c.ok) throw new Error('会話を開始できませんでした（' + c.status + '）');
-      var cj = await c.json();
-      agentConv = cj.conversation_id || (cj.data && cj.data.conversation_id);
-      if (!agentConv) throw new Error('conversation_id を取得できませんでした');
-    }
+  async function ensureConversation() {
+    if (agentConv) return agentConv;
+    var c = await fetch(AGENT_API + '/v1/conversation', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: 'qnap-portal-demo' }),
+    });
+    if (!c.ok) throw new Error('会話を開始できませんでした（' + c.status + '）');
+    var cj = await c.json();
+    agentConv = cj.conversation_id || (cj.data && cj.data.conversation_id);
+    if (!agentConv) throw new Error('conversation_id を取得できませんでした');
+    return agentConv;
+  }
+
+  // SSE で受け取り、届いた分から順に onChunk へ渡す。
+  // 途中でイベントが切れることがあるので、バッファに溜めて行単位で処理する。
+  async function askAgentStream(content, onChunk) {
+    await ensureConversation();
     var r = await fetch(AGENT_API + '/v2/conversation/message', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         conversation_id: agentConv,
-        response_mode: 'blocking',
+        response_mode: 'streaming',
         messages: [{ role: 'user', content: content }],
       }),
     });
@@ -954,10 +992,37 @@ tbody tr.row-main:hover{background:#f2f5f8}
       try { m = (await r.json()).message; } catch (e) {}
       throw new Error(m || 'エージェントが ' + r.status + ' を返しました');
     }
-    var j = await r.json();
-    var first = (j.output || []).find(function (o) { return o && o.content && o.content.text; });
-    if (!first) throw new Error('回答を取得できませんでした');
-    return first.content.text;
+
+    var ctype = r.headers.get('content-type') || '';
+    // ストリームで来なかった場合（プロキシがバッファした等）は一括で受ける
+    if (!/event-stream/i.test(ctype) || !r.body) {
+      var j = await r.json();
+      var one = (j.output || []).find(function (o) { return o && o.content && o.content.text; });
+      if (!one) throw new Error('回答を取得できませんでした');
+      onChunk(one.content.text);
+      return one.content.text;
+    }
+
+    var reader = r.body.getReader(), dec = new TextDecoder(), buf = '', full = '';
+    while (true) {
+      var res = await reader.read();
+      if (res.done) break;
+      buf += dec.decode(res.value, { stream: true });
+      var lines = buf.split('\n');
+      buf = lines.pop();                        // 最後の行は途中かもしれないので残す
+      lines.forEach(function (line) {
+        line = line.trim();
+        if (!line.startsWith('data:')) return;
+        var payload = line.slice(5).trim();
+        if (!payload || payload === '[DONE]') return;
+        try {
+          var ev = JSON.parse(payload);
+          if (ev.code === 3 && typeof ev.data === 'string') { full += ev.data; onChunk(ev.data); }
+        } catch (e) { /* 分割されたJSONは次のチャンクで揃う */ }
+      });
+    }
+    if (!full) throw new Error('回答を取得できませんでした');
+    return full;
   }
 
   // エージェントの返答は Markdown 風。見出し・強調・箇条書きだけ最低限整える
@@ -1025,23 +1090,84 @@ tbody tr.row-main:hover{background:#f2f5f8}
     return card;
   }
 
-  function aiCard(answer, payload) {
+  // 1枚のカードを 思考中 → 流し込み → 完成 と作り替えていく（チャットと同じ見え方）
+  var PHASES = ['内容を読み取っています', 'ナレッジベースを検索しています', '回答を作成しています'];
+
+  function aiCard() {
     var card = document.createElement('div');
-    card.className = 'aicard';
+    card.className = 'aicard thinking';
     card.innerHTML =
       '<div class="aicard-head"><span class="who">' +
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">' +
       '<rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 16h5"/></svg>' +
       'QNAP サポートAI</span><span class="badge">AI 回答</span>' +
       '<span class="when">' + stamp(new Date()) + '</span></div>' +
-      '<div class="aicard-body">' + renderAnswer(answer) +
-      (payload ? '<details class="payload"><summary>AI に渡した構造化データを表示</summary><pre></pre></details>' : '') +
+      '<div class="aicard-body">' +
+      '<div class="think"><span class="dots"><i></i><i></i><i></i></span>' +
+      '<span class="phase"><span>' + PHASES[0] + '</span></span></div>' +
+      '<div class="skeleton"><i></i><i></i><i></i></div>' +
       '</div>';
-    if (payload) card.querySelector('pre').textContent = payload;
-    return card;
+
+    var body = card.querySelector('.aicard-body');
+    var phase = card.querySelector('.phase');
+    var n = 0;
+    var timer = setInterval(function () {
+      n = Math.min(n + 1, PHASES.length - 1);
+      phase.innerHTML = '<span>' + PHASES[n] + '</span>';
+      if (n === PHASES.length - 1) clearInterval(timer);
+    }, 2600);
+
+    var streamEl = null, buf = '', pending = false;
+    // 届いた分をそのつど整形して描く（生の ### や ** を見せない）
+    function paint() {
+      pending = false;
+      streamEl.innerHTML = renderAnswer(buf) + '<span class="caret"></span>';
+      follow(card);
+    }
+    return {
+      el: card,
+      // 最初のチャンクが来たら思考表示を畳んで、本文の流し込みに切り替える
+      push: function (chunk) {
+        if (!streamEl) {
+          clearInterval(timer);
+          card.classList.remove('thinking');
+          body.innerHTML = '<div class="streamed"></div>';
+          streamEl = body.firstChild;
+        }
+        buf += chunk;
+        if (!pending) { pending = true; requestAnimationFrame(paint); }
+      },
+      done: function (full, payload) {
+        clearInterval(timer);
+        card.classList.remove('thinking');
+        body.innerHTML = renderAnswer(full) +
+          (payload ? '<details class="payload"><summary>AI に渡した構造化データを表示</summary><pre></pre></details>' : '');
+        if (payload) body.querySelector('pre').textContent = payload;
+        follow(card);
+      },
+      fail: function (msg) {
+        clearInterval(timer);
+        card.classList.remove('thinking');
+        body.innerHTML = '';
+        var p = document.createElement('p');
+        p.textContent = '回答を取得できませんでした（' + msg + '）';
+        body.appendChild(p);
+      },
+    };
   }
 
-  function fileTicket(t, text, answer) {
+  // 追従スクロール。ユーザーが上を読んでいるときは邪魔しない
+  function follow(el) {
+    var r = el.getBoundingClientRect();
+    var near = r.bottom - window.innerHeight < 260;
+    if (near) el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+  function jumpTo(el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // 起票：一覧に行を足し、スレッドにお客様の投稿を積む（AIカードは呼び出し側が足す）
+  function fileTicket(files) {
     var now = new Date();
     var no = 'Q-' + now.getFullYear() + pad(now.getMonth() + 1) + '-' +
       String(Math.floor(10000 + Math.random() * 89999));
@@ -1054,16 +1180,13 @@ tbody tr.row-main:hover{background:#f2f5f8}
       '<td class="num">' + stamp(now) + '</td><td><span class="status">新規</span></td><td>通常</td>';
     document.querySelector('table tbody').prepend(tr);
 
-    $('thread').prepend(aiCard(answer, text));
-    if (formFiles.length) {
-      $('thread').prepend(messageCard(
-        (val('f-first') + ' ' + val('f-last')).trim() || 'お客様',
-        stamp(now), val('f-title') + '（添付あり）', formFiles));
-    }
+    var who = (val('f-first') + ' ' + val('f-last')).trim() || 'お客様';
+    var body = val('f-title') + '\n' + val('f-desc');
+    $('msgs').appendChild(messageCard(who, stamp(now), body, files));
     return no;
   }
 
-  /* ---- 送信 ---- */
+  /* ---- 起票 ---- */
   $('ticketForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var missing = [];
@@ -1077,27 +1200,32 @@ tbody tr.row-main:hover{background:#f2f5f8}
       return;
     }
 
-    var btn = e.target.querySelector('button[type="submit"]');
-    var t = buildTicket(), text = ticketToText(t);
-    var t0 = Date.now();
-    btn.disabled = true;
-    var tick = setInterval(function () {
-      btn.textContent = 'AI が確認しています… ' + Math.round((Date.now() - t0) / 1000) + 's';
-    }, 500);
-    btn.textContent = 'AI が確認しています…';
+    var text = ticketToText(buildTicket());
+    var files = formFiles.slice();
+    var blocks = [{ type: 'text', text: text }].concat(attachBlocks(files));
+
+    // 待たせない。先に受付を見せてから、AIの回答は同じ画面で育てる
+    var no = fileTicket(files);
+    var card = aiCard();
+    $('msgs').appendChild(card.el);
+    // 作成画面は縦に長い。先頭へ戻してからカードへ送らないと、
+    // 縮んだドキュメントの範囲外にスクロール位置が残って空白が見える
+    show('list', true);
+    window.scrollTo(0, 0);
+    requestAnimationFrame(function () { jumpTo(card.el); });
+    toast(no + ' を受け付けました');
+
+    formFiles.length = 0; renderFiles(formFiles, 'f-files');
+    $('ticketForm').reset();
+    $('cnt').textContent = '0';
+    document.querySelectorAll('.ctrl select').forEach(function (sel) { sel.classList.add('placeholder'); });
 
     try {
-      var answer = await askAgent([{ type: 'text', text: text }].concat(attachBlocks(formFiles)));
-      var no = fileTicket(t, text, answer);
-      formFiles.length = 0; renderFiles(formFiles, 'f-files');
-      show('list');
-      toast(no + ' を受け付けました（AI が一次回答しました）');
+      var full = await askAgentStream(blocks, card.push);
+      card.done(full, text);
     } catch (err) {
+      card.fail(err.message);
       toast('AI への送信に失敗しました: ' + err.message);
-    } finally {
-      clearInterval(tick);
-      btn.disabled = false;
-      btn.textContent = 'メッセージの送信';
     }
   });
 
@@ -1106,35 +1234,35 @@ tbody tr.row-main:hover{background:#f2f5f8}
     var body = $('reply').value.trim();
     if (!body && !replyFiles.length) { toast('返信の内容を入力してください'); return; }
 
-    var btn = this, t0 = Date.now();
     var files = replyFiles.slice();
+    var text = body || '（本文なし・添付のみ）';
+    if (files.length) {
+      text += '\n\n■ 添付\n' + files.map(function (f) {
+        return '- ' + (f.kind === 'image' ? '画像' : '文書') + ': ' + f.name; }).join('\n');
+    }
+
+    // 送信した瞬間に自分の発言が積まれ、入力欄は空になる（チャットと同じ手触り）
+    $('msgs').appendChild(messageCard('水戸部', stamp(new Date()), body || '（添付のみ）', files));
+    $('reply').value = '';
+    replyFiles.length = 0; renderFiles(replyFiles, 'r-files');
+
+    var card = aiCard();
+    $('msgs').appendChild(card.el);
+    jumpTo(card.el);
+
+    var btn = this;
     btn.disabled = true;
-    var tick = setInterval(function () {
-      btn.textContent = 'AI が確認しています… ' + Math.round((Date.now() - t0) / 1000) + 's';
-    }, 500);
-    btn.textContent = 'AI が確認しています…';
-
     try {
-      var text = body || '（本文なし・添付のみ）';
-      if (files.length) {
-        text += '\n\n■ 添付\n' + files.map(function (f) {
-          return '- ' + (f.kind === 'image' ? '画像' : '文書') + ': ' + f.name; }).join('\n');
-      }
-      var answer = await askAgent([{ type: 'text', text: text }].concat(attachBlocks(files)));
-
-      $('thread').prepend(aiCard(answer, null));
-      $('thread').prepend(messageCard('水戸部', stamp(new Date()), body || '（添付のみ）', files));
-      $('reply').value = '';
-      replyFiles.length = 0; renderFiles(replyFiles, 'r-files');
-      toast('返信を送信しました（AI が回答しました）');
+      var full = await askAgentStream([{ type: 'text', text: text }].concat(attachBlocks(files)), card.push);
+      card.done(full, null);
     } catch (err) {
+      card.fail(err.message);
       toast('AI への送信に失敗しました: ' + err.message);
     } finally {
-      clearInterval(tick);
       btn.disabled = false;
-      btn.textContent = '返信を送信';
     }
   });
+
   $('btnRefresh').addEventListener('click', function () { toast('最新の状態です'); });
   $('btnSearch').addEventListener('click', function () { toast('デモのため検索結果は固定です'); });
   ['serialHelp', 'logHelp'].forEach(function (id) {

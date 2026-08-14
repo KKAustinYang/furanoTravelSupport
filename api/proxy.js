@@ -87,9 +87,21 @@ export default async function handler(req, res) {
 
   try {
     const upstream = await fetch(target, init)
-    const body = await upstream.text()
+    const ct = upstream.headers.get('content-type') || 'application/json'
     res.status(upstream.status)
-    res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json')
+    res.setHeader('Content-Type', ct)
+
+    // SSE はバッファせずそのまま流す。溜めてから返すとストリーミングの意味が無い。
+    if (/text\/event-stream/i.test(ct) && upstream.body) {
+      res.setHeader('Cache-Control', 'no-cache, no-transform')
+      res.setHeader('Connection', 'keep-alive')
+      res.setHeader('X-Accel-Buffering', 'no')   // プロキシ側のバッファリング抑止
+      const { Readable } = await import('node:stream')
+      Readable.fromWeb(upstream.body).pipe(res)
+      return
+    }
+
+    const body = await upstream.text()
     res.send(body)
   } catch (e) {
     res.status(502).json({ message: 'Proxy error: ' + e.message })
