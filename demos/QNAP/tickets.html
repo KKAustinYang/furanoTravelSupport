@@ -249,8 +249,11 @@ tbody tr.row-main:hover{background:#f2f5f8}
 
 /* ---------- デモ告知 ---------- */
 .demo-bar{background:#fff8e1; border-bottom:1px solid #f2e3b0; color:#6b5316; font-size:12.5px}
-.demo-bar .container{display:flex; align-items:center; gap:10px; padding-block:9px}
+.demo-bar .container{display:flex; align-items:center; gap:10px; padding-block:9px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .demo-bar b{font-weight:700}
+.demo-bar .short{display:none}
+@media(max-width:720px){ .demo-bar .full{display:none} .demo-bar .short{display:inline} }
 
 /* ---------- 狭い画面 ---------- */
 @media(max-width:760px){
@@ -299,7 +302,8 @@ tbody tr.row-main:hover{background:#f2f5f8}
 <div class="demo-bar">
   <div class="container">
     <b>デモ環境</b>
-    <span>QNAP サポートポータルの画面を再現したものです。送信ボタンを押すと、入力内容は構造化して <b>AI エージェント</b>へ渡され一次回答が返ります。QNAP へチケットが起票されることはありません。</span>
+    <span class="full">入力内容は <b>AI エージェント</b>へ送信されます。QNAP へのチケット起票は行いません。</span>
+    <span class="short">入力内容は AI へ送信。QNAP への起票なし。</span>
   </div>
 </div>
 
