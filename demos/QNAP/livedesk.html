@@ -3,144 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QNAP サポートAIチャット（ライブ体験）｜EngageLab LiveDesk</title>
+<title>QNAP サポートAIチャット｜EngageLab LiveDesk</title>
+<meta name="description" content="QNAP サポートAI とその場で話せるチャット専用ページ。ログイン不要、このURLを開くだけでお試しいただけます。">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#05070e; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.055);
-    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
-    --ink:#eef2fb; --sub:#aab6d6; --muted:#7d8bb0;
-    --blue:#4c8dff; --cyan:#2fe0e6; --violet:#9b6bff; --green:#3fdc93;
-    --grad:linear-gradient(120deg,#4c8dff 0%,#2fe0e6 55%,#9b6bff 100%);
-    --glow:rgba(47,224,230,.5); --brand:#56d8b5;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Noto Sans JP',-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
-       background:var(--bg);color:var(--ink);line-height:1.75;-webkit-font-smoothing:antialiased;
-       min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden}
-  a{color:var(--cyan);text-decoration:none}
-  .mono{font-family:'JetBrains Mono',monospace}
-  ::selection{background:rgba(76,141,255,.35)}
+/* ==========================================================================
+   チャット専用ページ
+   index.html / tickets.html と同じトークン・同じヘッダーで統一している。
+   ========================================================================== */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff;
+  --ink:#16181d; --ink-2:#4a4f58; --ink-3:#818893;
+  --line:#e3e6ea; --line-2:#cfd4da;
+  --brand:#0a0a0a; --accent:#2196f3; --accent-ink:#1976d2; --accent-soft:#e8f3fd;
+  --ok:#2e7d5b;
+  --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --shadow-1:0 1px 2px rgba(22,24,29,.06);
+  --shadow-3:0 24px 60px rgba(22,24,29,.14);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --font:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --container:1240px;
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font); font-size:15.5px; line-height:1.85; color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column}
+h1,h2{line-height:1.45; font-feature-settings:"palt" 1; font-weight:700; text-wrap:balance; word-break:auto-phrase}
+img,svg,iframe{display:block; max-width:100%}
+button{font:inherit; color:inherit}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--sp-6)}
+.mono{font-family:var(--mono); font-variant-numeric:tabular-nums}
 
-  /* aurora background */
-  .aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.45;animation:drift 26s ease-in-out infinite}
-  .b1{width:620px;height:620px;background:radial-gradient(circle,#1f5bd6,transparent 65%);top:-240px;left:-140px}
-  .b2{width:560px;height:560px;background:radial-gradient(circle,#12b6c8,transparent 65%);bottom:-220px;right:-160px;animation-delay:-8s}
-  .b3{width:460px;height:460px;background:radial-gradient(circle,#7b45e0,transparent 65%);top:35%;left:35%;animation-delay:-14s;opacity:.28}
-  @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,50px) scale(1.12)}}
-  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.04;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* ---------- 共通ヘッダー ---------- */
+.gnav{background:var(--brand); color:#fff; flex:0 0 auto}
+.gnav-in{display:flex; align-items:center; gap:var(--sp-6); height:60px}
+.gnav .logo{height:19px; width:110px; color:#fff; flex:0 0 auto}
+.gnav-menu{display:flex; align-items:stretch; height:60px; margin-left:var(--sp-2)}
+.gnav-menu a{display:inline-flex; align-items:center; padding:0 var(--sp-6); font-size:14px; font-weight:500;
+  color:#cfd3d8; text-decoration:none; transition:color .18s var(--ease), background .18s var(--ease)}
+.gnav-menu a:hover{color:#fff}
+.gnav-menu a.on{color:var(--ink); background:var(--surface); font-weight:700}
+.gnav-right{margin-left:auto; display:flex; align-items:center; gap:var(--sp-3)}
+@media(max-width:760px){
+  .gnav-in{gap:var(--sp-2); height:56px}
+  .gnav .logo{width:88px; height:16px}
+  .gnav-menu{height:56px; margin-left:0}
+  .gnav-menu a{padding:0 var(--sp-3); font-size:13px; white-space:nowrap}
+}
 
-  /* header */
-  header{position:relative;z-index:30;backdrop-filter:blur(16px);background:rgba(5,7,14,.55);border-bottom:1px solid var(--line);flex:0 0 auto}
-  .nav{max-width:1460px;margin:0 auto;padding:12px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-  .logos{display:flex;align-items:center;gap:12px;font-weight:700;font-size:15px;min-width:0}
-  .qnaplogo{height:19px;width:110px;color:#fff;display:block;flex:0 0 auto}
-  .brandlogo{height:19px;width:106px;display:block;flex:0 0 auto}
-  .x{color:var(--muted);font-size:12px}
-  .navr{display:flex;align-items:center;gap:10px}
-  .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700;
-       border:1px solid var(--line2);background:var(--panel);color:var(--ink);cursor:pointer;transition:.25s;white-space:nowrap}
-  .btn:hover{background:var(--panel2);border-color:rgba(47,224,230,.5);transform:translateY(-1px)}
-  .btn.pri{border-color:transparent;background:var(--grad);color:#05070e;box-shadow:0 8px 24px rgba(47,224,230,.22)}
-  .btn.pri:hover{box-shadow:0 10px 30px rgba(47,224,230,.35)}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px;
+  padding:0 var(--sp-4); border-radius:var(--r-sm); border:1px solid var(--line-2); background:var(--surface);
+  font-size:13.5px; font-weight:600; cursor:pointer; white-space:nowrap; text-decoration:none;
+  transition:background .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease)}
+.btn:hover{background:#fafbfc; box-shadow:var(--shadow-1)}
+.btn:active{transform:translateY(1px)}
+.btn-onDark{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.22); color:#fff}
+.btn-onDark:hover{background:rgba(255,255,255,.16)}
 
-  /* layout */
-  main{position:relative;z-index:2;flex:1 1 auto;width:100%;max-width:1460px;margin:0 auto;padding:18px 26px 16px;
-       display:grid;grid-template-columns:minmax(0,1fr) minmax(560px,760px);gap:32px;align-items:stretch}
+/* ---------- 本文 ---------- */
+main{flex:1 1 auto; width:100%; max-width:var(--container); margin-inline:auto; padding:var(--sp-10) var(--sp-6);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(560px,700px); gap:var(--sp-12); align-items:stretch}
+.side{display:flex; flex-direction:column; justify-content:center; gap:var(--sp-4); min-width:0}
+.eyebrow{display:inline-flex; align-items:center; gap:10px; align-self:flex-start; font-size:12px; font-weight:600;
+  letter-spacing:.16em; color:var(--ok); text-transform:uppercase}
+.eyebrow i{width:7px; height:7px; border-radius:50%; background:var(--ok); display:block}
+h1{font-size:clamp(26px,3.2vw,38px)}
+h1 .em{color:var(--accent-ink)}
+.lead{font-size:15.5px; color:var(--ink-2); max-width:34em}
+.steps{list-style:none; padding:0; margin-top:var(--sp-2); display:grid; gap:var(--sp-3)}
+.steps li{display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-md); padding:13px 16px; font-size:13.5px; color:var(--ink-2); box-shadow:var(--shadow-1)}
+.steps b{color:var(--ink)}
+.steps .n{flex:0 0 auto; width:22px; height:22px; border-radius:7px; display:grid; place-items:center; margin-top:2px;
+  background:var(--accent-soft); color:var(--accent-ink); border:1px solid #cde6fb; font-size:11px; font-weight:700;
+  font-family:var(--mono)}
+.note{font-size:12px; color:var(--ink-3); line-height:1.8}
 
-  /* left column */
-  .side{display:flex;flex-direction:column;justify-content:center;gap:18px;min-width:0}
-  .tag{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 13px;border-radius:999px;
-       border:1px solid rgba(63,220,147,.35);background:rgba(63,220,147,.08);color:var(--green);
-       font-size:11.5px;font-weight:700;letter-spacing:.5px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  h1{font-size:clamp(26px,3.4vw,40px);font-weight:900;line-height:1.3;letter-spacing:-.5px}
-  h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .lead{color:var(--sub);font-size:14.5px;max-width:52ch}
-  .feat{list-style:none;display:grid;gap:10px;margin-top:2px}
-  .feat li{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;border:1px solid var(--line);border-radius:12px;
-           background:var(--panel);font-size:13.5px;color:var(--sub);line-height:1.6}
-  .feat b{color:var(--ink);font-weight:700}
-  .ico{flex:0 0 auto;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;margin-top:2px;
-       background:rgba(76,141,255,.14);border:1px solid rgba(76,141,255,.3);color:var(--cyan);font-size:11px;font-weight:900}
-  .note{font-size:11.5px;color:var(--muted);line-height:1.7}
+/* ---------- チャット枠 ---------- */
+.frame{display:flex; flex-direction:column; min-height:0; border-radius:var(--r-lg); overflow:hidden;
+  border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow-3)}
+.frame-head{flex:0 0 auto; display:flex; align-items:center; gap:11px; padding:11px 14px;
+  border-bottom:1px solid var(--line); background:#fafbfc}
+.dots{display:flex; gap:6px}
+.dots i{width:10px; height:10px; border-radius:50%; display:block}
+.dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+.addr{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:7px; padding:5px 12px; border-radius:999px;
+  background:var(--bg); border:1px solid var(--line); color:var(--ink-3); font-family:var(--mono); font-size:11.5px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.addr .lock{color:var(--ok)}
+.live{flex:0 0 auto; display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--ok)}
+.live i{width:7px; height:7px; border-radius:50%; background:var(--ok); display:block}
+.frame-body{flex:1 1 auto; position:relative; min-height:0; background:var(--surface); overflow:hidden}
+.frame-body iframe{position:absolute; top:0; left:0; width:100%; height:100%; border:0; transform-origin:top left}
+.loader{position:absolute; inset:0; display:grid; place-items:center; background:var(--surface);
+  transition:opacity .4s var(--ease), visibility .4s; text-align:center}
+.loader.hide{opacity:0; visibility:hidden}
+.spin{width:30px; height:30px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--accent);
+  animation:sp .9s linear infinite; margin:0 auto 12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loader .t{font-size:12.5px; color:var(--ink-3); font-family:var(--mono)}
 
-  /* chat frame */
-  .frame{position:relative;display:flex;flex-direction:column;min-height:0;border-radius:20px;overflow:hidden;
-         border:1px solid var(--line2);background:rgba(9,12,22,.9);
-         box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03) inset;
-         animation:rise .9s cubic-bezier(.2,.8,.2,1)}
-  @keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-  .frame::before{content:"";position:absolute;inset:-1px;border-radius:21px;padding:1px;pointer-events:none;
-    background:linear-gradient(140deg,rgba(76,141,255,.55),rgba(47,224,230,.35) 45%,transparent 70%);
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
-  .frame-head{flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--line);
-              background:rgba(255,255,255,.03)}
-  .dots{display:flex;gap:6px;flex:0 0 auto}
-  .dots i{width:10px;height:10px;border-radius:50%;display:block}
-  .dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
-  .addr{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;
-        background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);font-size:11.5px;
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .addr .lock{color:var(--green)}
-  .live{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--green)}
-  /* LiveDesk ウィジェットは横幅 520px 未満だと中身が見切れるため、
-     狭い画面では 520px 相当で描画して縮小表示する（下部 fit() が担当） */
-  .frame-body{flex:1 1 auto;position:relative;min-height:0;background:#0b0f1c;overflow:hidden}
-  .frame-body iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block;transform-origin:top left}
-  .loader{position:absolute;inset:0;display:grid;place-items:center;gap:14px;background:#0b0f1c;
-          transition:opacity .5s ease,visibility .5s;text-align:center}
-  .loader.hide{opacity:0;visibility:hidden}
-  .spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:var(--cyan);
-        animation:sp .9s linear infinite;margin:0 auto 12px}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .loader .t{font-size:12.5px;color:var(--muted);letter-spacing:.5px}
+footer{flex:0 0 auto; border-top:1px solid var(--line); background:var(--surface); padding:14px var(--sp-6);
+  font-size:12px; color:var(--ink-3); text-align:center}
+.toast{position:fixed; left:50%; bottom:26px; transform:translate(-50%,16px); z-index:80; background:var(--brand);
+  color:#fff; font-size:13px; font-weight:600; padding:11px 20px; border-radius:999px;
+  box-shadow:0 12px 32px rgba(0,0,0,.28); opacity:0; visibility:hidden; transition:.28s var(--ease)}
+.toast.show{opacity:1; visibility:visible; transform:translate(-50%,0)}
 
-  footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line);padding:10px 24px;
-         color:var(--muted);font-size:11.5px;text-align:center;line-height:1.6}
-  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:80;padding:10px 18px;border-radius:999px;
-         background:rgba(9,12,22,.95);border:1px solid rgba(47,224,230,.45);color:var(--ink);font-size:12.5px;font-weight:700;
-         opacity:0;visibility:hidden;transition:.3s;box-shadow:0 12px 32px rgba(0,0,0,.5)}
-  .toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
-
-  @media(max-width:1180px){
-    body{overflow-y:auto}
-    main{grid-template-columns:1fr;gap:24px;padding:22px 18px}
-    /* 縦並びではチャットを先頭に（開いてすぐ試せるように） */
-    .frame{order:1;height:min(74vh,700px);min-height:460px}
-    .side{order:2}
-    h1{font-size:26px}
-  }
-  @media(max-width:600px){
-    .nav{padding:12px 16px;gap:10px}
-    .brandlogo,.x{display:none}
-    .btn{padding:7px 11px;font-size:11.5px}
-    .frame{height:calc(100dvh - 150px);min-height:440px}
-    .addr{font-size:10.5px}
-    .feat li{font-size:12.5px}
-  }
+@media(max-width:1180px){
+  body{display:block}
+  main{grid-template-columns:1fr; gap:var(--sp-6); padding:var(--sp-6)}
+  .frame{order:1; height:min(74vh,700px); min-height:460px}
+  .side{order:2}
+}
+@media(max-width:600px){
+  .frame{height:calc(100dvh - 150px); min-height:440px}
+  .addr{font-size:10.5px}
+}
+@media(prefers-reduced-motion:reduce){ *{transition-duration:.01ms!important; animation-duration:.01ms!important} }
 </style>
 </head>
 <body>
+
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<symbol id="gptlogo" viewBox="0 0 888.5 158.6">
-<path fill="#56d8b5" d="M194.5,64.48c2.57,2.57,2.27,25.09.45,28.42-1.66,2.72-10.58,6.35-13.91,8.92-10.43,7.86-13.15,17.23-20.56,26.61-31.44,39.61-89.94,40.21-122.75,1.97-7.41-8.62-11.49-19.35-20.26-26.76-4.08-3.48-16.63-9.07-17.23-12.09-.45-2.72-.3-24.64.6-26.15,6.35-4.23,14.36-8.01,19.8-13.3,9.52-9.37,13.76-22.83,24.79-32.5,32.95-28.72,83.29-25.55,111.86,7.56,7.86,9.07,12.7,21.01,22.22,28.72,3.63,2.87,13.3,6.8,14.97,8.62ZM64.64,33.94c-6.05,1.06-10.43,4.69-12.4,10.58,1.81,21.62-2.57,47.47,0,68.63.91,8.16,7.26,11.34,14.66,12.09,15.42,1.51,45.65,1.36,61.07,0,9.37-.76,14.66-3.48,15.87-13.45,1.51-13.76,1.66-51.25,0-64.85-.91-8.31-8.31-12.55-15.87-13.3-12.85-1.36-51.09-1.81-63.34.3Z"/>
-<path fill="#e9f0ff" d="M299.1,80.5c-7.41,9.52-19.35,13.76-31.29,10.88-11.49-2.72-19.5-11.19-21.62-22.37-1.97-10.28.6-19.8,6.95-26.76,5.59-6.2,13.91-9.52,22.98-9.52h3.33c10.13.91,18.74,7.26,23.13,17.08,4.54,10.28,3.33,22.07-3.17,30.54l-.3.15ZM245.44,148.07v-35.68c4.69,2.87,9.83,5.44,15.72,6.65,4.69,1.06,9.22,1.51,13.76,1.51,21.31,0,40.36-10.73,50.79-29.48,4.69-8.31,7.1-17.38,7.41-26.91.3-8.92-1.66-17.99-5.29-26.15-7.71-16.78-22.37-28.57-40.21-32.35-17.38-3.63-34.31.15-47.62,10.58-13.6,10.58-21.77,26.91-22.67,44.9-.45,10.13-.3,20.86,0,31.29,0,4.08,0,8.16.15,12.09,0,4.23,0,40.66-.3,44.59v3.48l28.57-.3"/>
-<path fill="#e9f0ff" d="M509.38,124.48c-10.43.91-19.95-2.57-26.15-9.52-6.35-6.95-8.77-16.48-6.95-26.76,2.12-11.19,10.13-19.65,21.62-22.37,11.94-2.87,24.04,1.21,31.29,10.88,6.5,8.47,7.86,20.26,3.17,30.54-4.38,9.83-13,16.33-23.13,17.08l.15.15ZM475.51,4.46h-28.57v3.48c.3,4.08.45,40.36.45,44.59,0,3.93,0,8.16-.15,12.09-.15,10.43-.3,21.16,0,31.29.91,17.99,9.07,34.47,22.67,44.9,10.13,7.86,22.22,11.94,34.92,11.94,4.23,0,8.47-.45,12.85-1.36,17.84-3.78,32.65-15.42,40.21-32.35,3.78-8.16,5.59-17.23,5.29-26.15-.3-9.52-2.72-18.59-7.41-26.91-12.7-22.67-38.09-33.56-64.7-27.97-5.9,1.21-10.88,3.78-15.72,6.65V8.99"/>
-<path fill="#e9f0ff" d="M422.3,35.15h-44.14V4.92h-27.97v91.46c.6,14.97,6.8,28.87,17.38,39.15,10.58,10.43,24.64,16.33,39.45,16.78h15.12v-30.54l-4.69,2.27c-14.97.3-24.19-1.21-32.2-10.73-5.44-6.35-6.65-12.4-6.95-21.92-.15-4.38,0-8.92,0-13.45,0-4.84.15-9.98,0-14.97h43.69v-28.27l.3.45Z"/>
-<path fill="#e9f0ff" d="M853.43,80.2c-12.55-4.69-20.26-7.86-20.26-15.12,0-6.65,5.9-10.88,15.27-10.88,7.41,0,15.27,3.33,20.11,8.47l2.42,2.57,17.54-18.14-2.12-2.27c-8.16-8.92-21.77-14.06-37.34-14.06-12.55,0-23.28,3.63-31.14,10.58-7.26,6.5-11.34,15.27-11.34,24.79,0,23.43,19.35,30.54,34.92,36.28,12.55,4.69,20.11,7.86,20.11,14.97s-6.2,11.94-16.78,11.94c-15.12,0-24.94-9.07-27.66-11.79l-2.57-2.57-16.48,19.65,2.12,2.12c4.08,4.23,9.98,8.01,16.63,10.73,8.16,3.33,17.23,4.99,26.91,4.99,13.91,0,25.4-3.93,33.56-11.49,6.95-6.5,10.88-15.42,10.88-24.49,0-23.58-19.35-30.69-35.07-36.43l.3.15Z"/>
-<path fill="#e9f0ff" d="M782.08,35.15h-44.14V4.92h-27.97v91.46c.6,14.97,6.8,28.87,17.38,39.15,10.58,10.43,24.64,16.33,39.45,16.78h15.12v-30.54l-4.69,2.27c-14.97.3-24.19-1.21-32.2-10.73-5.44-6.35-6.65-12.4-6.95-21.92-.15-4.38,0-8.92,0-13.45,0-4.84.15-9.98,0-14.97h43.69v-28.27l.3.45Z"/>
-<path fill="#56d8b5" d="M643.31,26.98c-.6-1.21-1.66-2.12-3.02-2.57-1.36-.45-2.72-.3-3.93.3-.91.45-1.66,1.21-2.12,2.12l-63.79,121.99h32.95l34.92-65.61,33.86,64.85.45.76h32.95l-62.28-121.99v.15Z"/>
-</symbol>
-<symbol id="gptmark" viewBox="0 0 196 158.6">
-<path fill="currentColor" d="M194.5,64.48c2.57,2.57,2.27,25.09.45,28.42-1.66,2.72-10.58,6.35-13.91,8.92-10.43,7.86-13.15,17.23-20.56,26.61-31.44,39.61-89.94,40.21-122.75,1.97-7.41-8.62-11.49-19.35-20.26-26.76-4.08-3.48-16.63-9.07-17.23-12.09-.45-2.72-.3-24.64.6-26.15,6.35-4.23,14.36-8.01,19.8-13.3,9.52-9.37,13.76-22.83,24.79-32.5,32.95-28.72,83.29-25.55,111.86,7.56,7.86,9.07,12.7,21.01,22.22,28.72,3.63,2.87,13.3,6.8,14.97,8.62ZM64.64,33.94c-6.05,1.06-10.43,4.69-12.4,10.58,1.81,21.62-2.57,47.47,0,68.63.91,8.16,7.26,11.34,14.66,12.09,15.42,1.51,45.65,1.36,61.07,0,9.37-.76,14.66-3.48,15.87-13.45,1.51-13.76,1.66-51.25,0-64.85-.91-8.31-8.31-12.55-15.87-13.3-12.85-1.36-51.09-1.81-63.34.3Z"/>
-</symbol>
 <symbol id="qnaplogo" viewBox="0 0 138 24">
   <g id="uuid-c1730897-8a8c-4c4f-8ac3-a0d3b8b0973c" data-name="组 186">
     <g id="uuid-07e5c0ff-ef8e-4498-9115-2ce3141bdaf8" data-name="组 165">
@@ -162,32 +155,29 @@
 </symbol>
 </defs></svg>
 
-<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div class="grain"></div>
-
-<header>
-  <div class="nav">
-    <div class="logos">
-      <svg class="qnaplogo"><use href="#qnaplogo"/></svg>
-      <span class="x">×</span>
-      <svg class="brandlogo"><use href="#gptlogo"/></svg>
-    </div>
-    <div class="navr">
-      <button class="btn" id="copyBtn" type="button">🔗 URLをコピー</button>
-      <a class="btn pri" href="index.html">デモサイトへ →</a>
+<header class="gnav">
+  <div class="container gnav-in">
+    <svg class="logo" aria-label="QNAP"><use href="#qnaplogo"/></svg>
+    <nav class="gnav-menu">
+      <a href="index.html">AI サポート</a>
+      <a href="tickets.html">サポートポータル</a>
+      <a href="livedesk.html" class="on" aria-current="page">チャット</a>
+    </nav>
+    <div class="gnav-right">
+      <button class="btn btn-onDark" id="copyBtn" type="button">URLをコピー</button>
     </div>
   </div>
 </header>
 
 <main>
   <section class="side">
-    <span class="tag"><i class="dot"></i>LIVE ・ EngageLab LiveDesk</span>
-    <h1>QNAP サポートAIに<br><span class="g">その場で話しかける。</span></h1>
+    <span class="eyebrow"><i></i>LIVE ・ EngageLab LiveDesk</span>
+    <h1>QNAP サポートAIに<br><span class="em">その場で話しかける。</span></h1>
     <p class="lead">右のウィンドウは、実際に稼働している EngageLab LiveDesk のチャットです。ログイン不要、このURLを開くだけで、AIエージェントとの応対をそのままお試しいただけます。</p>
-    <ul class="feat">
-      <li><span class="ico">1</span><span><b>まず聞いてみる</b> — 「HBS3のバックアップ世代管理について教えて」など、QNAP製品のご質問をそのまま入力してください。</span></li>
-      <li><span class="ico">2</span><span><b>24時間・数秒で回答</b> — 実サポートチケットとナレッジベースを参照し、出典付きで日本語回答します。</span></li>
-      <li><span class="ico">3</span><span><b>有人へのエスカレーション</b> — AIで解決しない場合は、そのまま人のオペレーターへ引き継げます。</span></li>
+    <ul class="steps">
+      <li><span class="n">1</span><span><b>まず聞いてみる</b> — 「HBS3のバックアップ世代管理について教えて」など、QNAP製品のご質問をそのまま入力してください。</span></li>
+      <li><span class="n">2</span><span><b>24時間・数秒で回答</b> — 実サポートチケットとナレッジベースを参照し、出典付きで日本語回答します。</span></li>
+      <li><span class="n">3</span><span><b>有人へのエスカレーション</b> — AIで解決しない場合は、そのまま人のオペレーターへ引き継げます。</span></li>
     </ul>
     <p class="note">※ 本ページはデモ用の共有リンクです。入力内容はテスト目的でのみご利用ください。<br>Powered by EngageLab LiveDesk × GPTBots — Aurora Mobile 株式会社</p>
   </section>
@@ -195,19 +185,17 @@
   <section class="frame">
     <div class="frame-head">
       <div class="dots"><i></i><i></i><i></i></div>
-      <div class="addr mono"><span class="lock">🔒</span> livedesk.engagelab.com — QNAP サポートAIチャット</div>
-      <div class="live"><i class="dot"></i>ONLINE</div>
+      <div class="addr"><span class="lock">🔒</span> livedesk.engagelab.com — QNAP サポートAIチャット</div>
+      <div class="live"><i></i>ONLINE</div>
     </div>
     <div class="frame-body" id="fb">
-      <iframe
-        id="ld"
-        title="QNAP サポートAIチャット（EngageLab LiveDesk）"
+      <iframe id="ld" title="QNAP サポートAIチャット（EngageLab LiveDesk）"
         src="https://livedesk.engagelab.com/console/livedesk/widget/?website_token=nfsXJizqLngQ7RFrCkWrcWs2&mode=standalone"
         allow="camera;microphone;clipboard-write"></iframe>
       <div class="loader" id="loader">
         <div>
           <div class="spin"></div>
-          <div class="t mono">CONNECTING TO SUPPORT AGENT…</div>
+          <div class="t">CONNECTING TO SUPPORT AGENT…</div>
         </div>
       </div>
     </div>
@@ -218,7 +206,7 @@
 <div class="toast" id="toast">URLをコピーしました</div>
 
 <script>
-  // 狭い画面では 520px 幅で描画してから縮小（LiveDesk 側の最小幅対策）
+// 狭い画面では 520px 幅で描画してから縮小（LiveDesk 側の最小幅対策）
   var BASE = 520;
   var frame = document.getElementById('ld');
   var box = document.getElementById('fb');
