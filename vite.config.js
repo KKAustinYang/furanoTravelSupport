@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const key = env.MODELLIX_KEY || ''
+  const gptbotsKey = env.GPTBOTS_API_KEY || ''
+  const gptbotsEndpoint = env.GPTBOTS_ENDPOINT || 'https://api-jp.gptbots.ai'
   return {
     plugins: [react()],
     build: {
@@ -20,6 +22,18 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
+        // 本番の api/proxy.js と同じ振り分け。'/api' より先に置くこと。
+        '/api/gptbots': {
+          target: gptbotsEndpoint,
+          changeOrigin: true,
+          secure: true,
+          rewrite: (p) => p.replace(/^\/api\/gptbots/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              if (gptbotsKey) proxyReq.setHeader('Authorization', 'Bearer ' + gptbotsKey)
+            })
+          },
+        },
         '/api': {
           target: 'https://api.modellix.ai',
           changeOrigin: true,

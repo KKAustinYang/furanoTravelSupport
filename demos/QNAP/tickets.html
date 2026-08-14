@@ -190,6 +190,34 @@ tbody tr.row-main:hover{background:#f2f5f8}
 .notice li+li{margin-top:var(--sp-3)}
 .form-actions{display:flex; justify-content:flex-end; margin-top:var(--sp-8)}
 
+/* ---------- AI 一次回答 ---------- */
+.aicard{border:1px solid #bcdffb; background:linear-gradient(180deg,#f7fbff,#fff); border-radius:var(--r-md);
+  overflow:hidden; margin-bottom:var(--sp-4)}
+.aicard-head{display:flex; align-items:center; gap:var(--sp-3); padding:12px 20px; background:var(--accent-soft);
+  border-bottom:1px solid #cde6fb; flex-wrap:wrap}
+.aicard-head .who{display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px; color:var(--accent-ink)}
+.aicard-head .badge{font-size:11px; font-weight:700; letter-spacing:.06em; color:#fff; background:var(--accent);
+  border-radius:999px; padding:3px 10px}
+.aicard-head .when{margin-left:auto; font-size:12.5px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.aicard-body{padding:18px 20px; font-size:14.5px; color:var(--ink-2); line-height:1.95}
+.aicard-body h4{font-size:14.5px; color:var(--ink); margin:16px 0 6px}
+.aicard-body h4:first-child{margin-top:0}
+.aicard-body p+p{margin-top:10px}
+.aicard-body ul{margin:8px 0 0; padding-left:1.25em}
+.aicard-body li{margin-top:5px}
+.aicard-body strong{color:var(--ink); font-weight:700}
+.aicard-body hr{border:0; border-top:1px solid var(--line); margin:16px 0}
+.payload{margin-top:var(--sp-4); border:1px solid var(--line); border-radius:var(--r-sm); background:#fbfcfd}
+.payload summary{cursor:pointer; padding:11px 16px; font-size:13px; font-weight:600; color:var(--ink-2)}
+.payload summary:hover{color:var(--ink)}
+.payload pre{margin:0; padding:0 16px 16px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px; line-height:1.9; color:var(--ink-2); white-space:pre-wrap; word-break:break-word}
+.sending{display:flex; align-items:center; gap:12px; padding:16px 20px; border:1px solid var(--line);
+  border-radius:var(--r-md); background:var(--surface); font-size:14px; color:var(--ink-2)}
+.sending .sp{width:18px; height:18px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--accent);
+  animation:sp .8s linear infinite; flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
 /* ---------- 空状態 / 送信後 ---------- */
 .empty{margin-top:var(--sp-8); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
   padding:var(--sp-16) var(--sp-6); text-align:center; color:var(--ink-3); box-shadow:var(--shadow-1)}
@@ -251,7 +279,7 @@ tbody tr.row-main:hover{background:#f2f5f8}
 <div class="demo-bar">
   <div class="container">
     <b>デモ環境</b>
-    <span>QNAP サポートポータルの画面を再現したものです。入力内容が送信されることはありません。</span>
+    <span>QNAP サポートポータルの画面を再現したものです。送信ボタンを押すと、入力内容は構造化して <b>AI エージェント</b>へ渡され一次回答が返ります。QNAP へチケットが起票されることはありません。</span>
   </div>
 </div>
 
@@ -692,8 +720,151 @@ tbody tr.row-main:hover{background:#f2f5f8}
     fill($('f-sub2'), this.value ? SUBS2 : []);
   });
 
-  /* ---- 送信は行わない（デモ） ---- */
-  $('ticketForm').addEventListener('submit', function (e) {
+  /* ==========================================================================
+     フォーム → 構造化 → AI エージェント
+     入力をそのまま投げると精度が落ちるので、見出し付きのブロックに整えてから渡す。
+     鍵はサーバー側（api/proxy.js の GPTBOTS_API_KEY）にあり、ブラウザには出さない。
+     ========================================================================== */
+  var AGENT_API = '/api/gptbots';
+  var agentConv = '';   // 会話IDは1セッション使い回す
+
+  function val(id) { return ($(id).value || '').trim(); }
+
+  // 送信内容の構造。ラベルはフォームの項目名とそろえてある
+  function buildTicket() {
+    return {
+      form: '製品情報',
+      groups: [
+        ['製品情報', [
+          ['デバイスシリアル番号', val('f-serial')],
+          ['製品モデル', val('f-model')],
+          ['ファームウェア', val('f-fw')],
+          ['クライアントデバイス', val('f-client')],
+        ]],
+        ['問い合わせ分類', [
+          ['問題のカテゴリー', val('f-cat')],
+          ['サブカテゴリー', val('f-sub')],
+          ['さらにサブカテゴリー', val('f-sub2')],
+        ]],
+        ['内容', [
+          ['件名', val('f-title')],
+          ['説明', val('f-desc')],
+        ]],
+        ['連絡先', [
+          ['氏名', (val('f-first') + ' ' + val('f-last')).trim()],
+          ['電子メール', val('f-mail')],
+          ['電話番号', val('f-tel')],
+          ['国/地域', val('f-country')],
+          ['タイムゾーン', val('f-tz')],
+          ['ユーザーの種類', val('f-utype')],
+          ['会社名', val('f-company')],
+        ]],
+      ],
+    };
+  }
+
+  // エージェントに渡すテキスト。空欄は落とし、説明だけ複数行で置く
+  function ticketToText(t) {
+    var out = ['【サポートチケット】'];
+    t.groups.forEach(function (g) {
+      var rows = g[1].filter(function (r) { return r[1]; });
+      if (!rows.length) return;
+      out.push('■ ' + g[0]);
+      rows.forEach(function (r) {
+        out.push(r[0] === '説明' ? '- 説明:\n' + r[1] : '- ' + r[0] + ': ' + r[1]);
+      });
+    });
+    return out.join('\n');
+  }
+
+  async function askAgent(text) {
+    if (!agentConv) {
+      var c = await fetch(AGENT_API + '/v1/conversation', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: 'qnap-portal-demo' }),
+      });
+      if (!c.ok) throw new Error('会話を開始できませんでした（' + c.status + '）');
+      var cj = await c.json();
+      agentConv = cj.conversation_id || (cj.data && cj.data.conversation_id);
+      if (!agentConv) throw new Error('conversation_id を取得できませんでした');
+    }
+    var r = await fetch(AGENT_API + '/v2/conversation/message', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation_id: agentConv,
+        response_mode: 'blocking',
+        messages: [{ role: 'user', content: [{ type: 'text', text: text }] }],
+      }),
+    });
+    if (!r.ok) {
+      var m = '';
+      try { m = (await r.json()).message; } catch (e) {}
+      throw new Error(m || 'エージェントが ' + r.status + ' を返しました');
+    }
+    var j = await r.json();
+    var first = (j.output || []).find(function (o) { return o && o.content && o.content.text; });
+    if (!first) throw new Error('回答を取得できませんでした');
+    return first.content.text;
+  }
+
+  // エージェントの返答は Markdown 風。見出し・強調・箇条書きだけ最低限整える
+  function renderAnswer(md) {
+    var esc = function (x) { return x.replace(/[&<>]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); };
+    var html = '', list = null;
+    md.split('\n').forEach(function (line) {
+      var t = line.trim();
+      var li = t.match(/^[*-]\s+(.*)$/);
+      if (li) { list = (list || '') + '<li>' + inline(esc(li[1])) + '</li>'; return; }
+      if (list) { html += '<ul>' + list + '</ul>'; list = null; }
+      if (!t) return;
+      if (/^#{2,4}\s/.test(t)) { html += '<h4>' + inline(esc(t.replace(/^#+\s*/, ''))) + '</h4>'; return; }
+      if (/^---+$/.test(t)) { html += '<hr>'; return; }
+      html += '<p>' + inline(esc(t)) + '</p>';
+    });
+    if (list) html += '<ul>' + list + '</ul>';
+    return html;
+    function inline(x) { return x.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function stamp(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // 受け付けたチケットを一覧に足し、AIの一次回答をスレッドの先頭に置く
+  function fileTicket(t, text, answer) {
+    var now = new Date();
+    var no = 'Q-' + now.getFullYear() + pad(now.getMonth() + 1) + '-' +
+      String(Math.floor(10000 + Math.random() * 89999));
+
+    var tr = document.createElement('tr');
+    tr.className = 'row-main';
+    tr.innerHTML =
+      '<td></td><td class="num">' + no + '</td><td>' + (val('f-serial') || '—') + '</td><td></td>' +
+      '<td class="num">' + (val('f-model') || '—') + '</td><td>' + val('f-title') + '</td>' +
+      '<td class="num">' + stamp(now) + '</td><td><span class="status">新規</span></td><td>通常</td>';
+    document.querySelector('table tbody').prepend(tr);
+
+    var card = document.createElement('div');
+    card.className = 'aicard';
+    card.innerHTML =
+      '<div class="aicard-head"><span class="who">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">' +
+      '<rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 16h5"/></svg>' +
+      'QNAP サポートAI</span><span class="badge">一次回答</span>' +
+      '<span class="when">' + stamp(new Date()) + '</span></div>' +
+      '<div class="aicard-body">' + renderAnswer(answer) +
+      '<details class="payload"><summary>AI に渡した構造化データを表示</summary><pre></pre></details></div>';
+    card.querySelector('pre').textContent = text;
+    $('thread').prepend(card);
+
+    return no;
+  }
+
+  /* ---- 送信 ---- */
+  $('ticketForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     var missing = [];
     [['f-serial', 'デバイスシリアル番号'], ['f-model', '製品モデル'], ['f-fw', 'ファームウェア'],
@@ -705,7 +876,28 @@ tbody tr.row-main:hover{background:#f2f5f8}
       toast('未入力の項目があります: ' + missing.slice(0, 3).join('・') + (missing.length > 3 ? ' ほか' : ''));
       return;
     }
-    toast('デモのため送信は行いません（入力内容はこの画面から出ません）');
+
+    var btn = e.target.querySelector('button[type="submit"]');
+    var t = buildTicket(), text = ticketToText(t);
+    var t0 = Date.now();
+    btn.disabled = true;
+    var tick = setInterval(function () {
+      btn.textContent = 'AI が確認しています… ' + Math.round((Date.now() - t0) / 1000) + 's';
+    }, 500);
+    btn.textContent = 'AI が確認しています…';
+
+    try {
+      var answer = await askAgent(text);
+      var no = fileTicket(t, text, answer);
+      show('list');
+      toast(no + ' を受け付けました（AI が一次回答しました）');
+    } catch (err) {
+      toast('AI への送信に失敗しました: ' + err.message);
+    } finally {
+      clearInterval(tick);
+      btn.disabled = false;
+      btn.textContent = 'メッセージの送信';
+    }
   });
 
   $('btnReply').addEventListener('click', function () {

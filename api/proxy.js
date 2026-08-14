@@ -20,6 +20,12 @@
 
 const UPSTREAM = 'https://api.modellix.ai'
 
+// GPTBots も同じ関数から中継する。vercel.json の rewrite が /api/* を全部ここへ
+// 送るため、専用の関数を足すとルーティングが競合する。プレフィックスで振り分ける。
+//   /api/gptbots/v1/conversation  ->  https://api-jp.gptbots.ai/v1/conversation
+const GPTBOTS_PREFIX = 'gptbots/'
+const GPTBOTS_UPSTREAM = process.env.GPTBOTS_ENDPOINT || 'https://api-jp.gptbots.ai'
+
 // Header values must be safe to put on the wire. Anything outside printable
 // ASCII (or an implausible length) is a mistake or an injection attempt.
 const KEY_RE = /^[\x21-\x7e]{16,200}$/
@@ -32,10 +38,6 @@ export default async function handler(req, res) {
   }
 
   const key = clientKey ? String(clientKey) : process.env.MODELLIX_KEY
-  if (!key) {
-    res.status(401).json({ message: 'API key is missing. Set it in the demo, or configure MODELLIX_KEY on the server.' })
-    return
-  }
 
   // Reconstruct the upstream path. The rewrite passes the captured segments as
   // ?__path=v1/tasks/test; we prefer that and fall back to req.url for safety.
@@ -52,11 +54,31 @@ export default async function handler(req, res) {
     suffix = reqUrl.pathname.replace(/^\/api/, '') + (reqUrl.search || '')
   }
 
-  const target = `${UPSTREAM}/api${suffix}`
+  // GPTBots 宛てか、Modellix 宛てかをパスの先頭で決める
+  const path = suffix.replace(/^\//, '')
+  const toGptbots = path.startsWith(GPTBOTS_PREFIX)
+
+  let target, auth
+  if (toGptbots) {
+    const gptbotsKey = process.env.GPTBOTS_API_KEY
+    if (!gptbotsKey) {
+      res.status(500).json({ message: 'GPTBOTS_API_KEY is not configured on the server.' })
+      return
+    }
+    target = `${GPTBOTS_UPSTREAM}/${path.slice(GPTBOTS_PREFIX.length)}`
+    auth = gptbotsKey
+  } else {
+    if (!key) {
+      res.status(401).json({ message: 'API key is missing. Set it in the demo, or configure MODELLIX_KEY on the server.' })
+      return
+    }
+    target = `${UPSTREAM}/api${suffix}`
+    auth = key
+  }
 
   const init = {
     method: req.method,
-    headers: { Authorization: `Bearer ${key}` },
+    headers: { Authorization: `Bearer ${auth}` },
   }
   if (!['GET', 'HEAD'].includes(req.method)) {
     init.headers['Content-Type'] = req.headers['content-type'] || 'application/json'
