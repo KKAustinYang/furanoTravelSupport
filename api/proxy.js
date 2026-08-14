@@ -24,7 +24,17 @@ const UPSTREAM = 'https://api.modellix.ai'
 // 送るため、専用の関数を足すとルーティングが競合する。プレフィックスで振り分ける。
 //   /api/gptbots/v1/conversation  ->  https://api-jp.gptbots.ai/v1/conversation
 const GPTBOTS_PREFIX = 'gptbots/'
-const GPTBOTS_UPSTREAM = process.env.GPTBOTS_ENDPOINT || 'https://api-jp.gptbots.ai'
+
+// 送り先は既定で日本リージョン。上書きしたい場合だけ GPTBOTS_BASE_URL を設定する。
+// （汎用的な名前の GPTBOTS_ENDPOINT は他用途で使われていることがあるので読まない）
+// 'jp' のようなリージョン名でも、フルURLでも受け付ける。
+function gptbotsBase() {
+  const v = (process.env.GPTBOTS_BASE_URL || '').trim().replace(/\/+$/, '')
+  if (!v) return 'https://api-jp.gptbots.ai'
+  if (/^https?:\/\//i.test(v)) return v
+  if (/^[a-z]{2,4}$/i.test(v)) return `https://api-${v.toLowerCase()}.gptbots.ai`
+  return `https://${v}`
+}
 
 // Header values must be safe to put on the wire. Anything outside printable
 // ASCII (or an implausible length) is a mistake or an injection attempt.
@@ -65,7 +75,7 @@ export default async function handler(req, res) {
       res.status(500).json({ message: 'GPTBOTS_API_KEY is not configured on the server.' })
       return
     }
-    target = `${GPTBOTS_UPSTREAM}/${path.slice(GPTBOTS_PREFIX.length)}`
+    target = `${gptbotsBase()}/${path.slice(GPTBOTS_PREFIX.length)}`
     auth = gptbotsKey
   } else {
     if (!key) {
@@ -104,6 +114,9 @@ export default async function handler(req, res) {
     const body = await upstream.text()
     res.send(body)
   } catch (e) {
-    res.status(502).json({ message: 'Proxy error: ' + e.message })
+    // 次の切り分けが一発で済むよう、宛先ホストと理由を返す（鍵は含めない）
+    let host = ''
+    try { host = new URL(target).host } catch {}
+    res.status(502).json({ message: `Proxy error (upstream: ${host}): ${e.message}` })
   }
 }
