@@ -275,9 +275,16 @@
   .hero-ld .ar{transition:transform .2s}
   .hero-ld:hover .ar{transform:translate(3px,-3px)}
   .hero-cta-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+  /* サポートポータル（tickets.html）へのタブ */
+  .nav-tab{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:22px;
+           font-size:12.5px;font-weight:700;color:var(--sub);border:1px solid var(--line2);
+           background:var(--panel);white-space:nowrap;transition:.2s}
+  .nav-tab:hover{color:var(--ink);border-color:rgba(47,224,230,.45);background:var(--panel2)}
+  .nav-tab svg{width:14px;height:14px;flex:0 0 auto}
   .nav-ld .short{display:none}
   @media(max-width:860px){
     .nav-ld{padding:8px 13px;font-size:11.5px}.pw{display:none}
+    .nav-tab{padding:8px 12px;font-size:11.5px}.nav-tab svg{display:none}
     .nav-ld .full{display:none}.nav-ld .short{display:inline}
     .logos .brandlogo,.logos .x{display:none}
     .hero-ld{padding:13px 22px}
@@ -353,6 +360,10 @@
   <div class="wrap nav">
     <div class="logos"><svg class="qnaplogo"><use href="#qnaplogo"/></svg><span class="x">×</span><svg class="brandlogo"><use href="#gptlogo"/></svg></div>
     <div class="navr">
+      <a class="nav-tab" href="tickets.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 9.5h17M7 13.5h7M7 16h4"/></svg>
+        サポートポータル
+      </a>
       <a class="nav-ld" href="livedesk.html"><span class="d"></span><span class="full">チャット専用ページを開く →</span><span class="short">チャットを試す →</span></a>
       <div class="pw"><span class="live-dot"></span>Powered by GPTBots AI ・ Aurora Mobile</div>
     </div>

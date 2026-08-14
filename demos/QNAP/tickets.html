@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>サポートチケット｜QNAP サポートポータル（デモ）</title>
+<meta name="description" content="QNAP サポートポータルのチケット提出画面を再現したデモ。ケース一覧・チケット作成フォーム・AIチャットを1画面で確認できます。">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   QNAP サポートポータル（チケット提出画面）の再現デモ
+   実画面の情報・項目・文言はそのままに、余白・階層・状態表現だけ整えている。
+   送信は一切行わない。入力値はこの画面から出ない。
+   ========================================================================== */
+:root{
+  --bg:#f5f6f8;
+  --surface:#ffffff;
+  --ink:#16181d;
+  --ink-2:#4a4f58;
+  --ink-3:#818893;
+  --line:#e3e6ea;
+  --line-2:#cfd4da;
+  --brand:#0a0a0a;          /* QNAP のヘッダー */
+  --accent:#2196f3;         /* QNAP のプライマリブルー */
+  --accent-ink:#1976d2;
+  --accent-soft:#e8f3fd;
+  --req:#e8624a;            /* 必須マーク */
+  --ok:#2e7d5b;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px;
+  --sp-8:32px; --sp-10:40px; --sp-12:48px; --sp-16:64px;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --shadow-1:0 1px 2px rgba(22,24,29,.06);
+  --shadow-2:0 8px 28px rgba(22,24,29,.10);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --font:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
+  --container:1180px;
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font); font-size:15px; line-height:1.8; letter-spacing:.01em;
+  color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased}
+h1,h2,h3{line-height:1.45; font-feature-settings:"palt" 1; font-weight:700; text-wrap:balance}
+img,svg{display:block; max-width:100%}
+button,input,select,textarea{font:inherit; color:inherit}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.hide{display:none!important}
+.num{font-variant-numeric:tabular-nums; letter-spacing:0}
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--sp-6)}
+
+/* ---------- ヘッダー ---------- */
+.gnav{background:var(--brand); color:#fff; position:sticky; top:0; z-index:50}
+.gnav-in{display:flex; align-items:center; gap:var(--sp-8); height:60px}
+.gnav .logo{height:19px; width:110px; color:#fff; flex:0 0 auto}
+.gnav-menu{display:flex; align-items:stretch; height:60px; gap:var(--sp-2); margin-left:var(--sp-4)}
+.gnav-menu a{display:inline-flex; align-items:center; padding:0 var(--sp-6); font-size:14px; font-weight:500;
+  color:#cfd3d8; text-decoration:none; position:relative; transition:color .18s var(--ease)}
+.gnav-menu a:hover{color:#fff}
+.gnav-menu a.on{color:var(--ink); background:var(--surface); font-weight:700}
+.gnav-right{margin-left:auto; display:flex; align-items:center; gap:var(--sp-4)}
+.lang{display:inline-flex; align-items:center; gap:7px; font-size:13.5px; color:#e6e9ec}
+.lang svg{width:16px; height:16px; opacity:.9}
+.avatar{width:34px; height:34px; border-radius:50%; background:linear-gradient(140deg,#7fc7a3,#3f7d5f);
+  display:grid; place-items:center; font-size:15px; flex:0 0 auto}
+.demo-flag{font-size:11px; font-weight:700; letter-spacing:.1em; color:#0a0a0a; background:#ffd54a;
+  padding:3px 9px; border-radius:999px; white-space:nowrap}
+
+/* ---------- ページ枠 ---------- */
+main{padding-block:var(--sp-10) var(--sp-16)}
+.page-actions{display:flex; justify-content:flex-end; gap:var(--sp-3); flex-wrap:wrap}
+.page-title{text-align:center; font-size:clamp(26px,3.2vw,34px); letter-spacing:.02em; margin-top:var(--sp-6)}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
+  padding:0 var(--sp-6); border-radius:var(--r-sm); border:1px solid var(--line-2); background:var(--surface);
+  font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap;
+  transition:background .18s var(--ease), border-color .18s var(--ease), box-shadow .18s var(--ease), transform .18s var(--ease)}
+.btn:hover{background:#fafbfc; border-color:var(--line-2); box-shadow:var(--shadow-1)}
+.btn:active{transform:translateY(1px)}
+.btn-accent{color:var(--accent-ink); border-color:#bcdffb; background:#fff}
+.btn-accent:hover{background:var(--accent-soft); border-color:#8fcaf7}
+.btn-primary{background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 6px 18px rgba(33,150,243,.28)}
+.btn-primary:hover{background:#1e8ae0; border-color:#1e8ae0; box-shadow:0 8px 22px rgba(33,150,243,.36)}
+.btn-lg{min-height:48px; padding:0 var(--sp-10); font-size:15px}
+
+/* ---------- タブ ---------- */
+.tabs{display:flex; justify-content:center; gap:var(--sp-8); margin-top:var(--sp-8);
+  border-bottom:1px solid var(--line)}
+.tab{appearance:none; border:0; background:none; padding:0 var(--sp-2) var(--sp-3); cursor:pointer;
+  font-size:15px; font-weight:600; color:var(--ink-3); position:relative; transition:color .18s var(--ease)}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[aria-selected="true"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+  background:var(--accent); border-radius:2px}
+
+/* ---------- 検索 ---------- */
+.search{display:flex; align-items:flex-end; gap:var(--sp-3); margin-top:var(--sp-8)}
+.search input{width:min(340px,100%); height:40px; border:0; border-bottom:1px solid var(--line-2);
+  background:transparent; font-size:14px; padding:0 2px; transition:border-color .18s var(--ease)}
+.search input:focus{outline:none; border-bottom-color:var(--accent)}
+.search input::placeholder{color:var(--ink-3)}
+.icon-btn{width:44px; height:40px; border-radius:var(--r-sm); border:0; background:var(--accent); color:#fff;
+  display:grid; place-items:center; cursor:pointer; box-shadow:0 4px 14px rgba(33,150,243,.3);
+  transition:background .18s var(--ease), transform .18s var(--ease)}
+.icon-btn:hover{background:#1e8ae0}
+.icon-btn:active{transform:translateY(1px)}
+
+/* ---------- テーブル ---------- */
+.table-card{margin-top:var(--sp-6); background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-md); box-shadow:var(--shadow-1); overflow:hidden}
+.table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+table{width:100%; border-collapse:collapse; min-width:900px}
+thead th{background:#eef0f3; font-size:12.5px; font-weight:600; color:var(--ink-2); text-align:left;
+  padding:14px 16px; white-space:nowrap; letter-spacing:.02em; border-bottom:1px solid var(--line)}
+thead th .sort{margin-left:6px; color:var(--ink-3); font-size:10px; vertical-align:1px}
+tbody td{padding:16px; font-size:14px; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.row-main{background:#fafbfc; transition:background .18s var(--ease)}
+tbody tr.row-main:hover{background:#f2f5f8}
+.expander{width:30px; height:30px; border-radius:50%; border:0; background:#16181d; color:#fff;
+  display:grid; place-items:center; cursor:pointer; transition:transform .22s var(--ease), background .18s var(--ease)}
+.expander:hover{background:#2b2f36}
+.expander.open{transform:rotate(180deg)}
+.status{color:var(--accent-ink); font-weight:600}
+.info-dot{display:inline-grid; place-items:center; width:15px; height:15px; border-radius:50%;
+  background:var(--ink-3); color:#fff; font-size:10px; font-weight:700; margin-left:6px; vertical-align:1px}
+
+/* ---------- 会話 ---------- */
+.thread{padding:var(--sp-6); border-top:1px solid var(--line); background:var(--surface)}
+.msg{border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden}
+.msg-head{display:flex; align-items:center; gap:var(--sp-3); padding:14px 20px; background:#f7f8fa;
+  border-bottom:1px solid var(--line)}
+.msg-head .who{display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14.5px}
+.msg-head .when{margin-left:auto; display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-3)}
+.msg-body{padding:18px 20px; font-size:14.5px; color:var(--ink-2)}
+.reply-title{font-size:20px; margin:var(--sp-10) 0 var(--sp-4)}
+.editor{border:1px solid var(--line-2); border-radius:var(--r-md); background:var(--surface); overflow:hidden;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease)}
+.editor:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px rgba(33,150,243,.12)}
+.editor-bar{display:flex; align-items:center; gap:var(--sp-2); padding:9px 14px; border-bottom:1px solid var(--line);
+  background:#fafbfc}
+.editor-bar button{display:inline-flex; align-items:center; gap:7px; border:0; background:none; cursor:pointer;
+  font-size:13px; color:var(--ink-2); padding:5px 8px; border-radius:var(--r-sm); transition:background .16s var(--ease)}
+.editor-bar button:hover{background:#eef1f4}
+.editor textarea{width:100%; min-height:150px; border:0; padding:16px; resize:vertical; font-size:14.5px;
+  line-height:1.9; background:transparent}
+.editor textarea:focus{outline:none}
+.editor-foot{display:flex; justify-content:flex-end; gap:var(--sp-3); padding:12px 14px; border-top:1px solid var(--line)}
+
+/* ---------- フォーム ---------- */
+.form-card{margin-top:var(--sp-8); background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-lg); box-shadow:var(--shadow-1); padding:var(--sp-12) var(--sp-10)}
+@media(max-width:640px){ .form-card{padding:var(--sp-8) var(--sp-6)} }
+.grid2{display:grid; gap:var(--sp-8) var(--sp-10)}
+@media(min-width:820px){ .grid2{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.field{min-width:0}
+.field label{display:block; font-size:13px; color:var(--ink-2); letter-spacing:.02em; margin-bottom:var(--sp-2)}
+.req{color:var(--req); font-size:16px; line-height:0; vertical-align:-1px; margin-left:4px}
+.ctrl{position:relative}
+.ctrl select,.ctrl input{width:100%; height:42px; border:0; border-bottom:1px solid var(--line-2);
+  background:transparent; font-size:14.5px; padding:0 26px 0 2px; appearance:none; cursor:pointer;
+  transition:border-color .18s var(--ease)}
+.ctrl input{cursor:text; padding-right:2px}
+.ctrl select:focus,.ctrl input:focus{outline:none; border-bottom-color:var(--accent); border-bottom-width:2px}
+.ctrl select:disabled{color:var(--ink-3); cursor:not-allowed; border-bottom-style:dashed}
+.ctrl .chev{position:absolute; right:2px; top:13px; pointer-events:none; color:var(--ink-3)}
+.ctrl select:invalid,.ctrl select.placeholder{color:var(--ink-3)}
+.help{display:inline-block; margin-top:var(--sp-2); font-size:12.5px; text-decoration:none}
+.help:hover{text-decoration:underline}
+.section-line{border:0; border-top:1px solid var(--line); margin:var(--sp-12) 0}
+.section-title{font-size:21px; margin-bottom:var(--sp-8)}
+.counter{text-align:right; font-size:12.5px; color:var(--ink-3); margin-top:var(--sp-2)}
+.upload-note{font-size:12.5px; color:var(--ink-3); margin-top:var(--sp-6)}
+.upload-link{display:inline-flex; align-items:center; gap:8px; margin-top:var(--sp-2); font-size:14px;
+  color:var(--accent-ink); background:none; border:0; cursor:pointer; padding:4px 0}
+.upload-link:hover{text-decoration:underline}
+.upload-link .plus{display:grid; place-items:center; width:18px; height:18px; border-radius:50%;
+  background:var(--accent); color:#fff; font-size:12px; font-weight:700; line-height:1}
+.check{display:inline-flex; align-items:flex-start; gap:10px; font-size:14px; color:var(--ink-2); cursor:pointer}
+.check input{width:16px; height:16px; margin-top:5px; accent-color:var(--accent); cursor:pointer}
+.notice{background:#f7f8fa; border:1px solid var(--line); border-radius:var(--r-md); padding:var(--sp-6) var(--sp-8)}
+.notice ul{margin:0; padding-left:1.15em}
+.notice li{font-size:13.5px; color:var(--ink-2); line-height:1.95}
+.notice li+li{margin-top:var(--sp-3)}
+.form-actions{display:flex; justify-content:flex-end; margin-top:var(--sp-8)}
+
+/* ---------- 空状態 / 送信後 ---------- */
+.empty{margin-top:var(--sp-8); background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+  padding:var(--sp-16) var(--sp-6); text-align:center; color:var(--ink-3); box-shadow:var(--shadow-1)}
+.empty b{display:block; color:var(--ink-2); font-size:15px; margin-bottom:var(--sp-2)}
+.toast{position:fixed; left:50%; bottom:26px; transform:translate(-50%,16px); z-index:80;
+  background:#16181d; color:#fff; font-size:13.5px; font-weight:600; padding:12px 20px; border-radius:999px;
+  box-shadow:var(--shadow-2); opacity:0; visibility:hidden; transition:.28s var(--ease)}
+.toast.show{opacity:1; visibility:visible; transform:translate(-50%,0)}
+
+/* ---------- デモ告知 ---------- */
+.demo-bar{background:#fff8e1; border-bottom:1px solid #f2e3b0; color:#6b5316; font-size:12.5px}
+.demo-bar .container{display:flex; align-items:center; gap:10px; padding-block:9px}
+.demo-bar b{font-weight:700}
+
+/* ---------- 狭い画面 ---------- */
+@media(max-width:760px){
+  .container{padding-inline:var(--sp-4)}
+  .gnav-in{gap:var(--sp-2); height:56px}
+  .gnav .logo{width:88px; height:16px}
+  .gnav-menu{margin-left:var(--sp-1); height:56px; gap:0}
+  .gnav-menu a{padding:0 var(--sp-3); font-size:13px; white-space:nowrap}
+  .lang{display:none}
+  .page-actions .btn{flex:1 1 auto}
+  .page-title{margin-top:var(--sp-4)}
+  .tabs{gap:var(--sp-6)}
+  .thread{padding:var(--sp-4)}
+  .search input{width:100%}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important; animation-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="qnaplogo" viewBox="0 0 138 24">
+  <g id="uuid-c1730897-8a8c-4c4f-8ac3-a0d3b8b0973c" data-name="组 186">
+    <g id="uuid-07e5c0ff-ef8e-4498-9115-2ce3141bdaf8" data-name="组 165">
+      <g id="uuid-08557dd1-cfaf-479c-8913-1ea47a13cd8c" data-name="组 163">
+        <path id="uuid-a531e974-cdae-4441-b5f5-666520faee53" data-name="路径 124" d="M134.09,5.35v-3.07h1.36c.21,0,.42.02.63.08.14.06.26.16.34.29.09.14.13.3.13.46,0,.2-.07.4-.21.55-.18.17-.41.27-.66.28.09.04.17.09.25.15.13.12.24.26.34.41l.54.84h-.51l-.41-.64c-.12-.18-.22-.33-.29-.42-.06-.08-.13-.15-.21-.2-.06-.04-.12-.07-.18-.08-.08-.01-.15-.02-.23-.01h-.47v1.36h-.41ZM134.5,3.63h.87c.15,0,.29-.01.44-.06.1-.03.18-.1.24-.18.05-.08.08-.18.08-.28,0-.14-.05-.27-.16-.36-.14-.11-.32-.16-.5-.14h-.97v1.02Z" style="fill: currentColor;"/>
+      </g>
+      <g id="uuid-11b0541a-06c1-4bd2-935e-fb5f3463ac93" data-name="组 164">
+        <path id="uuid-674754c9-b429-4672-905d-500b0df759da" data-name="路径 125" d="M132.59,3.77c0-1.49,1.21-2.7,2.7-2.7h0c1.49,0,2.7,1.21,2.7,2.7h0c0,1.49-1.21,2.7-2.7,2.7h0c-1.49,0-2.7-1.21-2.7-2.7ZM132.99,3.77c0,1.27,1.03,2.3,2.31,2.31h0c1.27,0,2.3-1.03,2.31-2.31h0c0-1.27-1.03-2.31-2.31-2.31h0c-1.27,0-2.3,1.04-2.31,2.31Z" style="fill: currentColor;"/>
+      </g>
+    </g>
+    <g id="uuid-7330da66-fd56-41b6-a93e-497cc1ad09fe" data-name="组 166">
+      <path id="uuid-b812c293-a95e-4345-95ce-ffabc4d4455d" data-name="路径 126" d="M97.18,23.45h-8.81v-6.07h-12.33v6.07h-8.81V5.6c-.05-1.42.6-2.78,1.74-3.64,1.43-.96,3.14-1.43,4.87-1.31h16.76c1.72-.11,3.43.35,4.87,1.31,1.13.86,1.77,2.22,1.71,3.64v17.84ZM88.37,13.18v-6.6h-12.33v6.6h12.33Z" style="fill: currentColor;"/>
+      <path id="uuid-71e61e6c-e969-4b0c-a240-731fea2ee1c1" data-name="路径 127" d="M128.76,1.79c-1.21-.79-2.65-1.19-4.1-1.13h.03s-.34,0-.34,0h-16.41c-1.72-.11-3.44.35-4.87,1.32-1.11.83-1.76,2.14-1.74,3.52h0v.11h0v17.84h8.8v-5.95h14.24c3.87,0,5.8-1.54,5.8-4.61v-7.31c.14-1.41-.39-2.81-1.42-3.78ZM121.21,12.48h-11.2v-5.9h11.2v5.9Z" style="fill: currentColor;"/>
+      <path id="uuid-aa3ccd19-b600-40cf-9de7-0db99d52df8c" data-name="路径 128" d="M56.17.65h-1.31v13.26c-.06.14-.18.24-.45.2-.11-.03-.22-.08-.3-.16-1.49-2.27-7.21-10.05-9.04-12.53,0-.01-.01-.02-.02-.03h0s-.06-.05-.09-.08c0-.02-.02-.04-.04-.04-.53-.44-1.2-.66-1.89-.62h-7.11c-.76-.05-1.51.22-2.06.74-.5.55-.76,1.27-.74,2h-.01v20.05h8.32s-.05-10.59-.07-13.71c.03-.2.19-.51.82-.43.14.01.27.08.35.2h0c1.61,2.53,12.12,13.94,12.12,13.94h8.64V.65h-7.11Z" style="fill: currentColor;"/>
+    </g>
+    <path id="uuid-ca16467c-889d-4f40-9f28-375b104ea9b7" data-name="路径 129" d="M18.91,18.17l-.39-.28h-9.22V5.86h12.27v10.21c2.88.81,5.58,2.17,7.95,3.99.31-.81.46-1.67.44-2.54V6.4c0-3.82-2.26-5.83-6.77-6.04v-.02H7.59C2.53.35,0,2.36,0,6.4v11.12c0,4.01,2.53,6.02,7.59,6.02h14.8c.73,0,1.46-.05,2.18-.16-1.61-2.01-3.52-3.77-5.66-5.21Z" style="fill: currentColor;"/>
+    <path id="uuid-006fedb2-e245-4dc7-8337-eb041b2de140" data-name="路径 130" d="M16.05,15.25c2.76,1.75,7.79,5.23,9.45,8.4h6.27c-1.07-1.91-4.69-6.51-15.72-8.4Z" style="fill: currentColor;"/>
+  </g>
+</symbol>
+</defs></svg>
+
+<div class="demo-bar">
+  <div class="container">
+    <b>デモ環境</b>
+    <span>QNAP サポートポータルの画面を再現したものです。入力内容が送信されることはありません。</span>
+  </div>
+</div>
+
+<header class="gnav">
+  <div class="container gnav-in">
+    <svg class="logo" aria-label="QNAP"><use href="#qnaplogo"/></svg>
+    <nav class="gnav-menu">
+      <a href="index.html">マイデバイス</a>
+      <a href="#" class="on" aria-current="page">サポート</a>
+    </nav>
+    <div class="gnav-right">
+      <span class="demo-flag">DEMO</span>
+      <span class="lang">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18"/>
+        </svg>日本語
+      </span>
+      <span class="avatar" aria-hidden="true">🦌</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ ケース一覧 ============ -->
+  <section id="view-list" class="container">
+    <div class="page-actions">
+      <button class="btn" id="btnRefresh">ページをリフレッシュします</button>
+      <button class="btn btn-accent" id="btnCreate">サポートチケットの作成</button>
+    </div>
+
+    <h1 class="page-title">マイサポートケース</h1>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="tab-form" id="t-form">サポート要求フォーム</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="tab-rma" id="t-rma">myRMA</button>
+    </div>
+
+    <!-- サポート要求フォーム -->
+    <div id="tab-form" role="tabpanel" aria-labelledby="t-form">
+      <div class="search">
+        <input type="search" id="q" placeholder="キーワードを入力してください" aria-label="キーワードを入力してください">
+        <button class="icon-btn" id="btnSearch" aria-label="検索">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:64px"></th>
+                <th>フォーム番号<span class="sort">▼</span></th>
+                <th>デバイスシリアル番号<span class="sort">▼</span></th>
+                <th>デバイス名</th>
+                <th>モデル<span class="sort">▼</span></th>
+                <th>件名</th>
+                <th>作成時間<span class="sort">▼</span></th>
+                <th>ステータス<span class="sort">▼</span></th>
+                <th>種類<span class="info-dot" title="通常 / RMA など、チケットの種類">i</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-main">
+                <td>
+                  <button class="expander open" id="btnExpand" aria-expanded="true" aria-controls="thread" aria-label="詳細の表示切替">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                </td>
+                <td class="num">Q-202608-46930</td>
+                <td>SN-manual</td>
+                <td></td>
+                <td class="num">6B100-ABP301</td>
+                <td>Test</td>
+                <td class="num">2026-08-14 11:39</td>
+                <td><span class="status">新規</span></td>
+                <td>通常</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="thread" id="thread">
+          <div class="msg">
+            <div class="msg-head">
+              <span class="who">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <circle cx="12" cy="8" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+                </svg>水戸部
+              </span>
+              <span class="when">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>
+                </svg><span class="num">2026-08-14 11:40</span>
+              </span>
+            </div>
+            <div class="msg-body">AuroraMobileのテストです。ご返信不要でございます。</div>
+          </div>
+
+          <h2 class="reply-title">返信</h2>
+          <div class="editor">
+            <div class="editor-bar">
+              <button type="button" id="btnImg1">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                  <rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m5 16 4.5-4.5 3.5 3.5 3-2.5 3 3.5"/><circle cx="9" cy="9.5" r="1.3"/>
+                </svg>画像をアップロードする
+              </button>
+            </div>
+            <textarea id="reply" aria-label="返信の内容"></textarea>
+            <div class="editor-foot">
+              <button class="btn btn-primary" id="btnReply">返信を送信</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- myRMA -->
+    <div id="tab-rma" role="tabpanel" aria-labelledby="t-rma" hidden>
+      <div class="empty">
+        <b>RMA の申請はありません</b>
+        交換・修理のご依頼を作成すると、こちらに一覧が表示されます。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ チケット作成 ============ -->
+  <section id="view-create" class="container hide">
+    <h1 class="page-title">サポートチケットの作成</h1>
+
+    <form class="form-card" id="ticketForm" novalidate>
+      <div class="grid2">
+        <div class="field">
+          <label for="f-serial">デバイスシリアル番号<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-serial" class="placeholder" required>
+              <option value="" selected></option>
+              <option>SN-manual</option>
+              <option>Q23BI01234</option>
+              <option>手動で入力する</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+          <a class="help" href="#" id="serialHelp">QNAP NASのシリアル番号はどうやってわかりますか？</a>
+        </div>
+
+        <div class="field">
+          <label for="f-model">製品モデル<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-model" class="placeholder" required>
+              <option value="" selected></option>
+              <option>6B100-ABP301</option>
+              <option>TS-464</option>
+              <option>TS-873A</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-fw">ファームウェア<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-fw" class="placeholder" required>
+              <option value="" selected></option>
+              <option>QTS 5.2.x</option>
+              <option>QuTS hero h5.2.x</option>
+              <option>わからない</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-client">クライアントデバイス</label>
+          <div class="ctrl">
+            <select id="f-client" class="placeholder">
+              <option value="" selected></option>
+              <option>Windows</option>
+              <option>macOS</option>
+              <option>Linux</option>
+              <option>iOS / Android</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-cat">問題のカテゴリー<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-cat" class="placeholder" required>
+              <option value="" selected></option>
+              <option>バックアップ・同期</option>
+              <option>ストレージ・ディスク</option>
+              <option>ネットワーク・接続</option>
+              <option>アカウント・権限</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-sub">サブカテゴリー<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-sub" class="placeholder" required disabled>
+              <option value="" selected></option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-sub2">さらにサブカテゴリー<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-sub2" class="placeholder" required disabled>
+              <option value="" selected></option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:var(--sp-8)">
+        <label for="f-title">件名<span class="req">•</span></label>
+        <div class="ctrl"><input id="f-title" type="text" required></div>
+      </div>
+
+      <div class="field" style="margin-top:var(--sp-8)">
+        <label for="f-desc">説明<span class="req">•</span></label>
+        <div class="editor">
+          <div class="editor-bar">
+            <button type="button" id="btnImg2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                <rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m5 16 4.5-4.5 3.5 3.5 3-2.5 3 3.5"/><circle cx="9" cy="9.5" r="1.3"/>
+              </svg>画像をアップロードする
+            </button>
+          </div>
+          <textarea id="f-desc" maxlength="4000" style="min-height:260px" aria-label="説明"></textarea>
+        </div>
+        <div class="counter"><span class="num" id="cnt">0</span> / 4000</div>
+      </div>
+
+      <p class="upload-note">最大アップロードサイズ: 35 MB</p>
+      <button class="upload-link" type="button" id="btnAttach"><span class="plus">＋</span>添付ファイルをアップロードする</button>
+
+      <hr class="section-line">
+
+      <h2 class="section-title">情報を確認してください</h2>
+      <div class="grid2">
+        <div class="field">
+          <label for="f-mail">電子メール<span class="req">•</span></label>
+          <div class="ctrl"><input id="f-mail" type="email" value="akio.mitobe@zeven.co.jp" required></div>
+        </div>
+        <div class="field">
+          <label for="f-tel">電話番号</label>
+          <div class="ctrl"><input id="f-tel" type="tel"></div>
+        </div>
+        <div class="field">
+          <label for="f-first">名<span class="req">•</span></label>
+          <div class="ctrl"><input id="f-first" type="text" value="水戸部" required></div>
+        </div>
+        <div class="field">
+          <label for="f-last">姓<span class="req">•</span></label>
+          <div class="ctrl"><input id="f-last" type="text" value="章生" required></div>
+        </div>
+        <div class="field">
+          <label for="f-country">国/地域<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-country" class="placeholder" required>
+              <option value="" selected></option>
+              <option>日本</option>
+              <option>台湾</option>
+              <option>アメリカ合衆国</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-tz">タイムゾーン<span class="req">•</span></label>
+          <div class="ctrl">
+            <select id="f-tz" required>
+              <option selected>GMT+09:00 Japan Standard Time (Asia/Tokyo)</option>
+              <option>GMT+08:00 Taipei Standard Time (Asia/Taipei)</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-utype">ユーザーの種類</label>
+          <div class="ctrl">
+            <select id="f-utype" class="placeholder">
+              <option value="" selected></option>
+              <option>個人</option>
+              <option>法人</option>
+              <option>販売代理店</option>
+            </select>
+            <span class="chev" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-company">会社名</label>
+          <div class="ctrl"><input id="f-company" type="text"></div>
+        </div>
+      </div>
+
+      <label class="check" style="margin-top:var(--sp-8)">
+        <input type="checkbox" id="f-update">
+        <span>この情報でアカウントを更新</span>
+      </label>
+
+      <hr class="section-line">
+
+      <h2 class="section-title">注意</h2>
+      <div class="notice">
+        <ul>
+          <li>QTS ヘルプデスクアプリからの診断ログの添付をおすすめします。これらのログを見つけるには、[ヘルプデスク] &gt; [診断ツール] &gt; [ログのダウンロード] に移動します。 <a href="#" id="logHelp">詳細はこちらをクリックします。</a></li>
+          <li>弊社のテクニカルサポートチームの対応可能時間は月曜日から金曜日(土日祝、夏季休暇と年末年始を除く)です。サポートチケットを受け取ってから可能な限り 24 時間以内にご返答させていただきますが、混雑状況によりご返答が遅れる場合もあります。あらかじめご了承くださいますよう、お願い申し上げます。</li>
+        </ul>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary btn-lg" type="submit">メッセージの送信</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- EngageLab LiveDesk（右下のチャットランチャー）— 実画面と同じ位置に出る -->
+<script>
+  (function(d,t){
+    var BASE_URL="https://livedesk.engagelab.com";
+    var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=BASE_URL+"/console/livedesk/widget/sdk.js";
+    g.defer=true; g.async=true;
+    s.parentNode.insertBefore(g,s);
+    g.onload=function(){ window.livedeskSDK.run({ websiteToken:'nfsXJizqLngQ7RFrCkWrcWs2', baseUrl:BASE_URL }); };
+  })(document,"script");
+</script>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+
+  /* ---- タブ（サポート要求フォーム / myRMA） ---- */
+  var tabs = [$('t-form'), $('t-rma')];
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (x) {
+        var on = x === tab;
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
+        $(x.getAttribute('aria-controls')).hidden = !on;
+      });
+    });
+    tab.addEventListener('keydown', function (e) {
+      var i = tabs.indexOf(tab), n = null;
+      if (e.key === 'ArrowRight') n = tabs[(i + 1) % tabs.length];
+      if (e.key === 'ArrowLeft') n = tabs[(i - 1 + tabs.length) % tabs.length];
+      if (n) { e.preventDefault(); n.focus(); n.click(); }
+    });
+  });
+
+  /* ---- 一覧 ⇄ 作成フォーム ---- */
+  function show(view) {
+    $('view-list').classList.toggle('hide', view !== 'list');
+    $('view-create').classList.toggle('hide', view !== 'create');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  $('btnCreate').addEventListener('click', function () { show('create'); });
+
+  /* ---- 行の開閉 ---- */
+  $('btnExpand').addEventListener('click', function () {
+    var open = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', open ? 'false' : 'true');
+    this.classList.toggle('open', !open);
+    $('thread').classList.toggle('hide', open);
+  });
+
+  /* ---- 説明欄の文字数 ---- */
+  $('f-desc').addEventListener('input', function () { $('cnt').textContent = this.value.length; });
+
+  /* ---- プレースホルダ色（未選択のときだけ淡く） ---- */
+  document.querySelectorAll('.ctrl select').forEach(function (sel) {
+    sel.addEventListener('change', function () { sel.classList.toggle('placeholder', !sel.value); });
+  });
+
+  /* ---- カテゴリー選択でサブカテゴリーが開く（実画面と同じ挙動） ---- */
+  var SUBS = {
+    'バックアップ・同期': ['HBS 3（Hybrid Backup Sync）', 'スナップショット', 'クラウド同期'],
+    'ストレージ・ディスク': ['ストレージプール', 'RAID', 'ディスクの障害'],
+    'ネットワーク・接続': ['myQNAPcloud', 'VPN', '共有フォルダへの接続'],
+    'アカウント・権限': ['ユーザー・グループ', 'ライセンス', 'QNAP ID'],
+  };
+  var SUBS2 = ['設定方法を知りたい', '想定どおりに動作しない', 'エラーが表示される'];
+
+  function fill(sel, items) {
+    sel.innerHTML = '<option value="" selected></option>' +
+      items.map(function (v) { return '<option>' + v + '</option>'; }).join('');
+    sel.disabled = items.length === 0;
+    sel.classList.add('placeholder');
+  }
+  $('f-cat').addEventListener('change', function () {
+    fill($('f-sub'), SUBS[this.value] || []);
+    fill($('f-sub2'), []);
+  });
+  $('f-sub').addEventListener('change', function () {
+    fill($('f-sub2'), this.value ? SUBS2 : []);
+  });
+
+  /* ---- 送信は行わない（デモ） ---- */
+  $('ticketForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var missing = [];
+    [['f-serial', 'デバイスシリアル番号'], ['f-model', '製品モデル'], ['f-fw', 'ファームウェア'],
+     ['f-cat', '問題のカテゴリー'], ['f-title', '件名'], ['f-desc', '説明'],
+     ['f-mail', '電子メール'], ['f-first', '名'], ['f-last', '姓'], ['f-country', '国/地域']]
+      .forEach(function (p) { if (!$(p[0]).value.trim()) missing.push(p[1]); });
+
+    if (missing.length) {
+      toast('未入力の項目があります: ' + missing.slice(0, 3).join('・') + (missing.length > 3 ? ' ほか' : ''));
+      return;
+    }
+    toast('デモのため送信は行いません（入力内容はこの画面から出ません）');
+  });
+
+  $('btnReply').addEventListener('click', function () {
+    if (!$('reply').value.trim()) { toast('返信の内容を入力してください'); return; }
+    toast('デモのため送信は行いません');
+  });
+  $('btnRefresh').addEventListener('click', function () { toast('最新の状態です'); });
+  $('btnSearch').addEventListener('click', function () { toast('デモのため検索結果は固定です'); });
+  [['btnImg1', '画像'], ['btnImg2', '画像'], ['btnAttach', '添付ファイル']].forEach(function (p) {
+    $(p[0]).addEventListener('click', function () { toast('デモのため' + p[1] + 'のアップロードは行えません'); });
+  });
+  ['serialHelp', 'logHelp'].forEach(function (id) {
+    $(id).addEventListener('click', function (e) { e.preventDefault(); toast('デモのためリンク先は省略しています'); });
+  });
+})();
+</script>
+</body>
+</html>
