@@ -57,6 +57,8 @@ a{color:var(--accent-ink)}
 .gnav{background:var(--brand); color:#fff; position:sticky; top:0; z-index:50}
 .gnav-in{display:flex; align-items:center; gap:var(--sp-8); height:60px}
 .gnav .logo{height:19px; width:110px; color:#fff; flex:0 0 auto}
+.logo-link{display:inline-flex; flex:0 0 auto; opacity:1; transition:opacity .18s var(--ease)}
+.logo-link:hover{opacity:.75}
 .gnav-menu{display:flex; align-items:stretch; height:60px; gap:var(--sp-2); margin-left:var(--sp-4)}
 .gnav-menu a{display:inline-flex; align-items:center; padding:0 var(--sp-6); font-size:14px; font-weight:500;
   color:#cfd3d8; text-decoration:none; position:relative; transition:color .18s var(--ease)}
@@ -255,11 +257,11 @@ tbody tr.row-main:hover{background:#f2f5f8}
 
 <header class="gnav">
   <div class="container gnav-in">
-    <svg class="logo" aria-label="QNAP"><use href="#qnaplogo"/></svg>
+    <a href="index.html" class="logo-link" aria-label="デモトップへ">
+      <svg class="logo" aria-label="QNAP"><use href="#qnaplogo"/></svg>
+    </a>
     <nav class="gnav-menu">
-      <a href="index.html">AI サポート</a>
-      <a href="tickets.html" class="on" aria-current="page">サポートポータル</a>
-      <a href="livedesk.html">チャット</a>
+      <a href="tickets.html" class="on" aria-current="page">サポート</a>
     </nav>
     <div class="gnav-right">
       <span class="demo-flag">DEMO</span>
