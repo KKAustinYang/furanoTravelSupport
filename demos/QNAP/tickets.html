@@ -331,8 +331,8 @@ tbody tr.row-main:hover{background:#f2f5f8}
 <div class="demo-bar">
   <div class="container">
     <b>デモ環境</b>
-    <span class="full">入力内容は <b>AI エージェント</b>へ送信されます。QNAP へのチケット起票は行いません。</span>
-    <span class="short">入力内容は AI へ送信。QNAP への起票なし。</span>
+    <span class="full">入力内容は<b>メールで送信</b>されます。QNAP へのチケット起票は行いません。</span>
+    <span class="short">入力内容はメール送信。QNAP への起票なし。</span>
   </div>
 </div>
 
@@ -904,12 +904,15 @@ tbody tr.row-main:hover{background:#f2f5f8}
   bindPicker('btnAttach', 'f-doc-input', formFiles, 'f-files', 'document');  // 添付ファイル
   bindPicker('btnImg1', 'r-img-input', replyFiles, 'r-files', 'image');      // 返信の画像
 
+  // 投函先。'mail' … メールで送る（既定） / 'agent' … GPTBots API を直接呼ぶ
+  var DELIVERY = 'mail';
   var AGENT_API = '/api/gptbots';
   var MAIL_API = '/api/mail/send';
+  var mailThread = { subject: '', id: '' };   // 返信を同じスレッドにぶら下げるため
 
   // 起票内容をメールでも送る。AI の回答とは独立に走らせ、失敗しても画面は止めない。
   // 差出人はサーバー側の送信用アドレス、フォームの電子メールは Reply-To に入る。
-  async function mailTicket(subject, text, files) {
+  async function mailTicket(subject, text, files, inReplyTo) {
     var r = await fetch(MAIL_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -918,6 +921,7 @@ tbody tr.row-main:hover{background:#f2f5f8}
         text: text,
         replyTo: val('f-mail'),
         name: (val('f-first') + ' ' + val('f-last')).trim(),
+        inReplyTo: inReplyTo || '',
         attachments: (files || []).map(function (f) {
           return { name: f.name, base64: f.base64 };
         }),
@@ -1118,6 +1122,46 @@ tbody tr.row-main:hover{background:#f2f5f8}
   // 1枚のカードを 思考中 → 流し込み → 完成 と作り替えていく（チャットと同じ見え方）
   var PHASES = ['内容を読み取っています', 'ナレッジベースを検索しています', '回答を作成しています'];
 
+  // メール送信の状態カード（送信中 → 送信済み／失敗）
+  function mailCard(to) {
+    var card = document.createElement('div');
+    card.className = 'aicard thinking';
+    card.innerHTML =
+      '<div class="aicard-head"><span class="who">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4.5 7.5 12 13l7.5-5.5"/></svg>' +
+      'サポート窓口へ送信</span><span class="badge">メール</span>' +
+      '<span class="when">' + stamp(new Date()) + '</span></div>' +
+      '<div class="aicard-body">' +
+      '<div class="think"><span class="dots"><i></i><i></i><i></i></span>' +
+      '<span class="phase"><span>メールを送信しています…</span></span></div></div>';
+    var body = card.querySelector('.aicard-body');
+    return {
+      el: card,
+      done: function (res, replyTo) {
+        card.classList.remove('thinking');
+        body.innerHTML = '';
+        var p1 = document.createElement('p');
+        p1.innerHTML = '<strong>送信しました</strong>　宛先: ' + (res.to || to) +
+          (res.attachments ? '（添付 ' + res.attachments + ' 件）' : '');
+        var p2 = document.createElement('p');
+        p2.textContent = replyTo
+          ? 'AI からの返信は ' + replyTo + ' に届きます。'
+          : 'AI からの返信は入力されたメールアドレスに届きます。';
+        body.appendChild(p1);
+        body.appendChild(p2);
+        follow(card);
+      },
+      fail: function (msg) {
+        card.classList.remove('thinking');
+        body.innerHTML = '';
+        var p = document.createElement('p');
+        p.textContent = '送信できませんでした（' + msg + '）';
+        body.appendChild(p);
+      },
+    };
+  }
+
   function aiCard() {
     var card = document.createElement('div');
     card.className = 'aicard thinking';
@@ -1229,20 +1273,12 @@ tbody tr.row-main:hover{background:#f2f5f8}
     var files = formFiles.slice();
     var blocks = [{ type: 'text', text: text }].concat(attachBlocks(files));
 
-    var mailSubject = val('f-title');
-    mailTicket(mailSubject, text, files).then(function (res) {
-      toast('メールを送信しました（' + res.to + '）');
-    }, function (err) {
-      // メールが落ちてもデモは続ける。原因はトーストで分かるようにしておく
-      toast('メール送信に失敗しました: ' + err.message);
-    });
+    var subject = val('f-title');
 
-    // 待たせない。先に受付を見せてから、AIの回答は同じ画面で育てる
+    // 受付を先に見せてから、送信結果を同じ画面で埋める
     var no = fileTicket(files);
-    var card = aiCard();
+    var card = (DELIVERY === 'mail') ? mailCard() : aiCard();
     $('msgs').appendChild(card.el);
-    // 作成画面は縦に長い。先頭へ戻してからカードへ送らないと、
-    // 縮んだドキュメントの範囲外にスクロール位置が残って空白が見える
     show('list', true);
     window.scrollTo(0, 0);
     requestAnimationFrame(function () { jumpTo(card.el); });
@@ -1254,15 +1290,21 @@ tbody tr.row-main:hover{background:#f2f5f8}
     document.querySelectorAll('.ctrl select').forEach(function (sel) { sel.classList.add('placeholder'); });
 
     try {
-      var full = await askAgentStream(blocks, card.push);
-      card.done(full, text);
+      if (DELIVERY === 'mail') {
+        var res = await mailTicket(subject, text, files);
+        mailThread = { subject: subject, id: res.id || '' };
+        card.done(res, res.replyTo);
+      } else {
+        var full = await askAgentStream(blocks, card.push);
+        card.done(full, text);
+      }
     } catch (err) {
       card.fail(err.message);
-      toast('AI への送信に失敗しました: ' + err.message);
+      toast('送信に失敗しました: ' + err.message);
     }
   });
 
-  // 返信もそのままエージェントへ。会話IDを引き継ぐので文脈が続く
+  // 返信も同じ経路で送る。メールの場合は元のメールにぶら下げて1スレッドにする
   $('btnReply').addEventListener('click', async function () {
     var body = $('reply').value.trim();
     if (!body && !replyFiles.length) { toast('返信の内容を入力してください'); return; }
@@ -1279,18 +1321,24 @@ tbody tr.row-main:hover{background:#f2f5f8}
     $('reply').value = '';
     replyFiles.length = 0; renderFiles(replyFiles, 'r-files');
 
-    var card = aiCard();
+    var card = (DELIVERY === 'mail') ? mailCard() : aiCard();
     $('msgs').appendChild(card.el);
     jumpTo(card.el);
 
     var btn = this;
     btn.disabled = true;
     try {
-      var full = await askAgentStream([{ type: 'text', text: text }].concat(attachBlocks(files)), card.push);
-      card.done(full, null);
+      if (DELIVERY === 'mail') {
+        var subject = mailThread.subject ? 'Re: ' + mailThread.subject : '追加のご連絡';
+        var res = await mailTicket(subject, text, files, mailThread.id);
+        card.done(res, res.replyTo);
+      } else {
+        var full = await askAgentStream([{ type: 'text', text: text }].concat(attachBlocks(files)), card.push);
+        card.done(full, null);
+      }
     } catch (err) {
       card.fail(err.message);
-      toast('AI への送信に失敗しました: ' + err.message);
+      toast('送信に失敗しました: ' + err.message);
     } finally {
       btn.disabled = false;
     }

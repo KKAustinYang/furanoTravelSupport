@@ -65,6 +65,8 @@ export async function sendTicketMail(body) {
     auth: { user, pass },
   })
 
+  const inReplyTo = String(body.inReplyTo || '').trim() || undefined
+
   const info = await transporter.sendMail({
     from: { name: `${label}（QNAP サポートポータル デモ）`, address: from },
     to,
@@ -72,6 +74,9 @@ export async function sendTicketMail(body) {
     subject: `[サポートチケット] ${subject}`,
     text,
     attachments,
+    // 返信は元のメールにぶら下げる（Gmail で1スレッドにまとまる）
+    inReplyTo,
+    references: inReplyTo,
   })
 
   return { id: info.messageId, to, replyTo, attachments: attachments.length }
