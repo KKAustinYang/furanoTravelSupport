@@ -905,6 +905,31 @@ tbody tr.row-main:hover{background:#f2f5f8}
   bindPicker('btnImg1', 'r-img-input', replyFiles, 'r-files', 'image');      // 返信の画像
 
   var AGENT_API = '/api/gptbots';
+  var MAIL_API = '/api/mail/send';
+
+  // 起票内容をメールでも送る。AI の回答とは独立に走らせ、失敗しても画面は止めない。
+  // 差出人はサーバー側の送信用アドレス、フォームの電子メールは Reply-To に入る。
+  async function mailTicket(subject, text, files) {
+    var r = await fetch(MAIL_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subject: subject,
+        text: text,
+        replyTo: val('f-mail'),
+        name: (val('f-first') + ' ' + val('f-last')).trim(),
+        attachments: (files || []).map(function (f) {
+          return { name: f.name, base64: f.base64 };
+        }),
+      }),
+    });
+    if (!r.ok) {
+      var m = '';
+      try { m = (await r.json()).message; } catch (e) {}
+      throw new Error(m || 'メールサーバーが ' + r.status + ' を返しました');
+    }
+    return r.json();
+  }
   var agentConv = '';   // 会話IDは1セッション使い回す
 
   function val(id) { return ($(id).value || '').trim(); }
@@ -1203,6 +1228,14 @@ tbody tr.row-main:hover{background:#f2f5f8}
     var text = ticketToText(buildTicket());
     var files = formFiles.slice();
     var blocks = [{ type: 'text', text: text }].concat(attachBlocks(files));
+
+    var mailSubject = val('f-title');
+    mailTicket(mailSubject, text, files).then(function (res) {
+      toast('メールを送信しました（' + res.to + '）');
+    }, function (err) {
+      // メールが落ちてもデモは続ける。原因はトーストで分かるようにしておく
+      toast('メール送信に失敗しました: ' + err.message);
+    });
 
     // 待たせない。先に受付を見せてから、AIの回答は同じ画面で育てる
     var no = fileTicket(files);

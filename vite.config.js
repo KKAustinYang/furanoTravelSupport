@@ -11,7 +11,31 @@ export default defineConfig(({ mode }) => {
   const gptbotsKey = env.GPTBOTS_API_KEY || ''
   const gptbotsEndpoint = env.GPTBOTS_ENDPOINT || 'https://api-jp.gptbots.ai'
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      {
+        // /api/mail/* はローカルでも本番と同じ関数（api/proxy.js）で処理する。
+        // dev proxy は外部への中継しかできないため、ここだけ Vite 側で受ける。
+        name: 'local-mail-endpoint',
+        configureServer(server) {
+          server.middlewares.use('/api/mail', async (req, res) => {
+            let raw = ''
+            req.on('data', (c) => (raw += c))
+            req.on('end', async () => {
+              const { default: handler } = await server.ssrLoadModule('/api/proxy.js')
+              const shim = {
+                statusCode: 200,
+                status(c) { this.statusCode = c; return this },
+                setHeader(k, v) { res.setHeader(k, v); return this },
+                json(b) { res.statusCode = this.statusCode; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(b)) },
+                send(b) { res.statusCode = this.statusCode; res.end(b) },
+              }
+              await handler({ method: req.method, url: '/api/proxy?__path=mail/send', headers: req.headers, body: raw }, shim)
+            })
+          })
+        },
+      },
+    ],
     build: {
       rollupOptions: {
         input: {

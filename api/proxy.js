@@ -18,6 +18,8 @@
 // and was 404-ing in production. A normal function targeted by an explicit
 // rewrite in vercel.json is routed deterministically.
 
+import { sendTicketMail } from './_mail.js'
+
 const UPSTREAM = 'https://api.modellix.ai'
 
 // GPTBots も同じ関数から中継する。vercel.json の rewrite が /api/* を全部ここへ
@@ -64,8 +66,25 @@ export default async function handler(req, res) {
     suffix = reqUrl.pathname.replace(/^\/api/, '') + (reqUrl.search || '')
   }
 
-  // GPTBots 宛てか、Modellix 宛てかをパスの先頭で決める
+  // GPTBots 宛てか、Modellix 宛てか、メール送信かをパスの先頭で決める
   const path = suffix.replace(/^\//, '')
+
+  // /api/mail/send — 中継ではなく、この関数自身がメールを送る
+  if (path.startsWith('mail/')) {
+    if (req.method !== 'POST') {
+      res.status(405).json({ message: 'Method not allowed.' })
+      return
+    }
+    try {
+      const payload = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {})
+      const result = await sendTicketMail(payload)
+      res.status(200).json({ ok: true, ...result })
+    } catch (e) {
+      res.status(500).json({ message: 'Mail error: ' + e.message })
+    }
+    return
+  }
+
   const toGptbots = path.startsWith(GPTBOTS_PREFIX)
 
   let target, auth
