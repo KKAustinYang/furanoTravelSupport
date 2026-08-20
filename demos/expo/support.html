@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><!-- aurora-mobile 統一favicon -->
 <title>AIと人が交代で応える、育つカスタマーサポート｜GPTBots ライブデモ</title>
 <meta name="description" content="確証があるときはAIが即答し、曖昧なときは人へ。有人対応の記録はナレッジベースに還り、AIは対応するたび賢くなります。右側で実際のAIエージェントをお試しいただけます。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,6 +60,28 @@ a{color:var(--brand);text-underline-offset:.2em;text-decoration-thickness:1px;te
 .b2{width:560px;height:560px;background:radial-gradient(circle,#22508f,transparent 66%);bottom:-250px;right:-150px;animation-delay:-10s}
 .b3{width:440px;height:440px;background:radial-gradient(circle,#155e63,transparent 66%);top:48%;left:4%;animation-delay:-18s;opacity:.22}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(38px,44px) scale(1.1)}}
+/* ---- 背景写真（img/support-bg.png）----------------------------------
+   素材は「左下にNAS実機・右端にサーバーラック・中央は暗い床」という構図。
+   一様に敷くと主役が沈むので、2枚重ねにする：
+     .photo      … 全面に薄く敷いて空気感だけを出すアンビエント
+     .photo-key  … 同じ位置・同じ倍率のまま、NAS とラックの周りだけを
+                   マスクで抜いて濃く出す“キーライト”
+   2枚とも cover / center で完全に重なるので、被写体は必ず一致する。   */
+.photo,.photo-key{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url("img/support-bg.png") center/cover no-repeat}
+.photo{opacity:.2;filter:saturate(.85) brightness(.95)}
+.photo-key{opacity:.8;
+  -webkit-mask-image:radial-gradient(44% 50% at 15% 78%,#000 0%,rgba(0,0,0,.55) 46%,transparent 76%),
+                     radial-gradient(26% 62% at 95% 48%,#000 0%,transparent 74%);
+          mask-image:radial-gradient(44% 50% at 15% 78%,#000 0%,rgba(0,0,0,.55) 46%,transparent 76%),
+                     radial-gradient(26% 62% at 95% 48%,#000 0%,transparent 74%)}
+/* テキストが乗る左上〜中央を落として可読性を確保する（下＝実機側は残す）*/
+.photo::after{content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(160deg,rgba(9,16,22,.92) 0%,rgba(9,16,22,.6) 34%,rgba(9,16,22,.15) 62%,transparent 100%),
+    linear-gradient(0deg,rgba(9,16,22,.55) 0%,transparent 34%)}
+@media(max-width:1180px){ .photo{opacity:.14} .photo-key{opacity:.5} }
+
 .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
   background-image:linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
   background-size:56px 56px;
@@ -244,7 +267,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{
   body{background:#fff;color:#111;height:auto;overflow:visible}
-  .aurora,.grid-bg,.frame,.toast,.pill{display:none!important}
+  .aurora,.grid-bg,.photo,.photo-key,.frame,.toast,.pill{display:none!important}
   main{display:block;max-width:none}
   .card,.kb,.kbrow span{border-color:#ccc;background:#fff}
   .step p,.card p,.kb .desc,.kbrow span{color:#444}
@@ -255,6 +278,8 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 <body>
 
 <div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="photo" aria-hidden="true"></div>
+<div class="photo-key" aria-hidden="true"></div>
 <div class="grid-bg"></div>
 
 <header>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><!-- aurora-mobile 統一favicon -->
 <title>相談から、内見・申込まで。｜不動産仲介・営業支援 AI デモ</title>
 <meta name="description" content="一般相談への回答から物件提案、周辺・相場調査、内見予約、仮申込まで。会話の中で検討度を見極め、高意向リードはCRMへ、必要な場面は担当者へ引き継ぎます。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,6 +62,19 @@ p{text-wrap:pretty}
   background-size:26px 26px;
   -webkit-mask-image:radial-gradient(ellipse 80% 70% at 70% 30%,#000 0%,transparent 78%);
   mask-image:radial-gradient(ellipse 80% 70% at 70% 30%,#000 0%,transparent 78%)}
+/* ---- 背景写真（img/realestate-bg.png）------------------------------
+   素材は「右上にマンション・左下にマンション・中央は白い製図紙」という構図。
+   その構図をそのまま活かし、中央（＝文字と表が乗る場所）だけをマスクで
+   抜いた“逆ビネット”にする。四隅に建物が残り、中央は製図紙のまま白い。  */
+.photo{position:absolute;inset:0;
+  background:url("img/realestate-bg.png") center/cover no-repeat;opacity:1;
+  -webkit-mask-image:radial-gradient(ellipse 72% 64% at 52% 46%,transparent 0%,rgba(0,0,0,.4) 56%,#000 86%);
+          mask-image:radial-gradient(ellipse 72% 64% at 52% 46%,transparent 0%,rgba(0,0,0,.4) 56%,#000 86%)}
+/* 見出しが乗る左上だけ、白を一枚かぶせて文字を浮かせる */
+.photo::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(118deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.5) 24%,transparent 48%)}
+@media(max-width:1180px){ .photo{opacity:.55} }
+
 .wash{position:absolute;border-radius:50%;filter:blur(110px)}
 .w1{width:640px;height:640px;background:radial-gradient(circle,rgba(61,134,214,.2),transparent 66%);top:-240px;right:-120px}
 .w2{width:520px;height:520px;background:radial-gradient(circle,rgba(15,138,126,.14),transparent 68%);bottom:-220px;left:-140px}
@@ -131,6 +145,51 @@ h1 em{font-style:normal;color:var(--blue)}
 .tags span.t2{color:#0b6b61;border-color:rgba(15,138,126,.28);background:var(--teal-soft)}
 
 /* ---- handoff callout ---- */
+/* ---- 価格変動トリガー（EngageLab MA のユーザー属性を切り替える） ---- */
+.chans{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
+.chan{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+  padding:4px 10px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper);color:var(--sub)}
+.chan svg{width:13px;height:13px;flex:0 0 auto}
+.chan.ml{color:var(--blue);border-color:rgba(29,95,168,.32);background:var(--blue-soft)}
+.chan.pu{color:var(--teal);border-color:rgba(15,138,126,.3);background:var(--teal-soft)}
+body.pricedrop .chan{border-color:rgba(29,95,168,.5);box-shadow:0 0 0 1px rgba(29,95,168,.12)}
+
+.dropbox{margin-top:9px;border:1px solid var(--line-2);border-radius:var(--r-md);
+  background:var(--panel);padding:10px 12px}
+body.pricedrop .dropbox{border-color:rgba(29,95,168,.5);background:var(--blue-soft)}
+.droprow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trigger{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
+  padding:9px 16px;border-radius:999px;font-family:var(--font-sans);font-size:12.5px;font-weight:700;
+  letter-spacing:.03em;color:#fff;background:linear-gradient(120deg,#3d86d6,#1d5fa8);
+  box-shadow:0 8px 18px -10px rgba(29,95,168,.9);transition:transform .2s,filter .2s}
+.trigger:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.trigger:active{transform:translateY(0)}
+.trigger[aria-pressed="true"]{color:var(--sub);background:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--line-2)}
+.trigger .ico{font-size:14px;line-height:1}
+.attr{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;font-size:11px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attr code{color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.attr code.on{color:var(--blue);background:var(--blue-soft);border-color:rgba(29,95,168,.34)}
+.attr .st{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+.attr .st.ok{color:var(--teal)}.attr .st.ng{color:#b4462f}
+
+/* ---- 価格変動バナー ---- */
+.pricebar{flex:0 0 auto;position:relative;z-index:20;display:none;align-items:center;gap:12px;
+  padding:9px 28px;color:#fff;background:linear-gradient(90deg,#123a5f,#1d5fa8 56%,#123a5f);
+  border-bottom:1px solid rgba(29,95,168,.5);box-shadow:0 8px 24px -14px rgba(16,36,58,.7)}
+body.pricedrop .pricebar{display:flex;animation:slidein .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes slidein{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
+.pricebar .bl{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#8fd0ff;animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.pricebar b{font-size:13px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.pricebar .old{text-decoration:line-through;opacity:.72;font-weight:500}
+.pricebar span{font-size:11.5px;color:rgba(255,255,255,.88);min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.pricebar .tm{margin-left:auto;flex:0 0 auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;color:#fff;background:rgba(255,255,255,.16);border-radius:999px;padding:3px 11px}
+
 .handoff{flex:0 0 auto;margin-top:var(--gap-sec);border:1px solid rgba(29,95,168,.22);border-radius:var(--r-lg);
   background:linear-gradient(180deg,#fff,var(--blue-soft));padding:var(--pad-row) 18px;
   box-shadow:0 6px 20px rgba(16,36,58,.05)}
@@ -191,6 +250,8 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 
 /* ============ responsive ============ */
 @media(max-height:750px){ .lead{display:none} }
+/* 価格変動バナー表示中はその分だけ左カラムを詰める */
+@media(max-height:900px){ body.pricedrop .lead{display:none} }
 @media(max-width:1180px){
   body{height:auto;min-height:100dvh;overflow:auto;overflow-x:hidden}
   .blueprint{right:0;width:min(52%,300px);opacity:.1}
@@ -209,6 +270,10 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
   .feat+.feat{border-left:0;padding-left:0}
 }
 @media(max-width:720px){
+  .pricebar{padding:8px 16px;gap:8px}
+  .pricebar span,.pricebar .tm{display:none}
+  .droprow{gap:8px}
+  .attr{width:100%;flex:1 0 100%}
   .nav{padding:10px 16px;gap:10px}
   .wordmark{font-size:13.5px;letter-spacing:.1em}
   .kicker,.divider{display:none}
@@ -223,7 +288,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{
   body{background:#fff;height:auto;overflow:visible}
-  .bgfx,.stage{display:none!important}
+  .bgfx,.stage,.pricebar{display:none!important}
   main{display:block;max-width:none}
 }
 </style>
@@ -231,6 +296,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 <body>
 
 <div class="bgfx">
+  <div class="photo" aria-hidden="true"></div>
   <div class="grid-fine"></div>
   <div class="wash w1"></div>
   <div class="wash w2"></div>
@@ -247,6 +313,13 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     <span class="pill"><i class="dot"></i>ONLINE</span>
   </div>
 </header>
+
+<div class="pricebar" id="pricebar" role="status">
+  <i class="bl"></i>
+  <b>▼ 検討中の物件が値下がりしました　<span class="old">6,480万円</span> → 6,180万円</b>
+  <span>この物件を検討していたお客様へ、メールとアプリプッシュで最新状況を自動配信しました（デモ）</span>
+  <span class="tm" id="pricetime">--:--</span>
+</div>
 
 <main>
   <!-- ============ LEFT : story ============ -->
@@ -299,6 +372,29 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <div>
           <h3>内見予約から、仮申込まで</h3>
           <p>チャットの中で日程を調整し、購入申込書（仮申込）の作成まで進みます。</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="n">05</span>
+        <div>
+          <h3>物件の最新状況は、検討中のお客様へ自動で</h3>
+          <p>値下げ・条件変更・成約などで状況が動いたら、<b>その物件を検討していたお客様だけ</b>へ配信。ユーザー属性が切り替わった瞬間にMAのシナリオが起動し、価格の変化と内見予約リンクが届きます。</p>
+          <div class="chans">
+            <span class="chan ml"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m4 7.5 8 5.5 8-5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Email</span>
+            <span class="chan pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><path d="M10.6 18.6h2.8" stroke-linecap="round"/></svg>アプリプッシュ</span>
+          </div>
+          <div class="dropbox">
+            <div class="droprow">
+              <button class="trigger" id="dropBtn" type="button" aria-pressed="false">
+                <span class="ico">▼</span><span class="lbl">検討中の物件を値下げする</span>
+              </button>
+              <span class="attr">
+                <code id="attrVal">property_price_drop : false</code>
+                <span class="st" id="apiSt"></span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -421,6 +517,85 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
   addEventListener('load', shrink);
   var t2; addEventListener('resize', function(){ clearTimeout(t2); t2 = setTimeout(shrink,150); });
   setTimeout(shrink, 400); setTimeout(shrink, 1400);
+  window.reflow = shrink;
+
+  /* ============================================================
+     価格変動トリガー
+     EngageLab MA : POST /v1/user/property でユーザー属性を切り替える。
+     リクエストは自分のオリジン（/api/ma/...）へ投げ、api/proxy.js が
+     Basic 認証を付けて ma-api.engagelab.com へ中継する。
+     APIKey / APISecret はサーバー側の環境変数にしか置かない：
+       ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
+     ============================================================ */
+  var MA = {
+    endpoint : '/api/ma/v1/user/property',
+    euid     : 34775626,               // デモ用ユーザーの EUID（他デモと同じ）
+    attr     : 'property_price_drop'   // 切り替える自定義属性
+  };
+
+  (function(){
+    var btn = document.getElementById('dropBtn');
+    if(!btn) return;
+    var lbl = btn.querySelector('.lbl');
+    var ico = btn.querySelector('.ico');
+    var val = document.getElementById('attrVal');
+    var st  = document.getElementById('apiSt');
+    var tm  = document.getElementById('pricetime');
+    var on = false, busy = false;
+
+    function jst(){
+      try{ return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'}).format(new Date()); }
+      catch(e){ return '--:--'; }
+    }
+
+    function paint(){
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      lbl.textContent = on ? '価格を元に戻す' : '検討中の物件を値下げする';
+      ico.textContent = on ? '↩' : '▼';
+      val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
+      val.classList.toggle('on', on);
+      document.body.classList.toggle('pricedrop', on);
+      if(on){ tm.textContent = jst() + ' JST'; }
+      if(typeof reflow === 'function') reflow();
+    }
+
+    function status(text, cls){
+      st.textContent = text;
+      st.className = 'st' + (cls ? ' ' + cls : '');
+    }
+
+    function send(next){
+      var body = { euid: MA.euid, type: 'set', properties: {} };
+      body.properties[MA.attr] = next ? 'true' : 'false';
+
+      status('送信中…','');
+      return fetch(MA.endpoint, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      })
+        .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
+        .then(function(j){
+          if(j && j.code === 0){ status('MA 更新 ✓','ok'); }
+          else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
+          console.log('[MA]', j);
+        })
+        .catch(function(e){
+          status('MA 未接続（表示のみ）','ng');
+          console.warn('[MA] 送信できませんでした。/api/ma の中継とサーバー側の鍵設定を確認してください。', e);
+        });
+    }
+
+    btn.addEventListener('click', function(){
+      if(busy) return;
+      busy = true;
+      on = !on;
+      paint();               // 見た目は即座に切り替える（APIが失敗してもデモは止めない）
+      send(on).then(function(){ busy = false; });
+    });
+
+    paint();
+  })();
 })();
 </script>
 </body>

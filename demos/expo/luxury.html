@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg"><!-- aurora-mobile 統一favicon -->
 <title>世界のお客様を、待たせない。｜二次流通・海外顧客向け AI 一次対応デモ</title>
 <meta name="description" content="WhatsAppで24時間・多言語の一次対応。商品案内から買取相談まで AI が受け、必要なときは会話履歴ごと担当者へ引き継ぎます。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,6 +62,22 @@ p{text-wrap:pretty}
 .g2{width:520px;height:520px;background:radial-gradient(circle,#6b5322,transparent 68%);opacity:.28;bottom:-220px;right:8%;animation-delay:-12s}
 .g3{width:460px;height:460px;background:radial-gradient(circle,#20304d,transparent 68%);opacity:.3;top:38%;right:-160px;animation-delay:-20s}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(34px,40px) scale(1.1)}}
+/* 左半分に敷くジュエリー写真（img/luxury-bg.png / 縦長・元から暗い素材）。
+   素材そのものが暗くボケているので、こちらでは基本ぼかさない。
+   文字が乗るのは上半分だけなので、暗さも上半分に寄せてかけ、
+   下半分（リングが写っている側）はほぼ素のまま見せる。 */
+.photo{position:fixed;left:0;top:0;bottom:0;width:min(62vw,1000px);z-index:0;pointer-events:none;
+  background-image:url("img/luxury-bg.png");background-size:cover;background-position:left bottom;
+  filter:saturate(1.05) contrast(1.06) brightness(1.02);opacity:.92;
+  -webkit-mask-image:linear-gradient(90deg,#000 0%,#000 58%,transparent 96%);
+          mask-image:linear-gradient(90deg,#000 0%,#000 58%,transparent 96%)}
+/* 見出し・本文が乗る上半分だけを落とす。下は薄くしてリングを見せる。 */
+.photo::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(6,4,10,.88) 0%,rgba(6,4,10,.7) 26%,
+    rgba(6,4,10,.34) 52%,rgba(6,4,10,.1) 74%,rgba(6,4,10,.3) 100%)}
+@media(max-width:1180px){ .photo{width:100%;opacity:.4;
+  -webkit-mask-image:none;mask-image:none} }
+
 .vig{position:fixed;inset:0;z-index:0;pointer-events:none;
   background:radial-gradient(ellipse 90% 70% at 50% 40%,transparent 40%,rgba(6,4,10,.72) 100%)}
 .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
@@ -158,6 +175,52 @@ h1{font-family:var(--font-serif);font-weight:600;font-size:clamp(28px,1.6vw + 2v
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.32}}
 
 /* ---- world clock block ---- */
+/* ---- 新着入荷トリガー（EngageLab MA のユーザー属性を切り替える） ---- */
+.chans{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
+.chan{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;
+  padding:5px 11px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--sub)}
+.chan svg{width:13px;height:13px;flex:0 0 auto}
+.chan.wa{color:#7ee2a8;border-color:rgba(37,211,102,.34);background:rgba(37,211,102,.09)}
+.chan.ml{color:#bfd0ff;border-color:rgba(150,175,255,.3);background:rgba(150,175,255,.08)}
+body.arrived .chan{border-color:var(--gold-line);box-shadow:0 0 0 1px rgba(201,168,106,.18)}
+
+.arrbox{margin-top:9px;border:1px solid var(--gold-line);border-radius:var(--r-md);
+  background:var(--gold-soft);padding:10px 12px}
+body.arrived .arrbox{border-color:rgba(201,168,106,.7);background:rgba(201,168,106,.16)}
+.arrrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trigger{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
+  padding:9px 16px;border-radius:999px;font-family:var(--font-sans);font-size:12.5px;font-weight:700;
+  letter-spacing:.03em;color:#241c0c;background:linear-gradient(150deg,#f0dcae,#c9a86a 58%,#a9863f);
+  box-shadow:0 8px 20px -10px rgba(201,168,106,.9);transition:transform .2s,filter .2s}
+.trigger:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.trigger:active{transform:translateY(0)}
+.trigger[aria-pressed="true"]{color:var(--ink);
+  background:linear-gradient(150deg,#4a4356,#2a2433 60%,#3a3346);
+  box-shadow:0 8px 20px -10px rgba(0,0,0,.9)}
+.trigger .ico{font-size:14px;line-height:1}
+.attr{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;font-size:11px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attr code{color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);
+  border-radius:6px;padding:2px 7px}
+.attr code.on{color:#f0dcae;background:rgba(201,168,106,.2);border-color:var(--gold-line)}
+.attr .st{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.06em}
+.attr .st.ok{color:var(--gold)}.attr .st.ng{color:#e0a3a3}
+
+/* ---- 入荷バナー ---- */
+.arrivalbar{flex:0 0 auto;position:relative;z-index:20;display:none;align-items:center;gap:12px;
+  padding:9px 28px;color:#241c0c;background:linear-gradient(90deg,#a9863f,#f0dcae 52%,#a9863f);
+  border-bottom:1px solid rgba(201,168,106,.5);box-shadow:0 8px 26px -12px rgba(0,0,0,.8)}
+body.arrived .arrivalbar{display:flex;animation:slidein .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes slidein{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
+.arrivalbar .bl{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#241c0c;animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.arrivalbar b{font-size:13px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.arrivalbar span{font-size:11.5px;color:rgba(36,28,12,.82);min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.arrivalbar .tm{margin-left:auto;flex:0 0 auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;color:#241c0c;background:rgba(36,28,12,.12);border-radius:999px;padding:3px 11px}
+
 .world{flex:0 0 auto;width:100%;margin-top:var(--gap-sec);border:1px solid var(--line);border-radius:var(--r-lg);
   background:var(--surface);padding:var(--pad-card) 18px;position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -242,6 +305,8 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 
 /* ============ responsive ============ */
 @media(max-height:750px){ .lead{display:none} }
+/* 入荷バナー表示中はその分だけ左カラムを詰める */
+@media(max-height:900px){ body.arrived .lead{display:none} }
 @media(max-width:1180px){
   body{height:auto;min-height:100dvh;overflow:auto}
   main{grid-template-columns:1fr;gap:28px;padding:22px 20px;justify-content:stretch}
@@ -261,6 +326,10 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
   .feat+.feat{border-left:0;padding-left:0}
 }
 @media(max-width:720px){
+  .arrivalbar{padding:8px 16px;gap:8px}
+  .arrivalbar span,.arrivalbar .tm{display:none}
+  .arrrow{gap:8px}
+  .attr{width:100%;flex:1 0 100%}
   .nav{padding:10px 16px;gap:10px}
   .wordmark{font-size:14px;letter-spacing:.16em}
   .kicker,.divider,#resetBtn,.pill{display:none}
@@ -278,7 +347,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{
   body{background:#fff;color:#111;height:auto;overflow:visible}
-  .bgfx,.vig,.grain,.stage,.toast,.navr{display:none!important}
+  .bgfx,.photo,.vig,.grain,.stage,.toast,.navr,.arrivalbar{display:none!important}
   main{display:block;max-width:none}
   .card,.world{border-color:#ccc;background:#fff}
   .step p,.card p,.world p{color:#444}
@@ -289,6 +358,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 <body>
 
 <div class="bgfx"><div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div></div>
+<div class="photo" aria-hidden="true"></div>
 <div class="vig"></div>
 <div class="grain"></div>
 
@@ -305,6 +375,13 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     </div>
   </div>
 </header>
+
+<div class="arrivalbar" id="arrivalbar" role="status">
+  <i class="bl"></i>
+  <b>◆ 新作シルバーリングが入荷しました</b>
+  <span>シルバーリングをお探しのお客様へ、WhatsApp とメールで新着案内を自動配信しました（デモ）</span>
+  <span class="tm" id="arrivaltime">--:--</span>
+</div>
 
 <main>
   <!-- ============ LEFT : story ============ -->
@@ -359,6 +436,29 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <div>
           <h3>担当者は、読み直さずに続きから</h3>
           <p>言語・要望・確認事項が引き継ぎメモとして残ります。<span class="kw">お客様は同じ説明を二度しません。</span></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="n">05</span>
+        <div>
+          <h3>新作の入荷は、WhatsApp とメールで自動配信</h3>
+          <p>入荷を登録すると、<span class="kw">その商品を探していたお客様だけ</span>へ配信。ユーザー属性が切り替わった瞬間にMAのシナリオが起動し、写真付きの新着案内がWhatsAppへ、詳細と在庫リンクがメールへ届きます。</p>
+          <div class="chans">
+            <span class="chan wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a13 13 0 0 1-5.6-4.9c-.4-.6-.9-1.5-.9-2.4 0-.9.5-1.4.7-1.6.2-.2.4-.3.6-.3h.5c.2 0 .4 0 .5.4l.8 1.8c0 .2.1.3 0 .5l-.4.5-.3.3c-.1.1-.2.3 0 .5.2.4.8 1.2 1.6 1.9.9.8 1.7 1.1 2 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.7.8c.2.1.4.2.4.3v.9Z"/></svg>WhatsApp</span>
+            <span class="chan ml"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m4 7.5 8 5.5 8-5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Email</span>
+          </div>
+          <div class="arrbox">
+            <div class="arrrow">
+              <button class="trigger" id="arrBtn" type="button" aria-pressed="false">
+                <span class="ico">💍</span><span class="lbl">新作リングを入荷させる</span>
+              </button>
+              <span class="attr">
+                <code id="attrVal">luxury_new_arrival : false</code>
+                <span class="st" id="apiSt"></span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -508,6 +608,85 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
   addEventListener('load', shrink);
   var t2; addEventListener('resize', function(){ clearTimeout(t2); t2 = setTimeout(shrink,150); });
   setTimeout(shrink, 400); setTimeout(shrink, 1400);
+  window.reflow = shrink;
+
+  /* ============================================================
+     新着入荷トリガー
+     EngageLab MA : POST /v1/user/property でユーザー属性を切り替える。
+     リクエストは自分のオリジン（/api/ma/...）へ投げ、api/proxy.js が
+     Basic 認証を付けて ma-api.engagelab.com へ中継する。
+     APIKey / APISecret はサーバー側の環境変数にしか置かない：
+       ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
+     ============================================================ */
+  var MA = {
+    endpoint : '/api/ma/v1/user/property',
+    euid     : 34775626,              // デモ用ユーザーの EUID（観光デモと同じ）
+    attr     : 'luxury_new_arrival'   // 切り替える自定義属性
+  };
+
+  (function(){
+    var btn = document.getElementById('arrBtn');
+    if(!btn) return;
+    var lbl = btn.querySelector('.lbl');
+    var ico = btn.querySelector('.ico');
+    var val = document.getElementById('attrVal');
+    var st  = document.getElementById('apiSt');
+    var tm  = document.getElementById('arrivaltime');
+    var on = false, busy = false;
+
+    function jst(){
+      try{ return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'}).format(new Date()); }
+      catch(e){ return '--:--'; }
+    }
+
+    function paint(){
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      lbl.textContent = on ? '入荷を取り消す' : '新作リングを入荷させる';
+      ico.textContent = on ? '↩' : '💍';
+      val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
+      val.classList.toggle('on', on);
+      document.body.classList.toggle('arrived', on);
+      if(on){ tm.textContent = jst() + ' JST'; }
+      if(typeof reflow === 'function') reflow();
+    }
+
+    function status(text, cls){
+      st.textContent = text;
+      st.className = 'st' + (cls ? ' ' + cls : '');
+    }
+
+    function send(next){
+      var body = { euid: MA.euid, type: 'set', properties: {} };
+      body.properties[MA.attr] = next ? 'true' : 'false';
+
+      status('送信中…','');
+      return fetch(MA.endpoint, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(body)
+      })
+        .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
+        .then(function(j){
+          if(j && j.code === 0){ status('MA 更新 ✓','ok'); }
+          else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
+          console.log('[MA]', j);
+        })
+        .catch(function(e){
+          status('MA 未接続（表示のみ）','ng');
+          console.warn('[MA] 送信できませんでした。/api/ma の中継とサーバー側の鍵設定を確認してください。', e);
+        });
+    }
+
+    btn.addEventListener('click', function(){
+      if(busy) return;
+      busy = true;
+      on = !on;
+      paint();               // 見た目は即座に切り替える（APIが失敗してもデモは止めない）
+      send(on).then(function(){ busy = false; });
+    });
+
+    paint();
+  })();
 
 })();
 </script>
