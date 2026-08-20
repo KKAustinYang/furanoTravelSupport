@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>観光AI デモ｜Aurora Mobile</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   AI EXPO 出展ボード ／ 観光AI
+   ・1600x900 のステージを画面に合わせて拡大縮小（スクロールなし）
+   ・背景は写真を使わず SVG で水彩の風景を描き、天候4種で塗り替える
+   ・チャットは実物の GPTBots ウィジェットを2枚埋め込み、その場で触れる
+   ========================================================================== */
+:root{
+  --ink:#1d2233; --ink-2:#5a6377; --ink-3:#8a93a6;
+  --line:rgba(29,34,51,.10); --card:rgba(255,255,255,.9);
+  --brand:#6b5cc4; --brand-2:#2f9e8f; --accent:#6b5cc4;
+  --font:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium",system-ui,sans-serif;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  /* 天候パレット（晴れ） */
+  --sky-1:#bcdcff; --sky-2:#eaf4ff; --sky-3:#fdfbff;
+  --mnt-1:#9fb6d8; --mnt-2:#7e97c4;
+  --fld-1:#d7c6f4; --fld-2:#b69fe6; --fld-3:#9880d2;
+  --row:#8f74d6; --sun:#fff6d8; --sun-a:.85;
+}
+body[data-w="sunset"]{
+  --sky-1:#ffc79a; --sky-2:#ffe3cf; --sky-3:#fff3ea;
+  --mnt-1:#c98fa0; --mnt-2:#9c6d90;
+  --fld-1:#efbcc4; --fld-2:#cf8dab; --fld-3:#ad6f95;
+  --row:#a96b93; --sun:#ffd9a3; --sun-a:1; --accent:#c2683f;
+}
+body[data-w="snow"]{
+  --sky-1:#d5e3f2; --sky-2:#eef5fc; --sky-3:#ffffff;
+  --mnt-1:#b9c8dc; --mnt-2:#93a6c0;
+  --fld-1:#e2eaf5; --fld-2:#c3d0e2; --fld-3:#a3b3c9;
+  --row:#b7c4d8; --sun:#ffffff; --sun-a:.6; --accent:#4f7fb5;
+}
+body[data-w="night"]{
+  --ink:#eef2ff; --ink-2:#bcc6e2; --ink-3:#8f99b8;
+  --line:rgba(255,255,255,.14); --card:rgba(20,24,44,.78);
+  --sky-1:#151b3d; --sky-2:#0e1330; --sky-3:#080b1e;
+  --mnt-1:#232a55; --mnt-2:#171d40;
+  --fld-1:#2f3568; --fld-2:#222752; --fld-3:#171b3a;
+  --row:#3a3f75; --sun:#dfe6ff; --sun-a:.55; --accent:#8fa6ff;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html,body{height:100%; overflow:hidden}
+body{font-family:var(--font); color:var(--ink); background:var(--sky-3);
+  -webkit-font-smoothing:antialiased; display:grid; place-items:center; transition:background 1s ease}
+img,svg,iframe{display:block; max-width:100%}
+button{font:inherit; color:inherit}
+
+#stage{position:fixed; left:50%; top:50%; width:1600px; height:900px;
+  transform-origin:center center; transform:translate(-50%,-50%);
+  padding:26px 34px 22px; display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto; row-gap:14px; overflow:hidden}
+
+/* ---------- 背景（SVGの水彩風景） ---------- */
+.scene{position:fixed; inset:0; width:100%; height:100%; z-index:-2}
+.scene *{transition:fill 1s ease, opacity 1s ease}
+.fx{position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden}
+.fx i{position:absolute; border-radius:50%}
+.stars i{background:#fff; width:2px; height:2px; animation:tw 3.2s infinite}
+@keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+.snow i{top:-12px; background:rgba(255,255,255,.92); animation:fall linear infinite}
+@keyframes fall{to{transform:translate3d(24px,1040px,0)}}
+.stars,.snow{position:absolute; inset:0; opacity:0; transition:opacity 1s}
+body[data-w="night"] .stars{opacity:1}
+body[data-w="snow"] .snow{opacity:1}
+
+/* ---------- ヘッダー ---------- */
+.top{display:flex; align-items:center; gap:18px}
+.logo{display:flex; align-items:center; gap:11px; font-weight:700; font-size:18px; letter-spacing:.04em}
+.logo .mk{width:32px; height:32px; border-radius:10px; display:grid; place-items:center; color:#fff;
+  background:linear-gradient(140deg,var(--brand),var(--brand-2)); font-size:15px}
+.logo .sub{color:var(--ink-3); font-weight:500; font-size:13px; letter-spacing:.14em}
+.wx{margin-left:auto; display:flex; gap:6px; background:var(--card); border:1px solid var(--line);
+  border-radius:999px; padding:4px; box-shadow:0 8px 24px rgba(29,34,51,.10); backdrop-filter:blur(8px)}
+.wx button{border:0; background:none; font-size:13px; cursor:pointer; color:var(--ink-2);
+  padding:7px 15px; border-radius:999px; transition:.25s}
+.wx button.on{background:var(--accent); color:#fff; font-weight:700}
+.chip{border:1px solid var(--line); background:var(--card); border-radius:999px; padding:8px 15px;
+  font-size:12.5px; color:var(--ink-2); backdrop-filter:blur(8px)}
+
+/* ---------- 本体 3カラム ---------- */
+.main{display:grid; grid-template-columns:352px minmax(0,1fr) 470px; gap:16px; min-height:0}
+
+.story{min-height:0; display:flex; flex-direction:column}
+.badge{align-self:flex-start; background:var(--card); border:1px solid var(--line); border-radius:999px;
+  padding:6px 14px; font-size:12px; color:var(--ink-2); backdrop-filter:blur(8px)}
+.story h1{margin-top:14px; font-family:var(--serif); font-size:33px; line-height:1.38; font-weight:600;
+  font-feature-settings:"palt" 1; text-shadow:0 1px 0 rgba(255,255,255,.35)}
+body[data-w="night"] .story h1{text-shadow:none}
+.story .lead{margin-top:11px; font-size:13.5px; line-height:1.85; color:var(--ink-2)}
+.steps{margin-top:14px; display:grid; gap:9px}
+.step{display:grid; grid-template-columns:auto 1fr; gap:11px; align-items:start;
+  background:var(--card); border:1px solid var(--line); border-radius:15px; padding:11px 13px;
+  box-shadow:0 8px 22px rgba(29,34,51,.08); backdrop-filter:blur(10px)}
+.step .ic{width:36px; height:36px; border-radius:12px; display:grid; place-items:center; font-size:16px;
+  background:linear-gradient(150deg,rgba(107,92,196,.18),rgba(47,158,143,.14)); color:var(--brand)}
+body[data-w="night"] .step .ic{color:#c9d2ff}
+.step .no{font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:.14em}
+.step b{display:block; font-size:15px; margin-top:1px}
+.step span{display:block; font-size:12px; color:var(--ink-2); line-height:1.65; margin-top:3px}
+.tags{margin-top:auto; padding-top:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.tag{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:9px 4px; text-align:center;
+  font-size:11px; color:var(--ink-2); line-height:1.5; backdrop-filter:blur(10px)}
+.tag i{display:block; font-size:17px; margin-bottom:3px; font-style:normal}
+
+/* ---------- チャット枠 ---------- */
+.win{min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr);
+  background:var(--card); border:1px solid var(--line); border-radius:20px; overflow:hidden;
+  box-shadow:0 20px 50px rgba(29,34,51,.16); backdrop-filter:blur(10px)}
+.win-h{display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line)}
+.win-h b{font-size:14.5px}
+.win-h span{font-size:11.5px; color:var(--ink-3)}
+.win-h .live{margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:11px;
+  color:var(--brand-2); font-weight:700}
+.win-h .live i{width:7px; height:7px; border-radius:50%; background:var(--brand-2); display:block;
+  box-shadow:0 0 10px var(--brand-2); animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.win-b{min-height:0; background:#fff}
+.win-b iframe{width:100%; height:100%; border:0}
+
+/* ---------- 業務フロー ---------- */
+.flow{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:12px 20px;
+  box-shadow:0 10px 28px rgba(29,34,51,.10); display:flex; align-items:center; gap:12px; backdrop-filter:blur(10px)}
+.flow .node{display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; white-space:nowrap}
+.flow .node .ic{width:32px; height:32px; border-radius:11px; display:grid; place-items:center; font-size:15px;
+  background:linear-gradient(150deg,rgba(107,92,196,.18),rgba(47,158,143,.14)); color:var(--brand)}
+body[data-w="night"] .flow .node .ic{color:#c9d2ff}
+.flow .arw{flex:1; height:2px; opacity:.6; position:relative;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.flow .arw::after{content:""; position:absolute; right:0; top:-4px; border:5px solid transparent; border-left-color:var(--accent)}
+.flow .tail{font-family:var(--serif); font-size:13.5px; color:var(--accent); white-space:nowrap}
+
+/* ---------- フッター ---------- */
+.foot{display:flex; align-items:center; gap:14px}
+.feats{flex:1; display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+.feat{display:flex; align-items:center; gap:9px; font-size:11.5px; color:var(--ink-2)}
+.feat .ic{width:28px; height:28px; border-radius:9px; display:grid; place-items:center; font-size:14px; flex:0 0 auto;
+  background:var(--card); border:1px solid var(--line)}
+.feat b{display:block; color:var(--ink); font-size:12.5px}
+.note{font-size:11px; color:var(--ink-2); opacity:.85; line-height:1.55; text-align:right; white-space:nowrap}
+</style>
+</head>
+<body data-w="clear">
+
+<!-- 背景：水彩の風景。天候で塗りが入れ替わる -->
+<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="var(--sky-1)"/>
+      <stop offset=".55" stop-color="var(--sky-2)"/>
+      <stop offset="1"   stop-color="var(--sky-3)"/>
+    </linearGradient>
+    <radialGradient id="sunG"><stop offset="0" stop-color="var(--sun)"/><stop offset="1" stop-color="transparent"/></radialGradient>
+    <linearGradient id="fldG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="var(--fld-1)"/><stop offset=".55" stop-color="var(--fld-2)"/><stop offset="1" stop-color="var(--fld-3)"/>
+    </linearGradient>
+    <!-- 水彩のにじみ -->
+    <filter id="wc" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency=".011" numOctaves="3" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="34" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="26"/></filter>
+    <filter id="grain"><feTurbulence baseFrequency=".8" numOctaves="2"/></filter>
+    <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset=".74" stop-color="var(--sky-3)" stop-opacity="0"/>
+      <stop offset="1"   stop-color="var(--sky-3)" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="var(--sky-3)" stop-opacity=".72"/>
+      <stop offset=".46" stop-color="var(--sky-3)" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1240" cy="150" r="150" fill="url(#sunG)" opacity="var(--sun-a)"/>
+
+  <!-- 雲 -->
+  <g filter="url(#soft)" fill="#fff" opacity=".5">
+    <ellipse cx="300" cy="150" rx="190" ry="46"/><ellipse cx="620" cy="110" rx="150" ry="36"/>
+    <ellipse cx="1050" cy="185" rx="210" ry="40"/>
+  </g>
+
+  <!-- 遠景の山 -->
+  <path filter="url(#wc)" fill="var(--mnt-1)" opacity=".7"
+        d="M-40 470 L200 330 L360 430 L560 300 L760 440 L980 330 L1200 450 L1420 340 L1640 470 L1640 620 L-40 620 Z"/>
+  <path filter="url(#wc)" fill="var(--mnt-2)" opacity=".62"
+        d="M-40 540 L260 430 L470 520 L700 420 L900 520 L1150 440 L1380 530 L1640 450 L1640 660 L-40 660 Z"/>
+
+  <!-- ラベンダー畑 -->
+  <path filter="url(#wc)" fill="url(#fldG)"
+        d="M-40 566 C 300 532, 900 606, 1640 536 L1640 940 L-40 940 Z"/>
+  <g id="rows" stroke="var(--row)" fill="none" stroke-linecap="round" opacity=".7"></g>
+
+  <rect width="1600" height="900" fill="url(#haze)"/>
+
+  <!-- 左側を白く沈めて、文字を読ませる -->
+  <rect width="1600" height="900" fill="url(#fade)"/>
+  <rect width="1600" height="900" filter="url(#grain)" opacity=".05"/>
+</svg>
+<div class="fx"><div class="stars" id="stars"></div><div class="snow" id="snow"></div></div>
+
+<div id="stage">
+
+  <div class="top">
+    <div class="logo"><span class="mk">▲</span>AURORA AI DEMO<span class="sub">TOURISM / 01</span></div>
+    <div class="wx" id="wx">
+      <button data-w="clear">☀️ 晴れ</button><button data-w="sunset">🌇 夕暮れ</button>
+      <button data-w="snow">❄️ 雪</button><button data-w="night">✨ 星空</button>
+    </div>
+    <span class="chip">観光・自治体向け AI デモ ／ その場でお試しいただけます</span>
+  </div>
+
+  <div class="main">
+    <div class="story">
+      <span class="badge">旅行者向けAIと運営分析AIを、ひとつの運用でつなぐ</span>
+      <h1>旅の案内から、<br>観光運営の改善まで。</h1>
+      <p class="lead">観光案内・旅程提案・多言語対応から、問い合わせ傾向や未回答の分析、FAQ・PR改善まで。使われるほど、地域の案内が育ちます。</p>
+      <div class="steps">
+        <div class="step"><span class="ic">💬</span>
+          <div><span class="no">01</span><b>旅行者向けAI</b>
+            <span>旅程・宿泊・交通・イベント・天気を多言語で案内します。</span></div></div>
+        <div class="step"><span class="ic">📊</span>
+          <div><span class="no">02</span><b>運営分析AI</b>
+            <span>匿名化した会話ログから需要・未回答・改善点を可視化します。</span></div></div>
+      </div>
+      <div class="tags">
+        <div class="tag"><i>🗓</i>モデル<br>コース</div><div class="tag"><i>🏨</i>宿泊候補</div>
+        <div class="tag"><i>🚗</i>交通・<br>レンタカー</div><div class="tag"><i>🎆</i>イベント<br>・天気</div>
+      </div>
+    </div>
+
+    <div class="win">
+      <div class="win-h"><b>旅行者向け：AI観光案内チャット</b><span>多言語・出典付き</span>
+        <span class="live"><i></i>LIVE</span></div>
+      <div class="win-b">
+        <iframe title="AI観光案内チャット" allow="microphone *; camera *; display-capture *"
+                src="https://jp.gptbots.ai/widget/ee7xxf0dhloycf8zzu0xtrq/chat.html"></iframe>
+      </div>
+    </div>
+
+    <div class="win">
+      <div class="win-h"><b>運営者向け：会話ログ分析</b><span>匿名化ログを集計</span>
+        <span class="live"><i></i>LIVE</span></div>
+      <div class="win-b">
+        <iframe title="会話ログ分析AI" allow="microphone *; camera *; display-capture *"
+                src="https://jp.gptbots.ai/widget/eefwoas9zrx8nnqepxloql9/chat.html"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <span class="node"><span class="ic">💬</span>相談</span><span class="arw"></span>
+    <span class="node"><span class="ic">🤖</span>AI案内・旅程提案</span><span class="arw"></span>
+    <span class="node"><span class="ic">🗄</span>匿名化ログを収集</span><span class="arw"></span>
+    <span class="node"><span class="ic">📈</span>傾向・未回答を分析</span><span class="arw"></span>
+    <span class="node"><span class="ic">💡</span>FAQ・PRを改善</span>
+    <span class="tail">使われるほど、地域の案内が育つ。</span>
+  </div>
+
+  <div class="foot">
+    <div class="feats">
+      <div class="feat"><span class="ic">🌐</span><div><b>4言語対応</b>多言語で自然に対応</div></div>
+      <div class="feat"><span class="ic">🔗</span><div><b>根拠付き回答</b>出典・公式情報を明示</div></div>
+      <div class="feat"><span class="ic">🕘</span><div><b>最新情報を反映</b>公式サイトを参照</div></div>
+      <div class="feat"><span class="ic">📊</span><div><b>会話ログ分析</b>需要・未回答を可視化</div></div>
+      <div class="feat"><span class="ic">🙋</span><div><b>有人連携</b>必要時にオペレーター接続</div></div>
+    </div>
+    <p class="note">展示用のデモ環境です<br>実際の旅行者・自治体データではありません</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  function fit() {
+    var s = Math.min(innerWidth / 1600, innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  fit(); addEventListener('resize', fit);
+})();
+
+/* ラベンダーの畝。手前ほど太く粗く、奥ほど細かく */
+(function () {
+  var g = document.getElementById('rows'), ns = 'http://www.w3.org/2000/svg';
+  for (var i = 0; i < 22; i++) {
+    var t = i / 21;                       // 0=奥 1=手前
+    var y = 588 + Math.pow(t, 1.5) * 322;
+    var p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', 'M-40 ' + y + ' C 380 ' + (y - 22 - t * 14) + ', 1080 ' + (y + 20 + t * 16) + ', 1640 ' + (y - 14) + '');
+    p.setAttribute('stroke-width', (2 + t * 9).toFixed(1));
+    p.setAttribute('stroke-dasharray', (6 + t * 26).toFixed(0) + ' ' + (5 + t * 12).toFixed(0));
+    p.setAttribute('opacity', (0.25 + t * 0.45).toFixed(2));
+    g.appendChild(p);
+  }
+})();
+
+/* 星と雪 */
+(function () {
+  var stars = document.getElementById('stars'), snow = document.getElementById('snow'), el;
+  for (var i = 0; i < 80; i++) {
+    el = document.createElement('i');
+    el.style.cssText = 'left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 58) + '%;animation-delay:' + (Math.random() * 3) + 's';
+    stars.appendChild(el);
+  }
+  for (var j = 0; j < 46; j++) {
+    el = document.createElement('i');
+    var sz = (3 + Math.random() * 5).toFixed(1);
+    el.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + sz + 'px;height:' + sz + 'px;opacity:' +
+      (0.35 + Math.random() * 0.6).toFixed(2) + ';animation-duration:' + (7 + Math.random() * 8).toFixed(1) +
+      's;animation-delay:' + (-Math.random() * 12).toFixed(1) + 's';
+    snow.appendChild(el);
+  }
+})();
+
+/* 天候切替。クリックでも、放っておいても巡回する */
+(function () {
+  var wx = document.getElementById('wx'), order = ['clear', 'sunset', 'snow', 'night'], i = 0, auto;
+  function set(w) {
+    document.body.dataset.w = w;
+    [].forEach.call(wx.children, function (b) { b.classList.toggle('on', b.dataset.w === w); });
+    i = order.indexOf(w);
+  }
+  function next() { set(order[(i + 1) % order.length]); }
+  wx.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    set(b.dataset.w); clearInterval(auto); auto = setInterval(next, 12000);
+  });
+  set('clear');
+  auto = setInterval(next, 12000);       // 来場者が触っている間に切り替わりすぎないよう長め
+})();
+
+addEventListener('keydown', function (e) {
+  var map = { '1': 'tourism.html', '2': 'training.html', '3': 'support.html', '0': 'index.html' };
+  if (map[e.key]) location.href = map[e.key];
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI EXPO 出展ボード｜Aurora Mobile</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  :root{ --accent:#8d9bff; --accent-2:#3fd6bd; --glow-1:rgba(141,155,255,.16); --glow-2:rgba(63,214,189,.13) }
+  .cards{flex:1 1 auto; min-height:0; margin-top:40px; display:grid; grid-template-columns:repeat(3,1fr); gap:26px}
+  .card{position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+    border:1px solid var(--line); border-radius:24px; padding:34px 32px; overflow:hidden;
+    background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s}
+  .card:hover{transform:translateY(-6px); border-color:var(--line-2)}
+  .card::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--c)}
+  .card .no{font-family:var(--mono); font-size:13px; color:var(--fg-3); letter-spacing:.16em}
+  .card h2{margin-top:18px; font-size:31px; line-height:1.4; font-weight:800; font-feature-settings:"palt" 1}
+  .card p{margin-top:14px; font-size:15.5px; line-height:1.85; color:var(--fg-2)}
+  .card .biz{margin-top:auto; padding-top:22px; font-size:13px; color:var(--fg-3)}
+  .card .go{margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color:var(--c)}
+  .kbd{font-family:var(--mono); font-size:12px; color:var(--fg-3); border:1px solid var(--line);
+    border-radius:6px; padding:3px 8px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="top">
+    <span class="tag"><i></i>AI EXPO 出展デモ ・ 3画面</span>
+    <span class="brand"><b>Aurora Mobile</b> × GPTBots ・ EngageLab ・ Modellix</span>
+  </div>
+
+  <div class="head">
+    <h1>現場で動いている <span class="em">AI エージェント</span>を、3つ。</h1>
+    <p class="lead">いずれも実際の導入・検証から起こしたものです。画面をクリックすると、それぞれのボードが開きます。</p>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="tourism.html" style="--c:#3fd6bd">
+      <span class="no">01 ／ TOURISM</span>
+      <h2>観光AI<br>アシスタント</h2>
+      <p>スポット・モデルコース・天気・宿泊、緊急時まで。4言語で来訪者の母国語に応える。</p>
+      <span class="biz">観光・自治体</span>
+      <span class="go">ボードを開く →</span>
+    </a>
+    <a class="card" href="training.html" style="--c:#ffb454">
+      <span class="no">02 ／ TRAINING</span>
+      <h2>応対力<br>トレーニングAI</h2>
+      <p>AIのお客様と音声でロールプレイ。終話直後に6項目で採点し、次の応対へつなぐ。</p>
+      <span class="biz">コールセンター</span>
+      <span class="go">ボードを開く →</span>
+    </a>
+    <a class="card" href="support.html" style="--c:#4c8dff">
+      <span class="no">03 ／ SUPPORT</span>
+      <h2>サポートAI<br>エージェント</h2>
+      <p>実チケットから学習し、根拠を引用して24時間回答。確信が持てない時は人へ引き継ぐ。</p>
+      <span class="biz">メーカーサポート</span>
+      <span class="go">ボードを開く →</span>
+    </a>
+  </div>
+
+  <div class="foot">
+    <span>Aurora Mobile 株式会社</span>
+    <span class="note">各ボードは <span class="kbd">1 / 2 / 3</span> キーでも切り替えられます</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  function fit() {
+    var s = Math.min(innerWidth / 1600, innerHeight / 900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  fit(); addEventListener('resize', fit);
+})();
+
+// ブースでの操作用。数字キーで各ボードへ、0 でこの一覧へ
+addEventListener('keydown', function (e) {
+  var map = { '1': 'tourism.html', '2': 'training.html', '3': 'support.html', '0': 'index.html' };
+  if (map[e.key]) location.href = map[e.key];
+});
+</script>
+</body>
+</html>

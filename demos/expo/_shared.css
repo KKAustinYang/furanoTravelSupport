@@ -1,0 +1,85 @@
+/* ==========================================================================
+   AI EXPO 出展用ボード（3枚共通）
+   1600x900 のステージを画面に合わせて拡大縮小する。どの解像度でも
+   スクロールなしで全部見えることを最優先にしている（ブースの大画面向け）。
+   顧客名は伏せ、業種と成果だけを見せる。
+   ========================================================================== */
+:root{
+  --ink:#0a0d14;
+  --ink-2:#111726;
+  --line:rgba(255,255,255,.10);
+  --line-2:rgba(255,255,255,.18);
+  --fg:#f2f5fa;
+  --fg-2:#9aa6bd;
+  --fg-3:#66708a;
+  --font:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html,body{height:100%; overflow:hidden; background:var(--ink)}
+body{font-family:var(--font); color:var(--fg); -webkit-font-smoothing:antialiased;
+  display:grid; place-items:center}
+img,svg,canvas{display:block; max-width:100%}
+
+#stage{position:fixed; left:50%; top:50%; width:1600px; height:900px;
+  transform-origin:center center; transform:translate(-50%,-50%);
+  padding:52px 64px; display:grid;
+  grid-template-rows:auto auto minmax(0,1fr) auto auto;   /* 3行目だけが残りを取る */
+  row-gap:22px; align-content:stretch;
+  background:radial-gradient(1200px 700px at 12% -10%, var(--glow-1), transparent 62%),
+             radial-gradient(1000px 620px at 92% 108%, var(--glow-2), transparent 62%),
+             var(--ink)}
+#stage::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ---------- ヘッダー ---------- */
+.top{display:flex; align-items:center; justify-content:space-between; gap:24px}
+.tag{display:inline-flex; align-items:center; gap:11px; padding:9px 18px; border-radius:999px;
+  border:1px solid var(--line-2); background:rgba(255,255,255,.04);
+  font-size:15px; font-weight:600; letter-spacing:.06em; color:var(--fg-2)}
+.tag i{width:8px; height:8px; border-radius:50%; background:var(--accent); display:block;
+  box-shadow:0 0 14px var(--accent); animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.brand{display:flex; align-items:center; gap:14px; font-size:15px; color:var(--fg-3); letter-spacing:.04em}
+.brand b{color:var(--fg-2); font-weight:600}
+
+/* ---------- 見出し ---------- */
+.head{min-width:0}
+.head h1{font-size:56px; line-height:1.18; letter-spacing:-.01em; font-weight:800;
+  font-feature-settings:"palt" 1; text-wrap:balance}
+.head h1 .em{background:linear-gradient(100deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+.head .lead{margin-top:14px; font-size:19px; line-height:1.7; color:var(--fg-2); max-width:60ch}
+
+/* ---------- 本体（左：ライブ演出 / 右：数値） ---------- */
+.main{min-height:0; display:grid;
+  grid-template-columns:1fr 460px; grid-template-rows:minmax(0,1fr); gap:24px}
+.panel{border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,.035);
+  backdrop-filter:blur(8px); overflow:hidden; position:relative;
+  display:flex; flex-direction:column; min-height:0}
+.panel-h{flex:0 0 auto; display:flex; align-items:center; gap:12px; padding:16px 22px;
+  border-bottom:1px solid var(--line); font-size:14.5px; color:var(--fg-2); letter-spacing:.04em}
+.panel-h .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); flex:0 0 auto}
+.panel-h .right{margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--fg-3)}
+
+/* KPI */
+.kpis{display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:16px; min-height:0}
+.kpi{border:1px solid var(--line); border-radius:20px; padding:20px 22px; overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
+.kpi .v{font-family:var(--mono); font-size:44px; font-weight:600; line-height:1;
+  letter-spacing:-.02em; color:var(--accent)}
+.kpi .v small{font-size:22px; margin-left:3px; color:var(--fg-2)}
+.kpi .k{margin-top:9px; font-size:14.5px; color:var(--fg-2); line-height:1.6}
+.kpi .n{margin-top:5px; font-size:12px; color:var(--fg-3)}
+
+/* 下部の特徴 */
+.feats{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+.feat{border:1px solid var(--line); border-radius:16px; padding:15px 18px;
+  background:rgba(255,255,255,.03)}
+.feat b{display:block; font-size:15.5px; margin-bottom:6px}
+.feat span{font-size:12.5px; color:var(--fg-3); line-height:1.7}
+
+.foot{display:flex; align-items:center; justify-content:space-between;
+  font-size:13px; color:var(--fg-3); letter-spacing:.03em}
+.foot .note{color:#4d566d}
