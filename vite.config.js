@@ -10,6 +10,11 @@ export default defineConfig(({ mode }) => {
   const key = env.MODELLIX_KEY || ''
   const gptbotsKey = env.GPTBOTS_API_KEY || ''
   const gptbotsEndpoint = env.GPTBOTS_ENDPOINT || 'https://api-jp.gptbots.ai'
+  // EngageLab MA（緊急SMSのトリガー = ユーザー属性の切り替え）。Basic 認証。
+  const maBase = env.ENGAGELAB_MA_BASE_URL || 'https://ma-api.engagelab.com'
+  const maAuth = env.ENGAGELAB_MA_API_KEY && env.ENGAGELAB_MA_API_SECRET
+    ? Buffer.from(`${env.ENGAGELAB_MA_API_KEY}:${env.ENGAGELAB_MA_API_SECRET}`).toString('base64')
+    : ''
   return {
     plugins: [
       react(),
@@ -47,6 +52,17 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         // 本番の api/proxy.js と同じ振り分け。'/api' より先に置くこと。
+        '/api/ma': {
+          target: maBase,
+          changeOrigin: true,
+          secure: true,
+          rewrite: (p) => p.replace(/^\/api\/ma/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              if (maAuth) proxyReq.setHeader('Authorization', 'Basic ' + maAuth)
+            })
+          },
+        },
         '/api/gptbots': {
           target: gptbotsEndpoint,
           changeOrigin: true,

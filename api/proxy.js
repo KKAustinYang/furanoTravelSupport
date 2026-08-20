@@ -27,6 +27,18 @@ const UPSTREAM = 'https://api.modellix.ai'
 //   /api/gptbots/v1/conversation  ->  https://api-jp.gptbots.ai/v1/conversation
 const GPTBOTS_PREFIX = 'gptbots/'
 
+// EngageLab MA（マーケティングオートメーション）も同じ関数から中継する。
+//   /api/ma/v1/user/property  ->  https://ma-api.engagelab.com/v1/user/property
+// 認証は Bearer ではなく Basic base64(APIKey:APISecret)。鍵はサーバー側だけに置く。
+//   ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
+// 既定はシンガポールDC。US Virginia を使う場合だけ ENGAGELAB_MA_BASE_URL を設定する。
+const MA_PREFIX = 'ma/'
+
+function maBase() {
+  const v = (process.env.ENGAGELAB_MA_BASE_URL || '').trim().replace(/\/+$/, '')
+  return v || 'https://ma-api.engagelab.com'
+}
+
 // 送り先は既定で日本リージョン。上書きしたい場合だけ GPTBOTS_BASE_URL を設定する。
 // （汎用的な名前の GPTBOTS_ENDPOINT は他用途で使われていることがあるので読まない）
 // 'jp' のようなリージョン名でも、フルURLでも受け付ける。
@@ -86,9 +98,20 @@ export default async function handler(req, res) {
   }
 
   const toGptbots = path.startsWith(GPTBOTS_PREFIX)
+  const toMa = path.startsWith(MA_PREFIX)
 
-  let target, auth
-  if (toGptbots) {
+  let target, auth, authScheme = 'Bearer'
+  if (toMa) {
+    const apiKey = process.env.ENGAGELAB_MA_API_KEY
+    const secret = process.env.ENGAGELAB_MA_API_SECRET
+    if (!apiKey || !secret) {
+      res.status(500).json({ message: 'ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET are not configured on the server.' })
+      return
+    }
+    target = `${maBase()}/${path.slice(MA_PREFIX.length)}`
+    auth = Buffer.from(`${apiKey}:${secret}`).toString('base64')
+    authScheme = 'Basic'
+  } else if (toGptbots) {
     const gptbotsKey = process.env.GPTBOTS_API_KEY
     if (!gptbotsKey) {
       res.status(500).json({ message: 'GPTBOTS_API_KEY is not configured on the server.' })
@@ -107,7 +130,7 @@ export default async function handler(req, res) {
 
   const init = {
     method: req.method,
-    headers: { Authorization: `Bearer ${auth}` },
+    headers: { Authorization: `${authScheme} ${auth}` },
   }
   if (!['GET', 'HEAD'].includes(req.method)) {
     init.headers['Content-Type'] = req.headers['content-type'] || 'application/json'
