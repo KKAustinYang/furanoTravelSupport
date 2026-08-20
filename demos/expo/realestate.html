@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>不動産AI デモ｜Aurora Mobile</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   AI EXPO 出展ボード ／ 不動産AI
+   ・レイアウトは観光ボードと同じ（左＝業務フロー、右＝実機のエージェント）
+   ・シーンは街のスカイライン。時間帯を朝・夕・夜で切り替える
+   ========================================================================== */
+:root{
+  --ink:#141a26; --line:#e7ebf2;
+  --gold:#d8b36a; --gold-2:#f2dfae; --teal:#3fb9a6;
+  --grad:linear-gradient(100deg,#d8b36a,#c98f52 55%,#a9663f);
+  --serif:"Shippori Mincho",serif;
+  --sans:"Inter","Noto Sans JP",-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}*{margin:0}
+html,body{height:100%; overflow:hidden}
+body{font-family:var(--sans); color:#fff; background:#0a1020; -webkit-font-smoothing:antialiased}
+svg,iframe{display:block}
+button{font-family:inherit}
+
+/* ===== シーン ===== */
+.layer{position:fixed; inset:0; pointer-events:none; z-index:0}
+.sky{transition:background 1.4s ease}
+body[data-t="morning"] .sky{background:linear-gradient(180deg,#2b4b7d 0%,#7ba3cf 42%,#dcd0c0 78%,#f3e6d6 100%)}
+body[data-t="dusk"]    .sky{background:linear-gradient(180deg,#25264f 0%,#7b4a76 34%,#c9704f 66%,#f0b97e 100%)}
+body[data-t="night"]   .sky{background:linear-gradient(180deg,#050a1c 0%,#0f1c3d 52%,#22305c 100%)}
+
+.orb{position:absolute; border-radius:50%; opacity:0; transition:all 1.4s ease}
+.sun{width:118px; height:118px;
+  background:radial-gradient(circle,#fff7e2,#ffe6a8 44%,#ffcf72 70%,rgba(255,207,114,0) 72%);
+  filter:drop-shadow(0 0 70px rgba(255,220,150,.75))}
+body[data-t="morning"] .sun{opacity:1; top:11%; left:60%}
+body[data-t="dusk"] .sun{opacity:1; top:47%; left:13%; width:150px; height:150px;
+  background:radial-gradient(circle,#fff1cf,#ffb06b 42%,#ff7d4d 70%,rgba(255,125,77,0) 72%);
+  filter:drop-shadow(0 0 95px rgba(255,140,90,.85))}
+.moon{width:82px; height:82px; top:8%; left:62%;
+  background:radial-gradient(circle at 38% 36%,#fdfdf6,#e7ecf5 60%,#c9d2e4);
+  box-shadow:0 0 70px rgba(220,230,255,.5), inset -10px -8px 0 rgba(160,175,205,.25)}
+body[data-t="night"] .moon{opacity:1}
+
+.stars{opacity:0; transition:opacity 1.4s ease}
+body[data-t="night"] .stars{opacity:1}
+.star{position:absolute; border-radius:50%; background:#fff; animation:tw 3.5s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.22}50%{opacity:1}}
+
+.clouds{transition:opacity 1.4s ease}
+body[data-t="night"] .clouds{opacity:.22}
+.cloud{position:absolute; background:#fff; border-radius:50%; filter:blur(7px); opacity:.55;
+  box-shadow:44px 14px 0 -6px #fff,88px 6px 0 -10px #fff,-42px 12px 0 -8px #fff}
+.c1{width:96px; height:52px; top:15%; left:-12%; animation:drift 62s linear infinite}
+.c2{width:66px; height:38px; top:27%; left:-12%; animation:drift 84s linear infinite; animation-delay:-30s; opacity:.4}
+@keyframes drift{to{transform:translateX(136vw)}}
+
+/* 街並み。窓の灯りは夜ほど強く点く */
+.city{position:fixed; left:0; right:0; bottom:0; width:100%; height:56vh; z-index:0; transition:filter 1.4s ease}
+body[data-t="night"] .city{filter:brightness(.5) saturate(.85)}
+body[data-t="dusk"] .city{filter:brightness(.72) saturate(1.05)}
+.win{fill:#ffd98a; transition:opacity 1.4s ease}
+body[data-t="morning"] .win{opacity:.12}
+body[data-t="dusk"] .win{opacity:.55}
+body[data-t="night"] .win{opacity:.95}
+.veil{position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(115% 92% at 20% 50%,rgba(6,12,26,.55),rgba(6,12,26,0) 62%)}
+
+/* ===== ステージ ===== */
+#stage{position:fixed; left:50%; top:50%; width:1600px; height:900px; z-index:2;
+  transform-origin:center center; transform:translate(-50%,-50%);
+  padding:26px 36px 28px; display:grid; grid-template-rows:auto minmax(0,1fr); row-gap:18px}
+
+.top{display:flex; align-items:center; gap:16px}
+.brand{display:flex; align-items:center; gap:11px}
+.brand .mk{width:34px; height:34px; border-radius:11px; display:grid; place-items:center; font-size:16px;
+  background:var(--grad); box-shadow:0 8px 22px -8px rgba(216,179,106,.9)}
+.brand b{font-family:var(--serif); font-size:18px; letter-spacing:.02em; line-height:1.15; display:block}
+.brand small{display:block; font-size:9.5px; letter-spacing:.22em; opacity:.75; font-weight:500}
+.tsw{margin-left:auto; display:flex; align-items:center; gap:6px; background:rgba(12,20,38,.36);
+  border:1px solid rgba(255,255,255,.26); backdrop-filter:blur(10px); border-radius:999px; padding:5px}
+.tsw .cap{font:500 12px var(--sans); color:rgba(255,255,255,.82); padding:0 8px 0 12px; white-space:nowrap}
+.ts{border:0; background:transparent; color:rgba(255,255,255,.82); font:600 13px var(--sans);
+  padding:8px 15px; border-radius:999px; cursor:pointer; transition:.2s}
+.ts.on{background:#fff; color:var(--ink)}
+.tagline{border:1px solid rgba(255,255,255,.36); background:rgba(255,255,255,.1); backdrop-filter:blur(6px);
+  border-radius:999px; padding:8px 16px; font-size:12.5px; color:rgba(255,255,255,.95)}
+
+/* ===== 本体 ===== */
+.main{display:grid; grid-template-columns:558px minmax(0,1fr); gap:24px; min-height:0}
+
+/* --- 左：業務フロー --- */
+.flowcol{min-height:0; display:flex; flex-direction:column; text-shadow:0 2px 22px rgba(0,10,30,.4)}
+.eyebrow{align-self:flex-start; font:600 11.5px/1 var(--sans); letter-spacing:.2em; padding:7px 14px;
+  border:1px solid rgba(255,255,255,.42); border-radius:999px; background:rgba(255,255,255,.1); backdrop-filter:blur(4px)}
+.flowcol h1{margin-top:16px; font-family:var(--serif); font-size:40px; line-height:1.34; font-weight:700}
+.flowcol h1 .accent{background:linear-gradient(100deg,var(--gold-2),#ffd9a0);
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.flowcol .lead{margin-top:12px; font-size:14px; line-height:1.8; color:rgba(255,255,255,.92); max-width:530px}
+
+.steps{margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.st{position:relative; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.24);
+  border-radius:15px; padding:12px 13px 13px; backdrop-filter:blur(14px);
+  box-shadow:0 18px 40px -26px rgba(0,10,30,.95)}
+.st::before{content:""; position:absolute; left:13px; right:13px; top:0; height:2px; border-radius:2px;
+  background:linear-gradient(90deg,var(--gold),transparent)}
+.st .hd{display:flex; align-items:center; gap:9px}
+.st .ic{width:32px; height:32px; border-radius:10px; display:grid; place-items:center; font-size:15px;
+  background:rgba(255,255,255,.9); box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
+.st .no{font:700 10px var(--sans); letter-spacing:.18em; color:var(--gold-2); display:block}
+.st b{font-size:14.5px; display:block; line-height:1.35}
+.st p{margin-top:7px; font-size:11.8px; line-height:1.7; color:rgba(255,255,255,.88)}
+.st.key{background:linear-gradient(150deg,rgba(216,179,106,.32),rgba(255,255,255,.1));
+  border-color:rgba(242,223,174,.5)}
+.st .pin{position:absolute; right:11px; top:11px; font:700 9.5px var(--sans); letter-spacing:.12em;
+  color:#141a26; background:var(--gold-2); border-radius:999px; padding:3px 8px}
+
+/* 有人引き継ぎ */
+.hand{margin-top:auto; display:flex; align-items:center; gap:13px; background:rgba(63,185,166,.16);
+  border:1px solid rgba(63,185,166,.42); border-radius:16px; padding:12px 15px; backdrop-filter:blur(12px)}
+.hand .ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-size:18px;
+  background:rgba(255,255,255,.92); flex:0 0 auto}
+.hand b{display:block; font-size:14px}
+.hand p{font-size:11.8px; line-height:1.65; color:rgba(255,255,255,.9); margin-top:3px}
+
+/* --- 右：実機チャット --- */
+.frame{min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr); background:#fff; border-radius:22px;
+  overflow:hidden; box-shadow:0 46px 90px -34px rgba(0,6,20,.9); border:1px solid rgba(255,255,255,.28)}
+.bar{display:flex; align-items:center; gap:9px; padding:11px 16px; border-bottom:1px solid #eef1f6; background:#fff}
+.dot{width:11px; height:11px; border-radius:50%}
+.bar .title{margin-left:14px; display:flex; align-items:center; gap:9px; color:var(--ink);
+  font:700 14px var(--sans)}
+.bar .title span{font-weight:500; font-size:12px; color:#7b859b}
+.live{display:inline-flex; align-items:center; gap:6px; font:700 11px var(--sans); color:#1d8574; margin-left:auto}
+.live .pulse{width:8px; height:8px; border-radius:50%; background:var(--teal); animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,185,166,.6)}70%{box-shadow:0 0 0 10px rgba(63,185,166,0)}100%{box-shadow:0 0 0 0 rgba(63,185,166,0)}}
+.body{position:relative; min-height:0; background:#fff}
+.body iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+</style>
+</head>
+<body data-t="dusk">
+
+<div class="layer sky"></div>
+<div class="layer stars" id="stars"></div>
+<div class="layer"><div class="orb sun"></div><div class="orb moon"></div></div>
+<div class="layer clouds"><div class="cloud c1"></div><div class="cloud c2"></div></div>
+
+<svg class="city" viewBox="0 0 1440 460" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <!-- 遠景 -->
+  <g fill="#33507f" opacity=".55">
+    <rect x="20"  y="250" width="90"  height="210"/><rect x="130" y="205" width="70" height="255"/>
+    <rect x="230" y="275" width="110" height="185"/><rect x="380" y="230" width="80" height="230"/>
+    <rect x="500" y="285" width="120" height="175"/><rect x="660" y="245" width="86" height="215"/>
+    <rect x="790" y="290" width="104" height="170"/><rect x="930" y="235" width="76" height="225"/>
+    <rect x="1050" y="280" width="120" height="180"/><rect x="1210" y="240" width="90" height="220"/>
+    <rect x="1330" y="285" width="96" height="175"/>
+  </g>
+  <!-- 中景 -->
+  <g fill="#1d3159" opacity=".85">
+    <rect x="0"   y="330" width="130" height="130"/><rect x="150" y="300" width="96" height="160"/>
+    <rect x="270" y="345" width="140" height="115"/><rect x="430" y="290" width="104" height="170"/>
+    <rect x="560" y="340" width="126" height="120"/><rect x="710" y="305" width="98"  height="155"/>
+    <rect x="830" y="350" width="150" height="110"/><rect x="1000" y="300" width="100" height="160"/>
+    <rect x="1120" y="345" width="140" height="115"/><rect x="1280" y="310" width="160" height="150"/>
+  </g>
+  <!-- 手前 -->
+  <g fill="#111d38">
+    <rect x="60"  y="392" width="180" height="68"/><rect x="270" y="404" width="150" height="56"/>
+    <rect x="450" y="386" width="200" height="74"/><rect x="680" y="402" width="160" height="58"/>
+    <rect x="870" y="390" width="190" height="70"/><rect x="1090" y="404" width="170" height="56"/>
+    <rect x="1290" y="392" width="150" height="68"/>
+  </g>
+  <g id="wins" class="win"></g>
+</svg>
+<div class="veil"></div>
+
+<div id="stage">
+
+  <div class="top">
+    <div class="brand"><span class="mk">▲</span>
+      <span><b>AURORA AI DEMO</b><small>REAL ESTATE / 04</small></span></div>
+    <div class="tsw" id="tsw">
+      <span class="cap">時間帯</span>
+      <button class="ts" data-t="morning">🌅 朝</button>
+      <button class="ts" data-t="dusk">🌇 夕方</button>
+      <button class="ts" data-t="night">🌃 夜</button>
+    </div>
+    <span class="tagline">不動産・住宅事業者向け AI デモ ／ その場でお試しいただけます</span>
+  </div>
+
+  <div class="main">
+
+    <!-- 左：業務フロー -->
+    <div class="flowcol">
+      <span class="eyebrow">REAL ESTATE AI ／ INQUIRY TO CONTRACT</span>
+      <h1>問い合わせを、<br><span class="accent">商談</span>まで運ぶAI。</h1>
+      <p class="lead">一般的なご質問への回答から、意向度の見極め、物件のご提案、周辺・相場の調査、内見予約と初期契約まで。ひとつの会話の中で担当者の手前までを進め、必要な場面では自動で人に引き継ぎます。</p>
+
+      <div class="steps">
+        <div class="st"><div class="hd"><span class="ic">🏢</span>
+            <span><span class="no">STEP 01</span><b>一般問い合わせ対応</b></span></div>
+          <p>会社概要・サービス内容・不動産の基礎知識まで、24時間365日その場で回答します。</p></div>
+
+        <div class="st"><div class="hd"><span class="ic">🎯</span>
+            <span><span class="no">STEP 02</span><b>深掘りと意向度判定</b></span></div>
+          <p>予算・時期・エリア・条件を自然な会話で引き出し、購入意向の高さを見極めます。</p></div>
+
+        <div class="st key"><span class="pin">CRM 連携</span><div class="hd"><span class="ic">📥</span>
+            <span><span class="no">STEP 03</span><b>リードとして起票</b></span></div>
+          <p>意向が高いと判定したお客様は、会話の要約とともにCRMへリード登録します。</p></div>
+
+        <div class="st"><div class="hd"><span class="ic">🏠</span>
+            <span><span class="no">STEP 04</span><b>物件のご提案</b></span></div>
+          <p>ご要望の条件で物件を検索し、間取り・価格・特徴などの基本情報をご案内します。</p></div>
+
+        <div class="st"><div class="hd"><span class="ic">📍</span>
+            <span><span class="no">STEP 05</span><b>周辺環境・市場価値</b></span></div>
+          <p>学校・生活利便施設・交通などの周辺情報と、相場観・資産価値の見立てを提示します。</p></div>
+
+        <div class="st"><div class="hd"><span class="ic">📝</span>
+            <span><span class="no">STEP 06</span><b>内見予約・初期契約</b></span></div>
+          <p>空き枠から内見日程を確保し、初期契約に必要な手続きと書類までご案内します。</p></div>
+      </div>
+
+      <div class="hand">
+        <span class="ic">🤝</span>
+        <div><b>全工程で、有人への引き継ぎをAIが自動判定</b>
+          <p>込み入った交渉や重要事項の説明など、人が出るべき場面をAIが検知。会話の要約と意向度を添えて担当者へ渡すため、初動が速くなり、成約率の底上げにつながります。</p></div>
+      </div>
+    </div>
+
+    <!-- 右：実機のエージェント -->
+    <div class="frame">
+      <div class="bar">
+        <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+        <span class="title">🏠 不動産AIエージェント<span>問い合わせ対応・物件提案・内見予約</span></span>
+        <span class="live"><span class="pulse"></span>LIVE ｜ 実機に接続しています</span>
+      </div>
+      <div class="body">
+        <iframe title="不動産AIエージェント" allow="microphone *; camera *; display-capture *"
+                src="https://jp.gptbots.ai/widget/eepplsfbm483rkudzwjd44j/chat.html"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {                                   // 1600x900 を画面いっぱいに
+  var stage = document.getElementById('stage');
+  function fit(){ stage.style.transform = 'translate(-50%,-50%) scale(' + Math.min(innerWidth/1600, innerHeight/900) + ')' }
+  fit(); addEventListener('resize', fit);
+})();
+
+(function () {                                   // 星
+  var s = document.getElementById('stars'), h = '';
+  for (var i = 0; i < 70; i++) { var z = (Math.random()*2+1).toFixed(1);
+    h += '<span class="star" style="width:'+z+'px;height:'+z+'px;top:'+(Math.random()*58)+'%;left:'+(Math.random()*100)+'%;animation-delay:'+(Math.random()*3.5).toFixed(2)+'s"></span>' }
+  s.innerHTML = h;
+})();
+
+(function () {                                   // 窓の灯り。建物の上にランダムに散らす
+  var g = document.getElementById('wins'), ns = 'http://www.w3.org/2000/svg', h = '';
+  document.querySelectorAll('.city > g:not(#wins) rect').forEach(function (r, bi) {
+    var x = +r.getAttribute('x'), y = +r.getAttribute('y'),
+        w = +r.getAttribute('width'), hh = +r.getAttribute('height'),
+        far = bi < 11;                            // 遠景は灯りを控えめに
+    for (var cy = y + 12; cy < y + hh - 10; cy += 17) {
+      for (var cx = x + 9; cx < x + w - 9; cx += 15) {
+        if (Math.random() > (far ? .38 : .55)) continue;
+        h += '<rect x="' + cx + '" y="' + cy + '" width="5" height="8" opacity="' + (.45 + Math.random() * .55).toFixed(2) + '"/>';
+      }
+    }
+  });
+  g.innerHTML = h;
+})();
+
+(function () {                                   // 時間帯。触らなければ巡回する
+  var w = document.getElementById('tsw'), order = ['morning','dusk','night'], i = 1, timer;
+  function set(v){ document.body.dataset.t = v; i = order.indexOf(v);
+    [].forEach.call(w.querySelectorAll('.ts'), function(b){ b.classList.toggle('on', b.dataset.t === v) }) }
+  w.addEventListener('click', function(e){ var b = e.target.closest('.ts'); if(!b) return;
+    set(b.dataset.t); clearInterval(timer); timer = setInterval(function(){ set(order[(i+1)%3]) }, 14000) });
+  set('dusk'); timer = setInterval(function(){ set(order[(i+1)%3]) }, 14000);
+})();
+
+addEventListener('keydown', function (e) {
+  var map = { '1':'tourism.html', '2':'training.html', '3':'support.html', '4':'realestate.html', '0':'index.html' };
+  if (map[e.key]) location.href = map[e.key];
+});
+</script>
+</body>
+</html>

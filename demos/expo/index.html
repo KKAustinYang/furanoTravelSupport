@@ -11,16 +11,16 @@
 <link rel="stylesheet" href="_shared.css">
 <style>
   :root{ --accent:#8d9bff; --accent-2:#3fd6bd; --glow-1:rgba(141,155,255,.16); --glow-2:rgba(63,214,189,.13) }
-  .cards{flex:1 1 auto; min-height:0; margin-top:40px; display:grid; grid-template-columns:repeat(3,1fr); gap:26px}
+  .cards{flex:1 1 auto; min-height:0; margin-top:36px; display:grid; grid-template-columns:repeat(4,1fr); gap:20px}
   .card{position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
-    border:1px solid var(--line); border-radius:24px; padding:34px 32px; overflow:hidden;
+    border:1px solid var(--line); border-radius:24px; padding:30px 26px; overflow:hidden;
     background:linear-gradient(165deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
     transition:transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s}
   .card:hover{transform:translateY(-6px); border-color:var(--line-2)}
   .card::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--c)}
   .card .no{font-family:var(--mono); font-size:13px; color:var(--fg-3); letter-spacing:.16em}
-  .card h2{margin-top:18px; font-size:31px; line-height:1.4; font-weight:800; font-feature-settings:"palt" 1}
-  .card p{margin-top:14px; font-size:15.5px; line-height:1.85; color:var(--fg-2)}
+  .card h2{margin-top:16px; font-size:27px; line-height:1.4; font-weight:800; font-feature-settings:"palt" 1}
+  .card p{margin-top:13px; font-size:14.5px; line-height:1.85; color:var(--fg-2)}
   .card .biz{margin-top:auto; padding-top:22px; font-size:13px; color:var(--fg-3)}
   .card .go{margin-top:14px; display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color:var(--c)}
   .kbd{font-family:var(--mono); font-size:12px; color:var(--fg-3); border:1px solid var(--line);
@@ -30,12 +30,12 @@
 <body>
 <div id="stage">
   <div class="top">
-    <span class="tag"><i></i>AI EXPO 出展デモ ・ 3画面</span>
+    <span class="tag"><i></i>AI EXPO 出展デモ ・ 4画面</span>
     <span class="brand"><b>Aurora Mobile</b> × GPTBots ・ EngageLab ・ Modellix</span>
   </div>
 
   <div class="head">
-    <h1>現場で動いている <span class="em">AI エージェント</span>を、3つ。</h1>
+    <h1>現場で動いている <span class="em">AI エージェント</span>を、4つ。</h1>
     <p class="lead">いずれも実際の導入・検証から起こしたものです。画面をクリックすると、それぞれのボードが開きます。</p>
   </div>
 
@@ -61,11 +61,18 @@
       <span class="biz">メーカーサポート</span>
       <span class="go">ボードを開く →</span>
     </a>
+    <a class="card" href="realestate.html" style="--c:#d8b36a">
+      <span class="no">04 ／ REAL ESTATE</span>
+      <h2>不動産AI<br>エージェント</h2>
+      <p>問い合わせ対応から意向度の判定、物件提案、内見予約まで。高意向はCRMへ自動で起票。</p>
+      <span class="biz">不動産・住宅</span>
+      <span class="go">ボードを開く →</span>
+    </a>
   </div>
 
   <div class="foot">
     <span>Aurora Mobile 株式会社</span>
-    <span class="note">各ボードは <span class="kbd">1 / 2 / 3</span> キーでも切り替えられます</span>
+    <span class="note">各ボードは <span class="kbd">1 / 2 / 3 / 4</span> キーでも切り替えられます</span>
   </div>
 </div>
 
@@ -81,7 +88,7 @@
 
 // ブースでの操作用。数字キーで各ボードへ、0 でこの一覧へ
 addEventListener('keydown', function (e) {
-  var map = { '1': 'tourism.html', '2': 'training.html', '3': 'support.html', '0': 'index.html' };
+  var map = { '1': 'tourism.html', '2': 'training.html', '3': 'support.html', '4': 'realestate.html', '0': 'index.html' };
   if (map[e.key]) location.href = map[e.key];
 });
 </script>
