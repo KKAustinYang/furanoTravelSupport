@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="favicon.svg"><!-- aurora-mobile 統一favicon -->
 <title>旅の案内と、運営の改善を、ひとつに。｜観光・自治体向け AI デモ</title>
-<meta name="description" content="旅行者にはAIコンシェルジュが24時間・多言語で応対し、その会話ログを運営者向けの分析AIが読み解きます。案内するほどデータが貯まり、貯まるほど案内が良くなる仕組みです。">
+<meta name="description" content="旅行者にはAIコンシェルジュが24時間・多言語で応対し、その会話ログを運営者向けの分析AIが読み解きます。案内するほどデータがたまり、たまるほど案内が良くなる仕組みです。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Shippori+Mincho:wght@600;700&family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -369,7 +369,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
   <section class="side">
     <span class="eyebrow">観光・自治体向け AI デモ</span>
     <h1>旅の案内と、<br><span class="accent">運営の改善</span>を、ひとつに。</h1>
-    <p class="lead">旅行者にはAIコンシェルジュが24時間・多言語で応対し、その会話ログを運営者向けの分析AIが読み解きます。案内するほどデータが貯まり、貯まるほど案内が良くなる仕組みです。</p>
+    <p class="lead">旅行者にはAIコンシェルジュが24時間・多言語で応対し、その会話ログを運営者向けの分析AIが読み解きます。案内するほどデータがたまり、たまるほど案内が良くなる仕組みです。</p>
 
     <div class="spacer" aria-hidden="true"></div>
     <h2 class="sec-label">2つのエージェント<i class="rule"></i><span class="stag">CLOSED LOOP</span></h2>
@@ -379,7 +379,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <span class="n">01</span>
         <div>
           <h3>旅行者向け AIコンシェルジュ</h3>
-          <p>Webサイト・LINE・館内サイネージから、<span class="kw">24時間・多言語</span>で応対します。</p>
+          <p>Webサイト・LINE・館内サイネージに届いた問い合わせに、<span class="kw">24時間・多言語</span>で応対します。</p>
           <div class="caps">
             <span><i>🗓</i>旅程プラン作成</span>
             <span><i>🌐</i>多言語対応</span>
@@ -403,11 +403,11 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <span class="n">03</span>
         <div>
           <h3>緊急時は、SMSで自動送信</h3>
-          <p>気象警報などの異常を検知すると、<span class="kw">対象エリアに滞在中の旅行者だけ</span>にSMSを自動送信。ユーザー属性が切り替わった瞬間に、MAのシナリオが起動します。</p>
+          <p>気象警報などの緊急情報を受け取ると、<span class="kw">対象エリアに滞在中の旅行者だけ</span>にSMSを自動送信します。ユーザー属性が切り替わった瞬間に、MAのシナリオが起動します。</p>
           <div class="emgbox">
             <div class="emgrow">
               <button class="trigger" id="emgBtn" type="button" aria-pressed="false">
-                <span class="ico">🚨</span><span class="lbl">悪天候を発生させる</span>
+                <span class="ico">🚨</span><span class="lbl">暴風雪警報を発生させる</span>
               </button>
               <span class="attr">
                 <code id="attrVal">hokkaido_weather_alert : false</code>
@@ -565,7 +565,7 @@ var MA = {
 
   function paint(){
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    lbl.textContent = on ? '警報を解除する' : '悪天候を発生させる';
+    lbl.textContent = on ? '警報を解除する' : '暴風雪警報を発生させる';
     ico.textContent = on ? '✅' : '🚨';
     val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
     val.classList.toggle('on', on);
