@@ -19,6 +19,7 @@ const ICONS={
 };
 const TINT={ agent:'#8d9bff', engage:'#3fd6bd', model:'#b39bff' };
 const DEMOS=[
+  {cat:'model', icon:'spark', url:'/d/modellix-studio/index.html', ja:{t:'Modellix Live Studio（展示会キオスク）',d:'その場で撮った1枚の写真から、8つの世界のキャラクターカードをAIが生成。展示会ブースの大型ディスプレイ向けキオスク体験デモ。'},en:{t:'Modellix Live Studio (Expo Kiosk)',d:'One photo taken on the spot becomes a character card in any of 8 worlds. A kiosk experience built for expo-booth displays.'},tags:['Modellix','展示会','Live']},
   {cat:'agent', icon:'layers', url:'/d/expo/index.html', ja:{t:'展示会ショーケース（5業種シナリオ）',d:'展示会ブースの大型ディスプレイ向けスクロール展示。観光・研修・サポート・ラグジュアリー・不動産の5シナリオを1画面ずつ見せ、各デモへそのまま入れます。'},en:{t:'Expo Showcase — 5 Industry Scenarios',d:'A scroll-through showcase built for expo-booth displays: five industry scenarios, one screen each, each opening its live demo.'},tags:['展示会','Showcase','Live']},
   {cat:'agent', icon:'chat', url:'/tourism.html', ja:{t:'観光AIガイド',d:'観光スポット・モデルコース・天気・宿泊から多言語対応・緊急時案内まで、旅に寄り添う観光AIアシスタントのライブデモ。'},en:{t:'Tourism AI Guide',d:'A multilingual tourism AI assistant — spots, routes, weather, lodging and more. Live interactive demo.'},tags:['GPTBots','観光','Live']},
   {cat:'agent', icon:'support', url:'/d/nts-training/index.html', ja:{t:'応対力トレーニングAI（ロールプレイ研修）',d:'コールセンター向けの応対力トレーニング。AIロールプレイのお客様と実際に音声で対話し、評価レポートまで自動生成するデモ。'},en:{t:'Contact-Center Roleplay Training',d:'Agent-skills training for call centers — practice live voice roleplay with AI customers and get an auto-generated evaluation report.'},tags:['GPTBots','研修','Voice']},
