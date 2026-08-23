@@ -704,7 +704,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           </li>
           <li class="tn" data-k="3" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>動画をレンダリング</b><span>静止画 2 枚から 8 秒の縦型映像へ</span>
+            <div class="tx"><b>動画をレンダリング</b><span>静止画 2 枚から 7 秒の縦型映像へ</span>
               <span class="soon">準備中</span></div>
             <em class="tt"></em>
           </li>
@@ -3113,29 +3113,25 @@ var qrcode = function() {
    ① 世界のカット      … トップのポスターウォール
    ② キャラクターカード … 主役選択画面で「こう変身できます」を見せる見本
    ③ 完成カット        … 世界選択パネルと背景                            */
-var B = "https://jp.srcgptbots.com/ailab/images/";
-var SCN = [ // ①
-  B+"mvt7u2ayqlzz1qm.png", B+"nzs2d3h5ox1jztk.png", B+"1buyq8j9wbd7dea.png", B+"f936g7an3aachiv.png",
-  B+"ojow856tv7nbiht.png", B+"b1qtnfukuspnwoe.png", B+"j1jlkzv0nq20azl.png", B+"avph9eahepvyywd.png"];
-var CRD = [ // ②
-  B+"mjmldvjtqqxexjr.jpeg", B+"gklgg8ysytf42a5.jpeg", B+"offo0pnb9wxpswh.png", B+"georiwfh0lc5efp.jpeg",
-  B+"ejlgzonxfwjzsjn.png", B+"wewrvc97eytv0jr.jpeg", B+"yrb6klyjpz80axv.jpeg", B+"0em1m1i5noogols.jpeg"];
-var VID_B = "https://gptbots-resume-demo-jp.oss-ap-northeast-1.aliyuncs.com/Modellix/";
-/* 世界ごとのサンプル動画。未提供のものは null（プレースホルダを出す） */
-var VIDS = [
-  null,                                                                  // 機甲パイロット
-  VID_B+"%E2%91%A2-2%20%E7%95%B0%E4%B8%96%E7%95%8C%E3%81%AE%E5%8B%87%E8%80%85.mp4",   // 異世界の勇者
-  VID_B+"%E2%91%A2-3%20%E4%BE%8D.mp4",                                                // 侍
-  VID_B+"%E2%91%A2-4%20%E3%83%9F%E3%83%8B%E3%83%81%E3%83%A5%E3%82%A2%E6%8E%A2%E6%A4%9C%E9%9A%8A.mp4", // ミニチュア探検隊
-  null,                                                                  // 恐竜サバイバー
-  null,                                                                  // 深海の守護者
-  null,                                                                  // 宇宙飛行士
-  VID_B+"%E2%91%A2-8%20%E6%B0%B7%E3%81%AE%E9%AD%94%E5%B0%8E%E5%A3%AB.mp4"             // 氷の魔導士
-];
+/* 画像は URLs.md の原本を 900px 幅へ縮小してローカルに置いたもの。
+   原本は 1 枚あたり最大 13.8MB（24 枚で 130MB）あり、トップのウォールが
+   いつまでも埋まらなかった。表示サイズはどれも 900px 未満なので画質は落ちない。 */
+var SCN = ["img/s1.jpg","img/s2.jpg","img/s3.jpg","img/s4.jpg","img/s5.jpg","img/s6.jpg","img/s7.jpg","img/s8.jpg"]; // ①
+var CRD = ["img/c1.jpg","img/c2.jpg","img/c3.jpg","img/c4.jpg","img/c5.jpg","img/c6.jpg","img/c7.jpg","img/c8.jpg"]; // ②
+var WLD = ["img/w1.jpg","img/w2.jpg","img/w3.jpg","img/w4.jpg","img/w5.jpg","img/w6.jpg","img/w7.jpg","img/w8.jpg"]; // ③
 
-var WLD = [ // ③
-  B+"gxueinorvrfdpbe.png", B+"xgq46swfllwlwgo.png", B+"z3h13uav6vup2gm.png", B+"to4qsb5vyjfmcrs.png",
-  B+"pcif6aatrsr7oyn.png", B+"tibeglfejxj7fa2.png", B+"iho2zp962gsxwvi.png", B+"nug9jamxlt61rbx.png"];
+var VID_B = "https://gptbots-resume-demo-jp.oss-ap-northeast-1.aliyuncs.com/Modellix/";
+/* 世界ごとのサンプル動画（8 世界すべて） */
+var VIDS = [
+  VID_B+"%E2%91%A0%20%E6%A9%9F%E7%94%B2.mp4",                                          // 機甲パイロット
+  VID_B+"%E2%91%A2-2%20%E7%95%B0%E4%B8%96%E7%95%8C%E3%81%AE%E5%8B%87%E8%80%85.mp4",    // 異世界の勇者
+  VID_B+"%E2%91%A2-3%20%E4%BE%8D.mp4",                                                 // 侍
+  VID_B+"%E2%91%A2-4%20%E3%83%9F%E3%83%8B%E3%83%81%E3%83%A5%E3%82%A2%E6%8E%A2%E6%A4%9C%E9%9A%8A.mp4", // ミニチュア探検隊
+  VID_B+"%E2%91%A4%20%E6%81%90%E7%AB%9C.mp4",                                          // 恐竜サバイバー
+  VID_B+"%E2%91%A5%20%E6%B7%B1%E6%B5%B7.mp4",                                          // 深海の守護者
+  VID_B+"%E2%91%A6%20%E5%AE%87%E5%AE%99.mp4",                                          // 宇宙飛行士
+  VID_B+"%E2%91%A2-8%20%E6%B0%B7%E3%81%AE%E9%AD%94%E5%B0%8E%E5%A3%AB.mp4"              // 氷の魔導士
+];
 
 var WORLDS = [
  {id:"mech", ttl:"見つかった", nm:"機甲パイロット", sub:"雨のネオン街 × 半機械化", tag:"実写CG",
@@ -3169,7 +3165,7 @@ var NOTES=[
  "1 枚の写真から顔の構造を推定しています。「元の顔だと分かる」まま別人にならないよう保つのが、ここでいちばん難しいところです。",
  "身元を固定したまま、衣装・光・質感・表情だけを入れ替えています。単なるコスプレ合成にならないよう、汗や埃、筋肉の緊張まで描き分けます。",
  "背景となる世界と合成し、光の向き・色温度・空気感・粒状感まで合わせます。この工程は現在開発中です。",
- "静止画から 8 秒の縦型動画を生成します。この工程は現在開発中です。"
+ "静止画から 7 秒の縦型動画を生成します。この工程は現在開発中です。"
 ];
 
 /* ───── DOM ───── */
@@ -3213,7 +3209,7 @@ function setAccent(a,b){ root.style.setProperty("--a1",a); root.style.setPropert
         // 比率と見せる位置を散らして、同じ絵でも別カットに見せる
         var v=(oi+c*3)%6;
         f.style.aspectRatio = ["9/16","3/4","9/16","2/3","9/16","1/1"][v];
-        var im=new Image(); im.src=e.src; im.alt="";
+        var im=new Image(); im.decoding="async"; im.loading="lazy"; im.src=e.src; im.alt="";
         im.style.objectPosition = ["center 28%","center 50%","center 42%","center 62%","center 36%","center 54%"][v];
         f.appendChild(im);
         var g=document.createElement("span"); g.className="pg"; f.appendChild(g);
@@ -3234,7 +3230,7 @@ var cRow=[], cTimer=null, cIdx=0;
     var d=document.createElement("div");
     d.className="crd"; d.style.setProperty("--cc",w.a);
     d.style.animationDelay=(k*60)+"ms";
-    var im=new Image(); im.src=CRD[w.i]; im.alt=""; d.appendChild(im);
+    var im=new Image(); im.decoding="async"; im.src=CRD[w.i]; im.alt=""; d.appendChild(im);
     var sc=document.createElement("span"); sc.className="cs"; d.appendChild(sc);
     var g=document.createElement("span"); g.className="cg"; d.appendChild(g);
     var n=document.createElement("span"); n.className="cn"; n.textContent=w.nm; d.appendChild(n);
@@ -3793,8 +3789,9 @@ function restart(){
 var idleT=null, IDLE=90000;
 function resetIdle(){
   clearTimeout(idleT); $("#idle").textContent="";
-  // 生成中は触らないのが正しい状態なので、無操作リセットの対象から外す
-  if(current==="attract"||current==="gen") return;
+  // 生成中と結果表示中は、放っておくのが正しい状態なので自動リセットしない。
+  // 生成物が黙って消えると、その場を離れていたお客様に見せられなくなる。
+  if(current==="attract"||current==="gen"||current==="result") return;
   idleT=setTimeout(function(){
     $("#idle").textContent="操作がないため最初の画面に戻ります";
     setTimeout(restart,2600);
