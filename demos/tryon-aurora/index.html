@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Modellix バーチャル試着デモ — AURORA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👕</text></svg>">
+<style>
+  :root {
+    --accent: #BD4A3E;
+    --accent-soft: #fdf2ed;
+    --text: #1a1a1a;
+    --muted: #555;
+    --line: #eaeaea;
+    --panel: #F0F0F0;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+      "Hiragino Sans", "Yu Gothic UI", "Meiryo", "Noto Sans JP", system-ui, sans-serif;
+    margin: 0; color: var(--text); background: #fff; font-size: 14px;
+  }
+  button { font-family: inherit; }
+  img { display: block; }
+
+  /* ---- デモ用の帯（ショーケースへの戻り口を兼ねる） ---- */
+  .demo-bar {
+    background: #111; color: #fff; padding: 9px 24px;
+    display: flex; align-items: center; gap: 14px; font-size: 12px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .demo-bar .lbl { font-weight: 700; letter-spacing: .5px; }
+  .demo-bar .sep { width: 1px; height: 14px; background: #444; }
+  .demo-bar .meta { color: #aaa; }
+  .demo-bar .back { color: #ccc; text-decoration: none; margin-left: auto; border: 1px solid #444;
+    padding: 5px 12px; border-radius: 99px; white-space: nowrap; }
+  .demo-bar .back:hover { color: #fff; border-color: #888; }
+  @media (max-width: 700px) { .demo-bar .meta { display: none; } }
+
+  /* ---- Coupon strip ---- */
+  .coupon-strip {
+    background: #111; color: #fff; text-align: center;
+    padding: 9px; font-size: 13px; font-weight: 700; letter-spacing: 0.2px;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  /* ---- ストアヘッダー（AURORA＝デモ用の架空ストア） ---- */
+  .nav {
+    display: flex; align-items: center; padding: 20px 32px;
+    border-bottom: 1px solid var(--line); gap: 24px;
+  }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 3px; }
+  .nav-links { display: flex; gap: 28px; flex: 1; margin-left: 20px; flex-wrap: wrap; }
+  .nav-links span { color: var(--text); font-size: 14px; cursor: pointer; }
+  .nav-icons { display: flex; gap: 18px; align-items: center; font-size: 16px; color: var(--text); }
+  @media (max-width: 900px) { .nav-links { display: none; } }
+
+  /* ---- Breadcrumb ---- */
+  .crumb { padding: 18px 32px; font-size: 12px; color: #555; }
+
+  /* ---- Product switcher (demo: 3 garments) ---- */
+  .product-switcher {
+    display: flex; gap: 10px; padding: 4px 32px 18px 32px; flex-wrap: wrap;
+  }
+  .product-switcher .ps-label {
+    width: 100%; font-size: 11px; color: #888; letter-spacing: 1.5px;
+    margin-bottom: 4px; text-transform: uppercase;
+  }
+  .product-switcher .ps-tile {
+    flex: 1; min-width: 220px; display: flex; gap: 10px; padding: 10px;
+    background: #fafafa; border: 2px solid transparent; border-radius: 6px;
+    cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease;
+    align-items: center; text-align: left;
+  }
+  .product-switcher .ps-tile:hover { background: #f0f0f0; }
+  .product-switcher .ps-tile.active { border-color: var(--accent); background: #fff; }
+  .product-switcher .ps-tile .ps-thumb {
+    width: 56px; height: 56px; background: #eee; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    border-radius: 4px;
+  }
+  .product-switcher .ps-tile .ps-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .product-switcher .ps-tile .ps-meta { font-size: 11px; line-height: 1.4; color: #333; min-width: 0; flex: 1; display: block; }
+  .product-switcher .ps-tile .ps-meta > span { display: block; }
+  .product-switcher .ps-tile .ps-meta .ps-b { font-weight: 700; font-size: 12px; }
+  .product-switcher .ps-tile .ps-meta .ps-n { color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .product-switcher .ps-tile .ps-meta .ps-p { color: var(--accent); font-weight: 700; margin-top: 2px; }
+  /* 自分で足した商品（削除できる） */
+  .product-switcher .ps-tile { position: relative; }
+  .ps-del {
+    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%;
+    border: none; background: rgba(0,0,0,.5); color: #fff; font-size: 12px; line-height: 1;
+    cursor: pointer; display: none; text-align: center; line-height: 20px; padding: 0;
+  }
+  .product-switcher .ps-tile:hover .ps-del { display: block; }
+  .ps-del:hover { background: var(--accent); }
+  .ps-own { position: absolute; bottom: 4px; right: 6px; font-size: 9px; letter-spacing: .5px;
+    color: #999; text-transform: uppercase; }
+  /* 「商品を追加」タイル */
+  .ps-add {
+    flex: 1; min-width: 220px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px; border: 2px dashed #d5d5d5; border-radius: 6px; background: #fff;
+    cursor: pointer; color: #777; font-size: 12px; font-weight: 700;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .ps-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .ps-add .plus { font-size: 17px; line-height: 1; }
+
+  /* 商品追加ダイアログ */
+  .add-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 150; align-items: center; justify-content: center; padding: 24px;
+  }
+  .add-bg.show { display: flex; }
+  .add-box {
+    background: #fff; border-radius: 10px; padding: 28px; width: 100%; max-width: 720px;
+    max-height: 92vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  }
+  .add-box h3 { margin: 0 0 6px; font-size: 18px; }
+  .add-box .sub { font-size: 12px; color: #777; margin-bottom: 20px; line-height: 1.7; }
+  .add-grid { display: grid; grid-template-columns: 190px 1fr; gap: 20px; }
+  @media (max-width: 620px) { .add-grid { grid-template-columns: 1fr; } }
+  .add-prev {
+    background: var(--panel); height: 230px; display: flex; align-items: center;
+    justify-content: center; padding: 14px; border-radius: 6px; text-align: center;
+    font-size: 11px; color: #999;
+  }
+  .add-prev img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .add-f { margin-bottom: 12px; }
+  .add-f label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
+  .add-f label i { font-style: normal; color: #aaa; font-weight: 400; }
+  .add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .add-acts { display: flex; gap: 8px; margin-top: 18px; }
+  .add-acts button { flex: 1; padding: 13px; border: none; border-radius: 4px;
+    font-size: 13px; font-weight: 700; cursor: pointer; }
+  .add-go { background: #111; color: #fff; }
+  .add-go:hover { background: #2a2a2a; }
+  .add-go:disabled { background: #bbb; cursor: not-allowed; }
+  .add-cancel { background: #fff; color: #111; border: 1px solid #111 !important; }
+  .add-tab { display: none; }
+  .add-tab.active { display: block; }
+
+  /* ---- Product layout ---- */
+  .product-wrap {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px;
+    padding: 0 64px 80px 64px; max-width: 1320px; margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .product-wrap { grid-template-columns: 1fr; padding: 0 24px 60px 24px; gap: 32px; }
+  }
+
+  .product-image {
+    background: var(--panel); padding: 40px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 560px;
+  }
+  .product-image img { max-width: 100%; max-height: 480px; object-fit: contain; }
+  .heart { position: absolute; top: 22px; left: 22px; font-size: 22px; color: #888; }
+  .arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 42px; height: 42px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; font-size: 18px; color: #555;
+    user-select: none; border: none;
+  }
+  .arrow.left { left: 12px; }
+  .arrow.right { right: 12px; }
+
+  .product-info { padding-top: 8px; }
+  .brand { font-size: 14px; color: var(--text); margin-bottom: 8px; }
+  .pname { font-size: 28px; font-weight: 700; margin: 0 0 8px 0; }
+  .pname-en { font-size: 13px; color: var(--text); margin-bottom: 28px; }
+  .attrs {
+    display: grid; grid-template-columns: 110px 1fr; row-gap: 10px;
+    font-size: 14px; margin-bottom: 28px;
+  }
+  .attrs > div:nth-child(odd) { color: #1a1a1a; }
+  .price { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .price .tax { font-size: 13px; color: var(--muted); margin-left: 6px; font-weight: 400; }
+  .coupon-note { font-size: 13px; color: var(--muted); margin: 10px 0 24px 0; }
+  .period-label { font-size: 13px; margin-bottom: 8px; }
+  .period { color: var(--accent); font-weight: 700; font-size: 15px; margin-bottom: 24px; }
+
+  .tryon-btn {
+    background: var(--accent); color: #fff; padding: 18px;
+    width: 100%; border: none; border-radius: 4px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    position: relative;
+    transition: filter 0.15s ease;
+  }
+  .tryon-btn:hover { filter: brightness(1.08); }
+  .tryon-btn .badge-new {
+    position: absolute; top: -10px; right: -10px;
+    background: #d4a85a; color: #fff;
+    padding: 4px 10px; font-size: 11px; border-radius: 2px; font-weight: 700; letter-spacing: 1px;
+  }
+  .tryon-btn .shirt-icon { font-size: 20px; }
+
+  .secondary-btn {
+    background: #111; color: #fff; padding: 16px 22px;
+    width: 100%; border: none; border-radius: 0;
+    font-size: 14px; margin-top: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .secondary-btn:hover { background: #2a2a2a; }
+
+  /* ---- Modal ---- */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 100;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 10px; padding: 32px;
+    max-width: 1020px; width: 100%; max-height: 92vh; overflow: auto;
+    position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; gap: 16px;
+  }
+  .modal-title {
+    font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text);
+  }
+  .modal-title .shirt-icon { color: var(--accent); font-size: 22px; }
+  .modal-sub { font-size: 12px; color: #777; font-style: italic; margin-right: 8px; }
+  .close {
+    background: none; border: none; cursor: pointer; font-size: 22px;
+    padding: 0 4px; color: #333;
+  }
+
+  .modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 760px) { .modal-body { grid-template-columns: 1fr; } }
+
+  .panel-label { font-size: 12px; color: #444; margin-bottom: 12px; font-weight: 600; }
+  .panel-img {
+    background: var(--panel); height: 360px;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .panel-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab {
+    padding: 8px 14px; background: #f3f3f3; cursor: pointer;
+    font-size: 13px; border: 1px solid transparent; border-radius: 4px; user-select: none;
+  }
+  .tab.active { background: #fff; border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .upload-area {
+    border: 2px dashed var(--accent); padding: 32px 20px;
+    text-align: center; border-radius: 6px; cursor: pointer; background: var(--accent-soft);
+    display: block;
+  }
+  .upload-area .upload-icon { font-size: 36px; color: var(--accent); margin-bottom: 8px; }
+  .upload-area input[type=file] { display: none; }
+  .upload-hint { font-size: 11px; color: #777; margin-top: 4px; }
+
+  .models-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .model-thumb {
+    background: #f5f5f5; cursor: pointer; padding: 6px;
+    border: 2px solid transparent; border-radius: 4px; transition: border-color 0.15s ease;
+  }
+  /* 全身カットなので cover で切り落とさない。全身であることが見えるのが選ぶ基準になる。 */
+  .model-thumb img { width: 100%; height: 178px; object-fit: contain; background: #ececec; border-radius: 3px; }
+  .model-thumb.selected { border-color: var(--accent); }
+  .model-thumb .label { font-size: 11px; text-align: center; margin-top: 4px; color: #555; }
+
+  .url-input {
+    width: 100%; padding: 10px; border: 1px solid #ddd;
+    border-radius: 4px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .url-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+  .generate-btn {
+    background: #111; color: #fff; padding: 14px;
+    width: 100%; border: none; margin-top: 16px;
+    cursor: pointer; font-size: 14px; font-weight: 700;
+    border-radius: 4px; letter-spacing: 0.5px;
+  }
+  .generate-btn:hover:not(:disabled) { background: #2a2a2a; }
+  .generate-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+  /* loading & result */
+  .loading-state, .result-state { display: none; }
+  .loading-state.show, .result-state.show { display: block; }
+  .form-state.hidden { display: none; }
+
+  .spinner {
+    width: 90px; height: 90px;
+    border: 4px solid #f0e0dd; border-top: 4px solid var(--accent);
+    border-radius: 50%; animation: spin 1s linear infinite;
+    margin: 48px auto 20px auto;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .loading-text { text-align: center; color: var(--accent); font-weight: 700; font-size: 16px; }
+  .loading-sub { text-align: center; color: #777; font-size: 13px; margin-top: 8px; }
+
+  /* 生成中の 4 ステップ */
+  .steps { max-width: 420px; margin: 22px auto 40px auto; display: grid; gap: 10px; }
+  .steps li { list-style: none; display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; color: #999; transition: color .2s ease; }
+  .steps li .dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; flex: none; }
+  .steps li[data-s="run"] { color: var(--accent); font-weight: 700; }
+  .steps li[data-s="run"] .dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(189,74,62,.15); }
+  .steps li[data-s="done"] { color: #333; }
+  .steps li[data-s="done"] .dot { background: #333; }
+
+  .result-img-wrap {
+    position: relative; background: var(--panel); height: 360px;
+    padding: 24px; display: flex; align-items: center; justify-content: center;
+  }
+  .result-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; cursor: zoom-in; }
+  .ai-badge {
+    position: absolute; top: 8px; left: 8px; background: #111; color: #fff;
+    padding: 4px 8px; font-size: 10px; font-weight: 900; letter-spacing: 2px;
+  }
+
+  .result-cta { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .result-cta button, .result-cta a { padding: 14px; border: none; cursor: pointer; font-size: 13px;
+    border-radius: 2px; text-align: center; text-decoration: none; }
+  .cta-primary { flex: 1; background: #111; color: #fff; font-weight: 700; }
+  .cta-primary:hover { background: #2a2a2a; }
+  .cta-secondary { flex: 1; background: #fff; color: #111; border: 1px solid #111 !important; font-weight: 700; }
+  .cta-secondary:hover { background: #f5f5f5; }
+
+  .point-note {
+    background: var(--accent-soft); padding: 14px;
+    margin-top: 20px; font-size: 12px; color: #555; line-height: 1.7;
+  }
+  .point-note b { color: var(--accent); }
+
+  .error-msg {
+    color: var(--accent); padding: 12px; background: var(--accent-soft);
+    border-radius: 4px; margin-top: 12px; font-size: 13px;
+    display: none; line-height: 1.7;
+  }
+  .error-msg.show { display: block; }
+
+  /* 生成結果の拡大表示 */
+  .zoom {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.88); align-items: center; justify-content: center; padding: 4vh 4vw;
+  }
+  .zoom.show { display: flex; }
+  .zoom img { max-width: 100%; max-height: 92vh; object-fit: contain; }
+  .zoom .zx { position: absolute; top: 18px; right: 22px; background: none; border: none;
+    color: #fff; font-size: 26px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- ===== デモ帯 ===== -->
+<div class="demo-bar">
+  <span class="lbl">👕 Modellix バーチャル試着デモ</span>
+  <span class="sep"></span>
+  <span class="meta">Seedream 5.0 Pro Multi-Reference ／ 商品画像 ＋ 人物写真 の 2 枚から生成</span>
+  <a class="back" href="/">← デモ一覧へ戻る</a>
+</div>
+
+<!-- ===== Coupon strip ===== -->
+<div class="coupon-strip">LINE友だち追加で「5%OFFクーポン」プレゼント中!</div>
+
+<!-- ===== Header ===== -->
+<header class="nav">
+  <div class="logo">AURORA</div>
+  <div class="nav-links">
+    <span>新着</span><span>ブランド</span><span>ウェア</span><span>シューズ</span>
+    <span>アクセサリー</span><span>グッズ</span><span>バッグ</span><span>店舗一覧</span>
+  </div>
+  <div class="nav-icons">
+    <span>👤</span><span>🔍</span><span>🛒 (0)</span>
+  </div>
+</header>
+
+<!-- ===== Breadcrumb ===== -->
+<div class="crumb">HOME &nbsp;&gt;&nbsp; <span id="crumbBrand"></span> &nbsp;&gt;&nbsp; <span id="crumbName"></span></div>
+
+<!-- ===== Product switcher ===== -->
+<div class="product-switcher" id="productSwitcher">
+  <div class="ps-label">デモ商品セレクト / Choose a garment — 画像をアップロードまたはURLで追加できます</div>
+</div>
+
+<!-- ===== Product ===== -->
+<main class="product-wrap">
+  <div class="product-image">
+    <span class="heart">♡</span>
+    <button class="arrow left" type="button" id="prevProduct" aria-label="前の商品">‹</button>
+    <button class="arrow right" type="button" id="nextProduct" aria-label="次の商品">›</button>
+    <img id="productImg" alt="">
+  </div>
+
+  <div class="product-info">
+    <div class="brand" id="productBrand"></div>
+    <h1 class="pname" id="productName"></h1>
+    <div class="pname-en" id="productCode"></div>
+
+    <div class="attrs">
+      <div>性別タイプ</div><div id="productGender">: メンズ</div>
+      <div>サイズ</div><div id="productSize">: -</div>
+      <div>カラー</div><div id="productColor">: -</div>
+    </div>
+
+    <div class="price"><span id="productPrice">¥0</span> <span class="tax">税込</span></div>
+    <div class="coupon-note">ログイン後にご利用可能なクーポンが表示されます。</div>
+
+    <div class="period-label">販売期間</div>
+    <div class="period">2026.05.19 12:00 〜 2027.05.19 11:59</div>
+
+    <button class="tryon-btn" id="openTryon" type="button">
+      <span class="badge-new">NEW</span>
+      <span class="shirt-icon">👕</span>
+      AIで試着する &nbsp;/&nbsp; Virtual Try-On
+    </button>
+    <button class="secondary-btn" type="button">販売期間外 <span>→</span></button>
+    <button class="secondary-btn" type="button">カート一覧へ <span>→</span></button>
+  </div>
+</main>
+
+<!-- ===== Modal ===== -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><span class="shirt-icon">👕</span> AIバーチャル試着</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="modal-sub">powered by Modellix.ai / Seedream 5.0 Pro Multi-Reference</span>
+        <button class="close" type="button" id="closeModal">✕</button>
+      </div>
+    </div>
+
+    <!-- Form state -->
+    <div id="formState" class="modal-body form-state">
+      <!-- Product side -->
+      <div>
+        <div class="panel-label">商品</div>
+        <div class="panel-img"><img id="productImgInModal" alt=""></div>
+        <div style="margin-top: 14px;">
+          <div style="font-size: 14px;" id="productLabelModal"></div>
+          <div style="font-weight: 700; margin-top: 8px;"><span id="productPriceModal"></span> <span style="font-size:12px;color:#555;font-weight:400;">税込</span></div>
+        </div>
+        <div style="margin-top: 16px;">
+          <label style="font-size:12px;color:#555;display:block;margin-bottom:4px;" for="clothUrl">この商品の画像URL（差し替え可能）:</label>
+          <input type="text" class="url-input" id="clothUrl">
+          <div class="upload-hint" style="margin-top:6px">別の商品を足したいときは、左の「＋ 商品を追加」から。</div>
+        </div>
+      </div>
+
+      <!-- Person side -->
+      <div>
+        <div class="panel-label">あなた</div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="upload">写真をアップロード</div>
+          <div class="tab" data-tab="models">モデルから選ぶ</div>
+          <div class="tab" data-tab="url">URL貼り付け</div>
+        </div>
+
+        <div class="tab-content active" id="tab-upload">
+          <label class="upload-area" for="uploadInput">
+            <div class="upload-icon">⬆</div>
+            <div style="font-weight: 700;">写真をアップロード</div>
+            <div class="upload-hint">.jpg / .png / 最大 10MB / 推奨: 正面・上半身または全身</div>
+            <input type="file" id="uploadInput" accept="image/*">
+          </label>
+          <div id="uploadPreview" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="tab-content" id="tab-models">
+          <div class="models-grid" id="modelsGrid"></div>
+          <div class="upload-hint" style="margin-top:8px;">※ サンプルモデル画像。本番では自社モデル画像を埋め込み可能。</div>
+        </div>
+
+        <div class="tab-content" id="tab-url">
+          <input type="text" class="url-input" id="humanUrl" placeholder="https://example.com/your-photo.jpg">
+          <div class="upload-hint" style="margin-top:6px;">公開アクセス可能な写真のURLを貼り付けてください。</div>
+        </div>
+
+        <button class="generate-btn" id="genBtn" type="button">試着する → AI生成</button>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="upload-hint" style="margin-top:10px;line-height:1.7;">
+          アップロードした写真はこのブラウザ内で縮小したうえで生成に使われ、サーバーには保存されません。<br>
+          生成には 30 秒〜2 分ほどかかります。
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text">生成中…</div>
+      <div class="loading-sub" id="loadingSub">商品と人物の 2 枚を参照して、着用イメージを組み立てています</div>
+      <ol class="steps" id="steps">
+        <li data-k="0" data-s="wait"><span class="dot"></span>参照画像を準備しています</li>
+        <li data-k="1" data-s="wait"><span class="dot"></span>生成タスクを送信しています</li>
+        <li data-k="2" data-s="wait"><span class="dot"></span>着用イメージをレンダリングしています</li>
+        <li data-k="3" data-s="wait"><span class="dot"></span>仕上げています</li>
+      </ol>
+    </div>
+
+    <!-- Result state -->
+    <div class="result-state" id="resultState">
+      <div class="modal-body">
+        <div>
+          <div class="panel-label">商品</div>
+          <div class="panel-img"><img id="productImgResult" alt=""></div>
+          <div style="margin-top: 12px;">
+            <div style="font-size: 13px;" id="productLabelResult"></div>
+            <div style="font-weight: 700; margin-top: 6px;"><span id="productPriceResult"></span> <span style="font-size:12px;color:#555;font-weight:400;">税込</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel-label" style="color:var(--accent);font-weight:700;">試着結果 / あなたが着るとこんなイメージ</div>
+          <div class="result-img-wrap">
+            <div class="ai-badge">AI&nbsp;&nbsp;GENERATED</div>
+            <img id="resultImg" alt="AI が生成した試着イメージ">
+          </div>
+          <div class="result-cta">
+            <button class="cta-primary" type="button">このままカートに入れる</button>
+            <button class="cta-secondary" type="button" id="retryBtn">もう一度試す</button>
+            <a class="cta-secondary" id="dlBtn" href="#" download="modellix-tryon.png" target="_blank" rel="noopener" style="flex:1;line-height:1.2;display:flex;align-items:center;justify-content:center;">画像を保存</a>
+          </div>
+        </div>
+      </div>
+      <div class="point-note"><b>ポイント /</b> 生成から購入決定までを 1 モーダル内で完結。「商品ページに戻る」遷移が発生しない設計で CVR を最大化します。
+        参照画像は <b>［人物, 商品］</b>の 2 枚のみ。商品ページの既存画像がそのまま試着素材になるため、撮り下ろしは不要です。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 商品を URL で追加 -->
+<div class="add-bg" id="addDlg" role="dialog" aria-modal="true" aria-label="商品を追加">
+  <div class="add-box">
+    <h3>商品を追加する</h3>
+    <p class="sub">用意した 3 着以外にも、商品画像を足して試着できます。<br>
+      背景が白い切り抜き画像、または人が着ていない平置き・ハンガー写真がもっとも安定します。</p>
+    <div class="add-grid">
+      <div class="add-prev" id="addPrev">プレビュー<br>（画像を指定すると表示されます）</div>
+      <div>
+        <div class="tabs" style="margin-bottom:12px">
+          <div class="tab active" data-atab="file">ファイルをアップロード</div>
+          <div class="tab" data-atab="url">画像URLを貼り付け</div>
+        </div>
+
+        <div class="add-tab active" id="atab-file">
+          <label class="upload-area" for="addFile" style="padding:22px 20px">
+            <div class="upload-icon">⬆</div>
+            <div style="font-weight:700">商品画像をアップロード</div>
+            <div class="upload-hint">.jpg / .png / 最大 10MB</div>
+            <input type="file" id="addFile" accept="image/*">
+          </label>
+        </div>
+
+        <div class="add-tab" id="atab-url">
+          <div class="add-f">
+            <label for="addUrl">商品画像URL</label>
+            <input type="text" class="url-input" id="addUrl" placeholder="https://example.com/garment.jpg">
+          </div>
+        </div>
+        <div class="add-row">
+          <div class="add-f">
+            <label for="addBrand">ブランド <i>（任意）</i></label>
+            <input type="text" class="url-input" id="addBrand" placeholder="AURORA">
+          </div>
+          <div class="add-f">
+            <label for="addName">商品名 <i>（任意）</i></label>
+            <input type="text" class="url-input" id="addName" placeholder="ナイロンジャケット">
+          </div>
+        </div>
+        <div class="add-row">
+          <div class="add-f">
+            <label for="addPrice">価格 <i>（任意・円）</i></label>
+            <input type="text" class="url-input" id="addPrice" placeholder="19800" inputmode="numeric">
+          </div>
+          <div class="add-f">
+            <label for="addSize">サイズ <i>（任意）</i></label>
+            <input type="text" class="url-input" id="addSize" placeholder="M / L / XL">
+          </div>
+        </div>
+        <div class="add-f">
+          <label for="addKind">英語での品目 <i>（任意・生成プロンプトに使います / 例: nylon coach jacket）</i></label>
+          <input type="text" class="url-input" id="addKind" placeholder="未入力なら画像から判断させます">
+        </div>
+        <div class="error-msg" id="addErr"></div>
+        <div class="add-acts">
+          <button class="add-go" type="button" id="addGo">追加してこの商品にする</button>
+          <button class="add-cancel" type="button" id="addCancel">キャンセル</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 拡大表示 -->
+<div class="zoom" id="zoom">
+  <img id="zoomImg" alt="AI が生成した試着イメージ">
+  <button class="zx" type="button" id="zoomClose" aria-label="閉じる">✕</button>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ============================================================
+ *  Modellix バーチャル試着デモ（EC の商品ページ想定・ストア名は架空）
+ *  ──────────────────────────────────────────────────────────
+ *  POST /api/v1/bytedance/seedream-5.0-pro-multi-reference
+ *  GET  /api/v1/tasks/{task_id}
+ *
+ *  ブラウザは自分のオリジン（/api/v1/...）だけを叩き、api/proxy.js が
+ *  サーバー側の MODELLIX_KEY を付けて api.modellix.ai へ中継する。
+ *  鍵は画面にもバンドルにも出さない（元の試作版にあった API キー入力欄は撤去）。
+ *
+ *  参照画像はすべてブラウザ内で JPEG の data URI へ変換してから送る。
+ *  商品画像もモデル写真もこの端末の中にしかなく、Modellix 側から取りに
+ *  行けないため。data URI なら media アップロードの往復も要らない。
+ * ============================================================ */
+
+var API   = "/api/v1";
+var MODEL = "bytedance/seedream-5.0-pro-multi-reference";
+var TIMEOUT = 4 * 60 * 1000;      // 実測 40〜90 秒。余裕を持って 4 分で打ち切る
+var MAX_SIDE = 1600;              // 参照画像の長辺。これ以上は生成品質に効かない
+
+var $ = function(s){ return document.querySelector(s); };
+
+/* ───── デモ商品（同梱の 3 着） ───── */
+var BASE_PRODUCTS = [
+  { id:'off-white', brand:'OFF-WHITE', name:'バックアロースキニーバーシティブルゾン 19SS',
+    code:'OMEA145S19272024', gender:'メンズ', size:'XL', color:'ブラック',
+    price:36960, clothUrl:'products/off-white.jpg',
+    kindEn:'varsity bomber jacket', colorEn:'black' },
+  { id:'supreme', brand:'Supreme', name:'ロゴナイロンプルオーバーブルゾン',
+    code:'Warthog Warm Up Pullover', gender:'メンズ', size:'XL', color:'ブラック×オレンジ',
+    price:18480, clothUrl:'products/supreme.jpg',
+    kindEn:'nylon pullover anorak', colorEn:'black and orange' },
+  { id:'chrome-hearts', brand:'Chrome Hearts', name:'ナイキドレイク総柄ナイロンダウンジャケット',
+    code:'NOCTA PUFFER DRAKE', gender:'メンズ', size:'L', color:'ブラウン×ブラック×シルバー',
+    price:3172400, clothUrl:'products/chrome-hearts.jpg',
+    kindEn:'all-over-print nylon puffer down jacket', colorEn:'brown, black and silver' }
+];
+
+/* 自分で足した商品は端末に残す。画像はアップロードなら data URI、URL ならその URL。
+   localStorage が一杯／使えないときは、そのセッション中だけ保持して先へ進める。 */
+var OWN_KEY = 'aurora.tryon.ownProducts.v1';
+function loadOwn(){
+  try {
+    var a = JSON.parse(localStorage.getItem(OWN_KEY) || '[]');
+    return Object.prototype.toString.call(a) === '[object Array]' ? a : [];
+  } catch (e) { return []; }
+}
+function saveOwn(){
+  var own = PRODUCTS.filter(function(p){ return p.own; });
+  try { localStorage.setItem(OWN_KEY, JSON.stringify(own)); return true; }
+  catch (e) { return false; }   // 容量超過。表示は保つ
+}
+var PRODUCTS = BASE_PRODUCTS.concat(loadOwn());
+
+/* ───── サンプルモデル（6 枚とも同梱。外部サイトに一切依存させない） ─────
+   女性 3 枚は Modellix（seedream-5.0-pro）で生成した全身カット。
+   ストックサイトからの直リンクは、展示中に落ちたり bot 遮断されたりするので使わない。 */
+var PRESET_MODELS = [
+  { name:'女性 — 街角（全身）',   url:'models/female_street.jpg' },
+  { name:'女性 — スタジオ（全身）', url:'models/female_studio.jpg' },
+  { name:'女性 — 河川敷（全身）', url:'models/female_park.jpg'   },
+  { name:'男性 — 街角',           url:'models/male_street.jpg' },
+  { name:'男性 — 海辺',           url:'models/male_sea.jpg'    },
+  { name:'男性 — 夕暮れ',         url:'models/male_cloud.jpg'  }
+];
+
+var formatPrice = function(n){ return '¥' + n.toLocaleString('ja-JP'); };
+
+/* ═══════════ 商品 ═══════════ */
+var currentProduct = PRODUCTS[0];
+
+function applyProduct(p){
+  currentProduct = p;
+  $('#crumbBrand').textContent = p.brand;
+  $('#crumbName').textContent  = p.name;
+  $('#productBrand').textContent = p.brand;
+  $('#productName').textContent  = p.name;
+  $('#productCode').textContent  = p.code || '';
+  $('#productGender').textContent = ': ' + (p.gender || '-');
+  $('#productSize').textContent   = ': ' + (p.size   || '-');
+  $('#productColor').textContent  = ': ' + (p.color  || '-');
+  $('#productPrice').textContent  = formatPrice(p.price);
+
+  $('#productImg').src = p.clothUrl;
+  $('#productImg').alt = p.brand + ' ' + p.name;
+  $('#productImgInModal').src = p.clothUrl;
+  $('#productImgResult').src  = p.clothUrl;
+
+  var label = p.brand + '  ' + p.name;
+  $('#productLabelModal').textContent  = label;
+  $('#productLabelResult').textContent = label;
+  $('#productPriceModal').textContent  = formatPrice(p.price);
+  $('#productPriceResult').textContent = formatPrice(p.price);
+  $('#clothUrl').value = p.clothUrl;
+
+  document.querySelectorAll('#productSwitcher .ps-tile').forEach(function(el){
+    el.classList.toggle('active', el.dataset.id === p.id);
+  });
+}
+
+function esc(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+function renderSwitcher(){
+  var root = $('#productSwitcher');
+  // ラベル行だけ残して作り直す
+  root.querySelectorAll('.ps-tile, .ps-add').forEach(function(el){ el.remove(); });
+
+  PRODUCTS.forEach(function(p){
+    var tile = document.createElement('button');
+    tile.className = 'ps-tile'; tile.type = 'button'; tile.dataset.id = p.id;
+    tile.innerHTML =
+      '<span class="ps-thumb"><img src="' + esc(p.clothUrl) + '" alt=""></span>' +
+      '<span class="ps-meta"><span class="ps-b">' + esc(p.brand) + '</span>' +
+      '<span class="ps-n">' + esc(p.name) + '</span>' +
+      '<span class="ps-p">' + formatPrice(p.price) + '</span></span>' +
+      (p.own ? '<span class="ps-own">added</span>' +
+               '<span class="ps-del" role="button" aria-label="この商品を削除">✕</span>' : '');
+    tile.addEventListener('click', function(e){
+      if (e.target.classList.contains('ps-del')) { e.stopPropagation(); removeProduct(p); return; }
+      applyProduct(p);
+    });
+    root.appendChild(tile);
+  });
+
+  var add = document.createElement('button');
+  add.className = 'ps-add'; add.type = 'button';
+  add.innerHTML = '<span class="plus">＋</span><span>商品を追加（アップロード / URL）</span>';
+  add.addEventListener('click', openAdd);
+  root.appendChild(add);
+
+  var cur = PRODUCTS.indexOf(currentProduct) >= 0 ? currentProduct : PRODUCTS[0];
+  document.querySelectorAll('#productSwitcher .ps-tile').forEach(function(el){
+    el.classList.toggle('active', el.dataset.id === cur.id);
+  });
+}
+renderSwitcher();
+applyProduct(PRODUCTS[0]);
+
+function removeProduct(p){
+  var i = PRODUCTS.indexOf(p);
+  if (i < 0) return;
+  PRODUCTS.splice(i, 1);
+  saveOwn();
+  if (currentProduct === p) applyProduct(PRODUCTS[Math.max(0, i - 1)]);
+  renderSwitcher();
+}
+
+function stepProduct(d){
+  var i = PRODUCTS.indexOf(currentProduct);
+  applyProduct(PRODUCTS[(i + d + PRODUCTS.length) % PRODUCTS.length]);
+}
+$('#prevProduct').addEventListener('click', function(){ stepProduct(-1); });
+$('#nextProduct').addEventListener('click', function(){ stepProduct(1); });
+
+/* 商品画像 URL を差し替えたら、表示も参照画像も追従させる */
+$('#clothUrl').addEventListener('input', function(e){
+  currentProduct.clothUrl = e.target.value;
+  $('#productImg').src = currentProduct.clothUrl;
+  $('#productImgInModal').src = currentProduct.clothUrl;
+  $('#productImgResult').src  = currentProduct.clothUrl;
+  var tileImg = document.querySelector('#productSwitcher .ps-tile[data-id="' + currentProduct.id + '"] .ps-thumb img');
+  if (tileImg) tileImg.src = currentProduct.clothUrl;
+});
+
+/* ═══════════ 商品を追加する（アップロード / URL） ═══════════ */
+/* アップロード画像はここで縮小して data URI にしておく。
+   参照画像としてそのまま送れるうえ、端末に残しても容量が破裂しない。 */
+var ADD_STORE_SIDE = 1280;
+var addSrc = null;          // 追加しようとしている画像（data URI か URL）
+
+function setAddPreview(src){
+  var box = $('#addPrev');
+  if (!src) { box.innerHTML = 'プレビュー<br>（画像を指定すると表示されます）'; return; }
+  box.innerHTML = '<img alt="追加する商品">';
+  var im = box.querySelector('img');
+  im.onerror = function(){ box.textContent = '画像を読み込めませんでした'; };
+  im.src = src;
+}
+function addError(msg){
+  var el = $('#addErr');
+  if (!msg) { el.classList.remove('show'); el.textContent = ''; return; }
+  el.classList.add('show'); el.innerHTML = '<b>エラー:</b> ' + esc(msg);
+}
+
+function openAdd(){
+  addSrc = null;
+  $('#addUrl').value = ''; $('#addBrand').value = ''; $('#addName').value = '';
+  $('#addPrice').value = ''; $('#addSize').value = ''; $('#addKind').value = '';
+  $('#addFile').value = '';
+  setAddPreview(null); addError('');
+  $('#addDlg').classList.add('show');
+}
+function closeAdd(){ $('#addDlg').classList.remove('show'); }
+
+document.querySelectorAll('[data-atab]').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('[data-atab]').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.add-tab').forEach(function(c){ c.classList.remove('active'); });
+    tab.classList.add('active');
+    $('#atab-' + tab.dataset.atab).classList.add('active');
+    addSrc = null; setAddPreview(null); addError('');
+  });
+});
+
+$('#addFile').addEventListener('change', function(ev){
+  var file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { addError('ファイルサイズが 10MB を超えています。'); return; }
+  addError('');
+  var r = new FileReader();
+  r.onload = function(){
+    // 保存と送信を兼ねるので、ここで一度だけ縮小しておく
+    var im = new Image();
+    im.onload = function(){
+      var sc = Math.min(1, ADD_STORE_SIDE / Math.max(im.naturalWidth, im.naturalHeight));
+      var c = document.createElement('canvas');
+      c.width  = Math.max(2, Math.round(im.naturalWidth  * sc));
+      c.height = Math.max(2, Math.round(im.naturalHeight * sc));
+      var g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(im, 0, 0, c.width, c.height);
+      try { addSrc = c.toDataURL('image/jpeg', 0.9); setAddPreview(addSrc); }
+      catch (e) { addError('画像を処理できませんでした。'); }
+    };
+    im.onerror = function(){ addError('画像を読み込めませんでした。'); };
+    im.src = r.result;
+  };
+  r.onerror = function(){ addError('ファイルを読み込めませんでした。'); };
+  r.readAsDataURL(file);
+});
+
+$('#addUrl').addEventListener('input', function(e){
+  var v = e.target.value.trim();
+  addError('');
+  if (!v) { addSrc = null; setAddPreview(null); return; }
+  addSrc = v; setAddPreview(v);
+});
+
+$('#addGo').addEventListener('click', function(){
+  var isUrlTab = $('#atab-url').classList.contains('active');
+  if (!addSrc) { addError(isUrlTab ? '商品画像URLを入力してください。' : '商品画像をアップロードしてください。'); return; }
+  if (isUrlTab && !/^https?:\/\//i.test(addSrc)) { addError('http(s) から始まる画像 URL を指定してください。'); return; }
+
+  var price = parseInt(String($('#addPrice').value).replace(/[^0-9]/g, ''), 10);
+  var p = {
+    id: 'own-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    own: true,
+    brand: $('#addBrand').value.trim() || 'AURORA',
+    name:  $('#addName').value.trim()  || '追加した商品',
+    code:  '',
+    gender: '-',
+    size:  $('#addSize').value.trim(),
+    color: '',
+    price: isFinite(price) ? price : 0,
+    clothUrl: addSrc,
+    kindEn: $('#addKind').value.trim()
+  };
+  PRODUCTS.push(p);
+  var stored = saveOwn();
+  renderSwitcher();
+  applyProduct(p);
+  closeAdd();
+  if (!stored) console.warn('[try-on] 端末に保存できませんでした（容量超過）。このセッション中は使えます。');
+});
+$('#addCancel').addEventListener('click', closeAdd);
+$('#addDlg').addEventListener('click', function(e){ if (e.target === this) closeAdd(); });
+
+/* ═══════════ サンプルモデル ═══════════ */
+var selectedHuman = null;   // { type:'url'|'file', value:String|File }
+(function renderModels(){
+  var grid = $('#modelsGrid');
+  PRESET_MODELS.forEach(function(m){
+    var b = document.createElement('button');
+    b.className = 'model-thumb'; b.type = 'button'; b.dataset.url = m.url;
+    b.innerHTML = '<img src="' + m.url + '" alt="' + m.name + '"><div class="label">' + m.name + '</div>';
+    b.addEventListener('click', function(){
+      grid.querySelectorAll('.model-thumb').forEach(function(t){ t.classList.remove('selected'); });
+      b.classList.add('selected');
+      selectedHuman = { type:'url', value:m.url };
+    });
+    grid.appendChild(b);
+  });
+})();
+
+/* ═══════════ タブ ═══════════ */
+/* 商品追加ダイアログのタブも .tab を共有しているので、必ず [data-tab] で絞る。
+   絞らないと、そちらを押したときに #tab-undefined を掴んで落ちる。 */
+document.querySelectorAll('.tab[data-tab]').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.tab[data-tab]').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+    tab.classList.add('active');
+    var pane = $('#tab-' + tab.dataset.tab);
+    if (pane) pane.classList.add('active');
+  });
+});
+
+/* ═══════════ モーダル ═══════════ */
+function openModal(){ $('#modal').classList.add('show'); }
+function closeModal(){ $('#modal').classList.remove('show'); resetModal(); }
+function resetModal(){
+  $('#formState').classList.remove('hidden');
+  $('#loadingState').classList.remove('show');
+  $('#resultState').classList.remove('show');
+  $('#errorMsg').classList.remove('show');
+  $('#uploadPreview').innerHTML = '';
+  document.querySelectorAll('.model-thumb').forEach(function(t){ t.classList.remove('selected'); });
+  setStep(-1);
+  selectedHuman = null;
+}
+$('#openTryon').addEventListener('click', openModal);
+$('#closeModal').addEventListener('click', closeModal);
+$('#retryBtn').addEventListener('click', resetModal);
+$('#modal').addEventListener('click', function(e){ if (e.target === $('#modal')) closeModal(); });
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  if ($('#zoom').classList.contains('show')) { $('#zoom').classList.remove('show'); return; }
+  if ($('#addDlg').classList.contains('show')) { closeAdd(); return; }
+  if ($('#modal').classList.contains('show')) closeModal();
+});
+
+/* 結果の拡大表示 */
+$('#resultImg').addEventListener('click', function(){
+  if (!this.src) return;
+  $('#zoomImg').src = this.src;
+  $('#zoom').classList.add('show');
+});
+$('#zoomClose').addEventListener('click', function(){ $('#zoom').classList.remove('show'); });
+$('#zoom').addEventListener('click', function(e){ if (e.target === this) this.classList.remove('show'); });
+
+/* アップロード */
+$('#uploadInput').addEventListener('change', function(ev){
+  var file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showError('ファイルサイズが 10MB を超えています。'); return; }
+  selectedHuman = { type:'file', value:file };
+  var reader = new FileReader();
+  reader.onload = function(){
+    $('#uploadPreview').innerHTML =
+      '<img src="' + reader.result + '" style="max-width:100%;max-height:180px;border:1px solid #eee;">';
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ═══════════ 画像の下ごしらえ ═══════════ */
+/* 参照画像を JPEG の data URI にする。ついでに元の縦横も返し、
+   生成サイズを人物写真の比率に合わせられるようにする。
+   これを通せるのは同一オリジンの画像と data URL だけ。別ドメインの画像を
+   canvas に描くと toDataURL が塞がれる（tainted canvas）。 */
+function toRef(src){
+  return new Promise(function(resolve, reject){
+    var im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = function(){
+      var w = im.naturalWidth || 1, h = im.naturalHeight || 1;
+      var sc = Math.min(1, MAX_SIDE / Math.max(w, h));
+      var c = document.createElement('canvas');
+      c.width  = Math.max(2, Math.round(w * sc));
+      c.height = Math.max(2, Math.round(h * sc));
+      var g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(im, 0, 0, c.width, c.height);
+      try { resolve({ url:c.toDataURL('image/jpeg', 0.92), w:w, h:h }); }
+      catch (e) { reject(new Error('画像を読み込めませんでした（別ドメインの画像は URL のまま指定してください）')); }
+    };
+    im.onerror = function(){ reject(new Error('画像を読み込めませんでした: ' + String(src).slice(0, 80))); };
+    im.src = src;
+  });
+}
+/* 別ドメインの画像は変換しない。URL のまま渡せば Modellix 側が取りに行くし、
+   寸法だけなら canvas を経由せずに読めるので CORS の制約を受けない。 */
+function probeRef(src){
+  return new Promise(function(resolve){
+    var im = new Image();
+    im.onload  = function(){ resolve({ url:src, w:im.naturalWidth || 3, h:im.naturalHeight || 4 }); };
+    im.onerror = function(){ resolve({ url:src, w:3, h:4 }); };   // 読めなくても URL は渡せる
+    im.src = src;
+  });
+}
+function isLocal(u){
+  if (/^data:/i.test(u)) return true;
+  try { return new URL(u, location.href).origin === location.origin; } catch (e) { return false; }
+}
+function makeRef(src){ return isLocal(src) ? toRef(src) : probeRef(src); }
+
+function fileToRef(file){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload  = function(){ toRef(r.result).then(resolve, reject); };
+    r.onerror = function(){ reject(new Error('ファイルを読み込めませんでした')); };
+    r.readAsDataURL(file);
+  });
+}
+
+/* 生成サイズ。モデルの制約は総画素 [921,600 〜 4,624,220]、比率 [1/16, 16]。
+   人物写真の比率をそのまま使い、総画素だけ上限近くに合わせる。 */
+function pickSize(w, h){
+  var r = Math.min(16, Math.max(1 / 16, (w || 3) / (h || 4)));
+  var T = 4300000;                       // 上限 4,624,220 の手前で止める
+  var hh = Math.sqrt(T / r), ww = r * hh;
+  var q = function(v){ return Math.max(64, Math.round(v / 16) * 16); };
+  ww = q(ww); hh = q(hh);
+  while (ww * hh > 4624220) { ww = q(ww * 0.98); hh = q(hh * 0.98); }
+  while (ww * hh <  921600) { ww = q(ww * 1.04); hh = q(hh * 1.04); }
+  return ww + 'x' + hh;
+}
+
+/* ═══════════ プロンプト ═══════════ */
+/* 参照画像の順番は [人物, 商品] で固定。image 1 / image 2 はその並びを指す。
+   実運用で効いたのは 4 点：
+     ① 人物側は「変えないもの」を全部名指しする（顔だけだと背景やポーズが動く）
+     ② 商品側はロゴ・配色・付属パーツまで個別に列挙する（"exactly" だけでは崩れる）
+     ③ 置き換える範囲を上半身に限定する（ボトムスや靴まで作り替えられるのを防ぐ）
+     ④ 失敗の形を Do NOT に具体的に書く（浮いた服・綴りの違うロゴ・増える手）
+     ⑤ 顔と頭まわりは独立した段落で釘を刺す。眼鏡が勝手に生えるのはここが弱いとき。
+        「glasses を保つ」と肯定形で書くと、掛けていない人にも掛けさせてしまうので、
+        「image 1 に無いものは結果にも無い」という条件形で書く。 */
+function buildPrompt(p){
+  // 自分で足した商品は品目も色もサイズも分からないことがある。
+  // その場合は「image 2 から読み取れ」と言い切る。空文字を混ぜると指示が壊れる。
+  var kind = p.kindEn || 'garment';
+  var spec = (p.colorEn && p.size)
+    ? 'It is a ' + p.colorEn + ' ' + kind + ' worn in size ' + p.size + " — cut it to that size on this person's build."
+    : "Read the garment's exact type, colour, cut and details from image 2 itself, and cut it to this person's build in a size that fits naturally.";
+  return [
+'Reference image 1 is the person. Reference image 2 is the garment, shown as a product cut-out.',
+'',
+'Dress the person from image 1 in exactly the garment from image 2. The result is one photorealistic photograph of that same person, in that same place, now wearing that garment.',
+'',
+"KEEP FROM IMAGE 1, UNCHANGED: the body proportions and build; the pose and the exact position of the head, shoulders, arms, hands, fingers and legs; anything held in the hands; the background and everything in it; the framing and crop; the camera angle, the focal length and the depth of field; the direction, colour temperature, hardness and intensity of the light. It must be instantly recognizable as the same photo of the same person — only the clothing changes.",
+'',
+"FACE AND HEAD — DO NOT TOUCH. Reproduce the head exactly as it appears in image 1: the same eyes, eyelids, eyebrows, eyelashes, nose, mouth, teeth, jawline, cheekbones, ears, neck, skin tone, skin texture, pores, moles, freckles, scars, facial hair, hairstyle, hair length and hair colour. Do not beautify, smooth, slim, widen, age, de-age, re-pose or re-draw the head in any way. This is a clothing swap, not a portrait edit.",
+'',
+"ADD NOTHING TO THE FACE OR HEAD. Whatever is not on the person's face and head in image 1 must not appear in the result. If the person is NOT wearing glasses in image 1, the result has NO glasses and NO sunglasses of any kind. The same rule applies to hats, caps, beanies, headbands, hoods, masks, headphones, earrings, piercings, necklaces, watches, rings and hair ornaments: absent in image 1 means absent in the result. If the person IS wearing one of these in image 1, keep that exact item unchanged, in the same position, and keep it in front of the new garment wherever they overlap.",
+'',
+'COPY FROM IMAGE 2, EXACTLY: the silhouette and cut of the ' + kind + '; the colour and the way the colours are blocked; every logo, wordmark, graphic, print and embroidery, with the same spelling, orientation, size and placement; the fabric and its sheen; the collar shape, the zip or button placket, the pockets, the cuffs, the hem, the ribbing, the drawcords and the trims. Do not redesign, simplify, mirror, re-colour or invent any part of it. ' + spec,
+'',
+"INTEGRATION: replace only the upper-body clothing the person is currently wearing. Leave the trousers, shoes, belt and accessories from image 1 exactly as they are, except where the new garment naturally covers them. Fit the garment to the body with physically correct drape — folds at the elbows, tension across the shoulders and chest, the hem falling under its own weight. Re-light the garment with the same light as image 1 and cast the shadows it would cast on the body and on itself. Wherever an arm, a hand, hair, a strap or an object passes in front of the torso in image 1, it stays in front of the garment.",
+'',
+'Photorealistic retail catalogue photograph, sharp, natural colour, no retouching of the face.',
+'',
+"Do NOT: add glasses, sunglasses or any eyewear that is not already in image 1; add or remove a hat, cap, hood, mask, headphones, earrings, necklace, watch or any jewellery; change the hairstyle, hair length or hair colour; change, slim, smooth, retouch or beautify the face; give the person a different face; change the pose, the hands or the background; a garment that floats, sits flat like a pasted cut-out, or has no folds or shadows; logos that are misspelled, mirrored, moved, resized or missing; invented patterns, seams or panels; a colour different from image 2; the product photo's own background bleeding into the scene; extra people, extra limbs, extra hands or extra fingers; props or bags that are not in image 1; a cropped head or a change of framing; text, captions or watermarks."
+  ].join('\n');
+}
+
+/* ═══════════ 進行表示 ═══════════ */
+function setStep(k){
+  document.querySelectorAll('#steps li').forEach(function(li){
+    var i = +li.dataset.k;
+    li.dataset.s = (i < k) ? 'done' : (i === k ? 'run' : 'wait');
+  });
+}
+function showError(msg){
+  var el = $('#errorMsg');
+  el.classList.add('show');
+  el.innerHTML = '<b>エラー:</b> ' + escapeHtml(msg);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ═══════════ 送信とポーリング ═══════════ */
+function submit(images, prompt, size){
+  return fetch(API + '/' + MODEL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt: prompt,
+      image: images,
+      size: size,
+      // standard は提示語を書き換えてしまい、ロゴや配色の指定が潰れる。fast を使う。
+      optimize_prompt_mode: 'fast',
+      output_format: 'png'
+    })
+  }).then(function(r){ return r.text(); }).then(function(t){
+    var j; try { j = JSON.parse(t); } catch (e) { throw new Error('応答を解釈できませんでした: ' + t.slice(0, 120)); }
+    if (!j.data || !j.data.task_id) throw new Error(j.message || '生成を開始できませんでした');
+    var u = (j.data.get_result && j.data.get_result.url) || (API + '/tasks/' + j.data.task_id);
+    try { var x = new URL(u); return x.pathname + x.search; } catch (e) { return u; }
+  });
+}
+
+function poll(path, onTick){
+  var deadline = Date.now() + TIMEOUT, n = 0;
+  function step(){
+    if (Date.now() > deadline) throw new Error('時間内に完了しませんでした（4 分）');
+    return sleep(3000).then(function(){
+      n++; onTick && onTick(n * 3);
+      return fetch(path).then(function(r){ return r.text(); });
+    }).then(function(t){
+      var j; try { j = JSON.parse(t); } catch (e) { throw new Error('結果を取得できませんでした'); }
+      var d = j.data || {};
+      if (d.status === 'success' || d.status === 'succeeded' || d.status === 'completed') {
+        var u = d.result && d.result.resources && d.result.resources[0] && d.result.resources[0].url;
+        if (!u) throw new Error('画像 URL を取得できませんでした');
+        return u;
+      }
+      if (d.status === 'failed' || d.status === 'error' || d.status === 'canceled' || d.status === 'cancelled') {
+        throw new Error(d.error || d.error_message || '生成に失敗しました');
+      }
+      return step();
+    });
+  }
+  return step();
+}
+
+/* ═══════════ 生成 ═══════════ */
+var busy = false;
+function generate(){
+  if (busy) return;
+  var activeTab = document.querySelector('.tab.active').dataset.tab;
+  var human = null;
+
+  if (activeTab === 'upload') {
+    if (!selectedHuman || selectedHuman.type !== 'file') { showError('写真をアップロードしてください。'); return; }
+    human = selectedHuman;
+  } else if (activeTab === 'models') {
+    if (!selectedHuman || selectedHuman.type !== 'url') { showError('モデルを選択してください。'); return; }
+    human = selectedHuman;
+  } else {
+    var url = $('#humanUrl').value.trim();
+    if (!url) { showError('URL を入力してください。'); return; }
+    if (!/^https?:\/\//i.test(url)) { showError('http(s) から始まる画像 URL を指定してください。'); return; }
+    human = { type:'url', value:url };
+  }
+
+  var cloth = $('#clothUrl').value.trim() || currentProduct.clothUrl;
+  if (!cloth) { showError('商品画像 URL が空です。'); return; }
+
+  busy = true;
+  $('#formState').classList.add('hidden');
+  $('#loadingState').classList.add('show');
+  $('#errorMsg').classList.remove('show');
+  $('#loadingSub').textContent = '商品と人物の 2 枚を参照して、着用イメージを組み立てています';
+  setStep(0);
+
+  var product = currentProduct;
+
+  // ① 参照画像を data URI に揃える
+  var pHuman = human.type === 'file' ? fileToRef(human.value) : makeRef(human.value);
+  Promise.all([pHuman, makeRef(cloth)]).then(function(refs){
+    var person = refs[0], garment = refs[1];
+    var size = pickSize(person.w, person.h);
+    console.log('[try-on] size =', size, '（人物写真', person.w + '×' + person.h, 'の比率に合わせる）');
+
+    // ② 送信
+    setStep(1);
+    return submit([person.url, garment.url], buildPrompt(product), size);
+  }).then(function(taskPath){
+    // ③ ポーリング
+    setStep(2);
+    return poll(taskPath, function(sec){
+      $('#loadingSub').textContent = 'レンダリング中… ' + sec + ' 秒経過（通常 40〜90 秒）';
+    });
+  }).then(function(imageUrl){
+    // ④ 仕上げ
+    setStep(3);
+    var img = $('#resultImg');
+    img.src = imageUrl;
+    $('#dlBtn').href = imageUrl;
+    $('#loadingState').classList.remove('show');
+    $('#resultState').classList.add('show');
+    busy = false;
+  }).catch(function(err){
+    console.error('[try-on]', err);
+    $('#loadingState').classList.remove('show');
+    $('#formState').classList.remove('hidden');
+    showError(err && err.message ? err.message : String(err));
+    busy = false;
+  });
+}
+$('#genBtn').addEventListener('click', generate);
+
+})();
+</script>
+
+</body>
+</html>

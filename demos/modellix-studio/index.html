@@ -371,13 +371,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 @keyframes fl{from{opacity:.92}to{opacity:0}}
 
 /* ペット */
-.pets{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;width:100%;max-width:1000px}
-@media(max-width:900px){.pets{grid-template-columns:repeat(3,1fr)}}
+.pets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,240px));
+  gap:12px;width:100%;max-width:1000px;justify-content:center}
 .pet{position:relative;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;
   padding:12px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.01));
   transition:all var(--t2) var(--ease)}
 .pet .pa{display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:12px;margin-bottom:9px}
 .pet .pa svg{width:76%;height:76%}
+.pet .pa img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.pet b{font-size:14px}
 .pet b{display:block;font-size:13px;font-weight:700}
 .pet span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
 .pet:hover{transform:translateY(-5px);border-color:var(--line-2)}
@@ -545,6 +547,49 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .back{display:inline-flex;align-items:center;gap:8px;color:var(--muted)}
 .back:hover{color:var(--a1)}
 
+/* ══════════════ 13. 各ステップの「ひとつ前に戻る」入口 ══════════════ */
+/* フッターの戻るは目線から遠い。各ステップの左上にも同じ出口を置く。 */
+.stepback{position:absolute;z-index:6;
+  left:clamp(20px,3.4vw,56px); top:clamp(10px,2vh,24px);
+  display:inline-flex;align-items:center;gap:9px;min-height:42px;padding:0 18px 0 14px;
+  border-radius:99px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);color:var(--muted);
+  font-size:12px;font-weight:600;letter-spacing:.08em;line-height:1;
+  transition:border-color var(--t1) var(--ease),color var(--t1) var(--ease),transform var(--t1) var(--ease)}
+.stepback:hover{border-color:var(--a1);color:var(--a1);transform:translateX(-3px)}
+.stepback svg{flex:none}
+@media(max-width:760px){.stepback b{display:none}.stepback{padding:0 13px}}
+
+/* ══════════════ 14. 生成履歴 ══════════════ */
+.hist{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,172px));
+  justify-content:center;gap:14px;width:100%;max-width:1200px;max-height:58vh;
+  overflow-y:auto;padding:4px 4px 10px}
+.hist::-webkit-scrollbar{width:6px}
+.hist::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+.hcard{position:relative;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--line);
+  background:rgba(255,255,255,.03);
+  transition:transform var(--t2) var(--ease),border-color var(--t2) var(--ease)}
+.hcard img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block}
+.hcard::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(transparent 44%,rgba(3,4,9,.88))}
+.hcard b,.hcard i{position:absolute;left:11px;right:11px;z-index:2;text-align:left}
+.hcard b{bottom:22px;font-size:12.5px;font-weight:700}
+.hcard i{bottom:7px;font-style:normal;font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.04em}
+.hcard:hover{transform:translateY(-5px);border-color:var(--a1)}
+.hempty{display:grid;place-items:center;gap:12px;padding:44px 26px;border-radius:var(--r-lg);
+  border:1px dashed var(--line-2);color:var(--muted);font-size:13px;line-height:1.9;max-width:520px}
+.hv{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:4vh 4vw;
+  background:rgba(2,3,6,.9);backdrop-filter:blur(14px);opacity:0;pointer-events:none;
+  transition:opacity var(--t2) var(--ease)}
+.hv.on{opacity:1;pointer-events:auto}
+.hv-box{display:flex;gap:clamp(18px,3vw,44px);align-items:center;justify-content:center;flex-wrap:wrap}
+.hv-box .big{max-height:80vh;max-width:min(44vw,400px);width:auto;border-radius:var(--r-lg);
+  border:1px solid var(--line-2);box-shadow:0 40px 120px rgba(0,0,0,.85)}
+.hv-side{display:flex;flex-direction:column;gap:18px;text-align:left;max-width:340px}
+.hv-side h3{font-size:clamp(18px,2vw,26px)}
+.hv .lbx{position:absolute;top:22px;right:26px;width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;border:1px solid var(--line-2);background:rgba(255,255,255,.05);color:var(--fg)}
+.hv .lbx:hover{border-color:var(--a1);color:var(--a1)}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
     transition-duration:.01ms!important}}
@@ -596,12 +641,31 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         <button class="btn btn-p btn-xl" data-go="subject">体験をはじめる
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
+        <button class="btn btn-g" id="btnHistory" data-go="history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg>
+          生成履歴を見る<span class="num" id="histCount" style="margin-left:6px;opacity:.7"></span>
+        </button>
       </div>
       <div class="hint"><span class="dot"></span>画面にタッチしてスタート</div>
     </section>
 
+    <!-- 0b 生成履歴 -->
+    <section class="screen" id="s-history" aria-label="生成履歴">
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>最初の画面へ戻る</b></button>
+      <p class="eyebrow">History</p>
+      <h2 class="h2">これまでに生成した作品</h2>
+      <p class="lead" style="font-size:13px">この端末で生成したものが新しい順に並びます。選ぶと大きく表示され、QR コードからお持ち帰りいただけます。</p>
+      <div class="hist" id="histGrid"></div>
+      <p class="hempty" id="histEmpty" hidden>まだ生成された作品はありません。<br>「体験をはじめる」から、最初の 1 枚をつくってみてください。</p>
+      <div class="acts">
+        <button class="btn btn-p" data-go="subject">新しく生成する</button>
+        <button class="btn btn-g btn-sm" id="btnHistClear">履歴を消す</button>
+      </div>
+    </section>
+
     <!-- 1 主役 -->
     <section class="screen" id="s-subject" aria-label="主役を選ぶ">
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>最初の画面へ戻る</b></button>
       <p class="eyebrow">Step 1</p>
       <h2 class="h2">1 枚の写真が、この 8 スタイルになります</h2>
       <p class="lead" style="font-size:13px">下はすべて、1 枚の写真から生成した例です。ペットでも同じ品質で生成されます。</p>
@@ -624,8 +688,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
             <path d="M11 16h2l-1 1.4z" fill="var(--a1)" stroke="none"/>
           </svg></span>
           <span class="txt">
-            <h3>ペットを主役に</h3>
-            <p>6 種類のサンプルからお選びいただけます。撮影は不要です。</p>
+            <h3>うちの子を主役に</h3>
+            <p>看板ねこの「スイカ」で体験できます。撮影は不要です。</p>
           </span>
         </button>
       </div>
@@ -633,6 +697,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
     <!-- 2a 撮影 -->
     <section class="screen" id="s-capture" aria-label="撮影">
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
       <h2 class="h2">枠の中に顔を入れてください</h2>
       <div class="cam">
@@ -656,14 +721,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
     <!-- 2b ペット -->
     <section class="screen" id="s-pet" aria-label="ペットを選ぶ">
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
-      <h2 class="h2">主役になる子を選んでください</h2>
+      <h2 class="h2">この子が主役になります</h2>
+      <p class="lead" style="font-size:13px">タップして選ぶと、人物と同じ工程でキャラクターカードと入景カットを生成します。</p>
       <div class="pets" id="petGrid"></div>
       <div class="acts"><button class="btn btn-p" id="btnPetNext" disabled>この子で進む</button></div>
     </section>
 
     <!-- 3 世界 -->
     <section class="screen" id="s-world" aria-label="世界を選ぶ">
+      <button class="stepback" id="backWorld" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>撮影をやり直す</b></button>
       <p class="eyebrow">Step 3</p>
       <h2 class="h2">どの世界の扉を開きますか</h2>
       <p class="lead" style="font-size:13px">入りたい世界を 1 つ選んでください。選んだ世界の主役として生成されます。</p>
@@ -676,6 +744,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
     <!-- 4 生成中（タイムライン） -->
     <section class="screen" id="s-gen" aria-label="生成中">
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>生成を中止して世界を選び直す</b></button>
       <p class="eyebrow">Step 4 ／ Generating</p>
       <h2 class="h2" id="genTitle">キャラクターを生成しています</h2>
       <div class="tl">
@@ -698,8 +767,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           </li>
           <li class="tn" data-k="2" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>世界と合成</b><span>光の向き・空気感・粒状感を世界に合わせます</span>
-              <span class="soon">準備中</span></div>
+            <div class="tx"><b>世界と合成（入景）</b>
+              <span>キャラクターカードと世界の背景から、光の向き・空気感・粒状感を揃えた 1 枚を組み立てます</span>
+              <button class="tthumb" id="sceneThumb" type="button" hidden>
+                <img id="sceneThumbImg" alt="生成された入景カット">
+                <i><b>入景カットができました</b>タップすると大きく表示します</i>
+              </button></div>
             <em class="tt"></em>
           </li>
           <li class="tn" data-k="3" data-s="wait">
@@ -712,6 +785,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         <div class="tstage">
           <img id="tShot" alt="">
           <img id="tCard" alt="">
+          <img id="tScene" alt="">
           <div class="sweep" id="tSweep" aria-hidden="true"></div>
         </div>
       </div>
@@ -735,9 +809,14 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           </div>
           <p class="lead" id="resSub" style="text-align:inherit;margin:0;font-size:13.5px"></p>
 
+          <button class="tthumb" id="resCardThumb" type="button" hidden style="align-self:flex-start">
+            <img id="resCardImg" alt="キャラクターカード">
+            <i><b>キャラクターカード（工程 ②）</b>タップすると大きく表示します</i>
+          </button>
+
           <div class="vslot">
             <span class="vi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="14" height="13" rx="2.4"/><path d="m17 12 4.5-3v9L17 15z"/></svg></span>
-            <p><b>動画の生成は準備中です</b>このデモでは、いまはキャラクターカードまでを生成しています。</p>
+            <p><b>動画の生成は準備中です</b>このデモでは、キャラクターカードと入景カットまでを生成しています。</p>
           </div>
 
           <div class="qr-row">
@@ -3098,6 +3177,30 @@ var qrcode = function() {
   <p class="pv-hint">背景をタップ、または Esc で閉じます</p>
 </div>
 
+<div class="hv" id="hv" role="dialog" aria-modal="true" aria-label="生成履歴の詳細">
+  <div class="hv-box">
+    <img class="big" id="hvImg" alt="生成された作品">
+    <div class="hv-side">
+      <div>
+        <p class="kicker" style="font-size:11px;letter-spacing:.32em;color:var(--a1);font-weight:700">SAVED</p>
+        <h3 id="hvTitle" style="margin-top:8px">—</h3>
+        <p class="lead" id="hvSub" style="text-align:left;margin:6px 0 0;font-size:12.5px"></p>
+      </div>
+      <div class="qr-row">
+        <canvas class="qr" id="hvQr" width="240" height="240" aria-label="お持ち帰り用 QR コード"></canvas>
+        <p><b>スマホでお持ち帰り</b>読み取ると、この作品のダウンロードページが開きます。</p>
+      </div>
+      <div class="acts" style="justify-content:flex-start">
+        <button class="btn btn-g btn-sm" id="hvCard" type="button">キャラクターカードを見る</button>
+        <button class="btn btn-g btn-sm" id="hvClose2" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
+  <button class="lbx" id="hvClose" type="button" aria-label="閉じる">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+</div>
+
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="生成されたキャラクターカード">
   <img id="lbImg" alt="生成されたキャラクターカード">
   <button class="lbx" id="lbClose" type="button" aria-label="閉じる">
@@ -3119,6 +3222,19 @@ var qrcode = function() {
 var SCN = ["img/s1.jpg","img/s2.jpg","img/s3.jpg","img/s4.jpg","img/s5.jpg","img/s6.jpg","img/s7.jpg","img/s8.jpg"]; // ①
 var CRD = ["img/c1.jpg","img/c2.jpg","img/c3.jpg","img/c4.jpg","img/c5.jpg","img/c6.jpg","img/c7.jpg","img/c8.jpg"]; // ②
 var WLD = ["img/w1.jpg","img/w2.jpg","img/w3.jpg","img/w4.jpg","img/w5.jpg","img/w6.jpg","img/w7.jpg","img/w8.jpg"]; // ③
+
+/* ③ 入景の参考画像 ②＋この背景。ローカルの img/s*.jpg は API 側から取得できないので、
+   URLs.md の原本（公開 URL）をそのまま渡す。並びは WORLDS[i] と一致させてある。 */
+var SCN_URL = [
+  "https://jp.srcgptbots.com/ailab/images/mvt7u2ayqlzz1qm.png", // ①-1 機甲パイロット
+  "https://jp.srcgptbots.com/ailab/images/nzs2d3h5ox1jztk.png", // ①-2 異世界の勇者
+  "https://jp.srcgptbots.com/ailab/images/1buyq8j9wbd7dea.png", // ①-3 侍
+  "https://jp.srcgptbots.com/ailab/images/f936g7an3aachiv.png", // ①-4 ミニチュア探検隊
+  "https://jp.srcgptbots.com/ailab/images/ojow856tv7nbiht.png", // ①-5 恐竜サバイバー
+  "https://jp.srcgptbots.com/ailab/images/b1qtnfukuspnwoe.png", // ①-6 深海の守護者
+  "https://jp.srcgptbots.com/ailab/images/j1jlkzv0nq20azl.png", // ①-7 宇宙飛行士
+  "https://jp.srcgptbots.com/ailab/images/avph9eahepvyywd.png"  // ①-8 氷の魔導士
+];
 
 var VID_B = "https://gptbots-resume-demo-jp.oss-ap-northeast-1.aliyuncs.com/Modellix/";
 /* 世界ごとのサンプル動画（8 世界すべて） */
@@ -3152,19 +3268,16 @@ var WORLDS = [
   a:"#6ef0b0", b:"#a78bfa", cap:"第 1 話「光の竜」", i:7}
 ];
 
+/* ペットの主役は看板ねこ「スイカ」1 匹。写真をそのまま参考画像として API に渡すので、
+   ここだけは data URL ではなく公開 URL を持たせる。 */
 var PETS=[
- {id:"cat",n:"ねこ",s:"アメリカンショートヘア",g:["#2ee6c8","#0b5f74"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M27 40 22 15l20 11M73 40 78 15 58 26"/><circle cx="50" cy="57" r="26"/><circle cx="40" cy="52" r="3.4" fill="#fff" stroke="none"/><circle cx="60" cy="52" r="3.4" fill="#fff" stroke="none"/><path d="M46 65h8l-4 5z" fill="#fff" stroke="none"/><path d="M14 60h16M70 60h16" opacity=".7"/></svg>'},
- {id:"shiba",n:"しばいぬ",s:"柴犬・赤毛",g:["#ffb347","#8a3a06"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M28 38 24 14l20 12M72 38 76 14 56 26"/><path d="M24 52a26 26 0 0 1 52 0c0 18-12 28-26 28S24 70 24 52Z"/><circle cx="40" cy="50" r="3.4" fill="#fff" stroke="none"/><circle cx="60" cy="50" r="3.4" fill="#fff" stroke="none"/><ellipse cx="50" cy="64" rx="5" ry="3.6" fill="#fff" stroke="none"/><path d="M44 76a6 6 0 0 0 12 0" opacity=".85"/></svg>'},
- {id:"rabbit",n:"うさぎ",s:"ネザーランドドワーフ",g:["#ff9ecd","#7a1550"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="36" cy="27" rx="7.5" ry="20"/><ellipse cx="64" cy="27" rx="7.5" ry="20"/><circle cx="50" cy="63" r="23"/><circle cx="41" cy="59" r="3.2" fill="#fff" stroke="none"/><circle cx="59" cy="59" r="3.2" fill="#fff" stroke="none"/><path d="M47 69h6l-3 4z" fill="#fff" stroke="none"/></svg>'},
- {id:"hamster",n:"ハムスター",s:"ゴールデン",g:["#ffd76e","#7a4c05"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="33" r="8"/><circle cx="70" cy="33" r="8"/><circle cx="50" cy="58" r="27"/><circle cx="40" cy="54" r="3.4" fill="#fff" stroke="none"/><circle cx="60" cy="54" r="3.4" fill="#fff" stroke="none"/><circle cx="50" cy="64" r="2.6" fill="#fff" stroke="none"/><path d="M43 74a7 7 0 0 0 14 0" opacity=".85"/></svg>'},
- {id:"parrot",n:"インコ",s:"セキセイインコ",g:["#7bf59b","#0a5c3a"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M42 24c2-8 8-12 14-11M50 15c4-6 10-7 14-4"/><circle cx="52" cy="48" r="22"/><circle cx="46" cy="43" r="3.4" fill="#fff" stroke="none"/><path d="M30 50c-6 2-8 6-6 10 2 4 8 4 12 1"/><path d="M52 70c-4 12-2 18 4 22" opacity=".8"/></svg>'},
- {id:"poodle",n:"トイプードル",s:"アプリコット",g:["#c9a3ff","#3d1b7a"],svg:'<svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="22" r="11"/><circle cx="26" cy="46" r="12"/><circle cx="74" cy="46" r="12"/><circle cx="50" cy="58" r="23"/><circle cx="41" cy="54" r="3.2" fill="#fff" stroke="none"/><circle cx="59" cy="54" r="3.2" fill="#fff" stroke="none"/><ellipse cx="50" cy="66" rx="4.6" ry="3.4" fill="#fff" stroke="none"/></svg>'}
+ {id:"suika", n:"スイカ", s:"我が家の猫 🍉", img:"https://jp.srcgptbots.com/ailab/images/v0bt0m/neko.png"}
 ];
 
 var NOTES=[
  "1 枚の写真から顔の構造を推定しています。「元の顔だと分かる」まま別人にならないよう保つのが、ここでいちばん難しいところです。",
  "身元を固定したまま、衣装・光・質感・表情だけを入れ替えています。単なるコスプレ合成にならないよう、汗や埃、筋肉の緊張まで描き分けます。",
- "背景となる世界と合成し、光の向き・色温度・空気感・粒状感まで合わせます。この工程は現在開発中です。",
+ "キャラクターカードと世界の背景の 2 枚を参考に、1 枚へ組み立てています。光の向き・色温度・空気感・粒状感、そして足元の接触影までを世界に合わせます。",
  "静止画から 7 秒の縦型動画を生成します。この工程は現在開発中です。"
 ];
 
@@ -3369,11 +3482,12 @@ function setSound(on){
   PETS.forEach(function(p){
     var b=document.createElement("button");
     b.className="pet"; b.type="button"; b.setAttribute("aria-pressed","false");
-    b.innerHTML='<span class="pa" style="background:linear-gradient(150deg,'+p.g[0]+','+p.g[1]+')">'+p.svg+'</span><b>'+p.n+'</b><span>'+p.s+'</span>';
+    b.innerHTML='<span class="pa"><img src="'+p.img+'" alt="'+p.n+'"></span>'+
+                '<b>'+p.n+'</b><span>'+p.s+'</span>';
     b.addEventListener("click",function(){
       g.querySelectorAll(".pet").forEach(function(x){x.setAttribute("aria-pressed","false")});
       b.setAttribute("aria-pressed","true");
-      state.shot=null; state.petSvg=p.svg; state.petG=p.g; state.label=p.n;
+      state.shot=null; state.petImg=p.img; state.label=p.n;
       $("#btnPetNext").disabled=false; resetIdle();
     });
     g.appendChild(b);
@@ -3381,7 +3495,11 @@ function setSound(on){
 })();
 
 /* ───── 状態と画面遷移 ───── */
-var state={subject:null,shot:null,petSvg:null,petG:null,label:"",world:null,cardUrl:null,cardIsSample:false};
+function blankState(){
+  return {subject:null,shot:null,petImg:null,label:"",world:null,
+          cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false};
+}
+var state=blankState();
 var STEP={subject:1,capture:2,pet:2,world:3,gen:4,result:4};
 var current="attract", hist=[], timers=[];
 function later(fn,ms){var t=setTimeout(fn,ms);timers.push(t);return t}
@@ -3397,10 +3515,17 @@ function show(name,push){
   document.querySelectorAll(".step").forEach(function(s){
     var n=+s.dataset.n; s.dataset.s = n<st?"done":(n===st?"on":"");
   });
-  $("#btnBack").hidden = (name==="attract"||name==="gen");
+  // 生成中も戻れるようにした（各画面の左上と、フッターの両方から）
+  $("#btnBack").hidden = (name==="attract");
   if(name==="attract"){ attractLoop(); } else { clearInterval(attractTimer); }
   cardRowLoop(name==="subject");
   if(name==="world" && state.world!=null){ setWorldBg(state.world); }
+  if(name==="history"){ renderHistory(); }
+  // 世界選択の戻り先は、人物なら撮影・ペットなら選び直しと、実際の来た道に合わせる
+  if(name==="world"){
+    $("#backWorld").querySelector("b").textContent =
+      (state.subject==="pet") ? "主役の子を選び直す" : "撮影をやり直す";
+  }
   resetIdle();
 }
 
@@ -3433,10 +3558,8 @@ function sampleShot(){
   return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(s)));
 }
 function petShot(){
-  if(!state.petSvg) return sampleShot();
-  var inner=state.petSvg.replace("<svg ","<svg xmlns='http://www.w3.org/2000/svg' ");
-  var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+state.petG[0]+'"/><stop offset="1" stop-color="'+state.petG[1]+'"/></linearGradient></defs><rect width="300" height="400" fill="url(#g)"/><g transform="translate(50,50) scale(2)">'+state.petSvg.replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"")+'</g></svg>';
-  return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(s)));
+  // 公開 URL なので、変換せずそのまま参考画像として渡せる
+  return (PETS[0] && PETS[0].img) || sampleShot();
 }
 
 $("#btnSample").addEventListener("click",function(){
@@ -3478,7 +3601,8 @@ function capture(){
    ③ 世界との合成と ④ 動画は枠だけ用意してある。
    ══════════════════════════════════════════════════════════ */
 var API   = "/api/v1";
-var MODEL = "bytedance/seedream-5.0-pro-edit";
+var MODEL = "bytedance/seedream-5.0-pro-edit";                       // ② 角色卡
+var MODEL_SCENE = "bytedance/seedream-5.0-pro-multi-reference";      // ③ 入景
 var CARD_SIZE = "1440x2560";          // 9:16。1K〜2K の範囲内
 var CARD_TIMEOUT = 4 * 60 * 1000;     // 実測 80〜120 秒。余裕を持って 4 分で打ち切る
 
@@ -3559,6 +3683,77 @@ LIGHT AND STYLE: green-violet aurora key from directly above, warm gold rune glo
 Do NOT: looking at camera; a calm, neutral or posed expression; dirt, sweat, blood, wounds or grim realism; the hood covering the face; photorealistic live-action look; film grain or lens flare; text or watermark.`
 ];
 
+/* ③ 入景（Bootstrap・参考画像 2 枚）の生成プロンプト。
+   参考画像は必ず [キャラクターカード, 世界の背景] の順で渡す。
+   提示語の image 1 / image 2 は、その並びを指している。 */
+var SCENE_PROMPTS = [
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the neon alley from image 2, standing full body on the wet asphalt in the lower third, occupying roughly 50% of the frame height, slightly left of centre, feet fully visible, camera at chest height. He glances back and up over his shoulder into the searchlight, one arm raised as a glowing shield panel unfolds beside it.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, costume and every mark of weathering exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering style of image 2 exactly. Light him with the same hard white searchlight from the upper right plus the magenta and cyan neon of the street. Ground him with a contact shadow and his reflection in the wet asphalt; rain splashes at his feet.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the alley walls fall soft, heavy rain and steam in the air, high contrast with crushed but open blacks, fine grain and halation on the neon and the searchlight.
+Photorealistic cinematic CG, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating subject; a missing contact shadow or reflection; lighting that disagrees with the scene; a different, beautified or cleaned-up face; a clean dry costume; him looking at the camera; a flat evenly-lit look; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the floating-island scene from image 2, standing full body at the centre of the stone platform in the lower third, occupying roughly 50% of the frame height, feet fully visible, camera at chest height. He raises the glowing sword and looks up at the diving dragon, cloak and hair whipping backward.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, armor and every mark of damage exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+INTEGRATION: match the cel-shading, line work, colour palette and painted background style of image 2 exactly. Light him with the intense orange firelight from the UPPER LEFT where the dragon's fire strikes the platform edge, with a cool violet-blue sky rim from behind right. Ground him with a contact shadow on the stone; embers, ash and falling rubble scatter around his boots.
+STYLE: clean anime line work, flat cel shading with crisp light and shadow separation, subtle bloom on the glowing blade, high-end Japanese animation film quality.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating subject; a missing contact shadow; lighting that disagrees with the scene; a different or beautified face; a clean undamaged costume; photorealistic or 3D-render style; him looking at the camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the merchant street from image 2, standing full body in the middle ground on the packed-earth road, occupying roughly 50% of the frame height, right of centre, feet fully visible, camera at chest height. He faces the camera at three-quarters with his gaze off-frame to the LEFT at the ronin.
+WEAPON: both swords stay fully in their scabbards through his obi, the scabbard mouths visible at his waist. His right hand rests flat on the scabbard and his left thumb presses the guard — only two or three centimetres of bare blade show at the mouth. Neither hand touches the grip. There is no sword in his hand.
+KEEP FROM IMAGE 2, UNCHANGED: the foreground ronin at lower left seen entirely from behind, face never visible, his own katana already drawn and held low; every bystander pressed back against the shopfronts on both sides with faces indistinct; the near-foreground onlookers cropped at the bottom corners; the overcast sky and the whole street. Nobody else stands in the middle of the road.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, indigo haori and every mark of weathering exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+INTEGRATION: match the flat cool overcast daylight, low saturation, colour temperature, atmosphere and grain of image 2 exactly, plus a faint warm bounce from the charcoal brazier on the left. Ground him with a soft diffuse contact shadow; dust and loose straw swirl around his feet and blow past him down the street.
+CINEMATOGRAPHY: long lens compression stacking the crowd into flattened layers behind him, shallow depth of field so he is sharp while the foreground ronin and side crowds fall soft, dust and brazier smoke hanging in the air, low saturation with the brazier the only warm note, blacks deep but open, fine grain and halation only on the brazier coals.
+Photorealistic Japanese period drama, 9:16 vertical, frozen at the tense moment before the strike, highly detailed.
+Do NOT: his sword drawn or raised; a sword in his hand; a hand on the grip; a pasted-on or floating subject; a missing contact shadow; a different or beautified face or costume; a visible face on the foreground ronin; a second figure or bystander in the middle of the road; sunset or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade; him looking at the camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the clay figure from image 1 into the miniature jungle set from image 2, three-quarter body, occupying roughly 60% of the frame height, one step closer to camera in the lower third, mid-run toward the lens with the head twisted back at the clay T-rex, hat askew.
+IDENTITY: keep the figure's face, hairstyle silhouette, eyewear, earrings and clay surface texture exactly as in image 1 — instantly recognizable. Do not restyle or smooth the clay.
+INTEGRATION: match the tungsten studio lighting from the upper left, the handmade clay and felt textures, the saturated toy-like colours and the tabletop depth of field of image 2 exactly. Ground the figure with a hard tabletop contact shadow; small clay dust puffs kick up at its feet.
+STYLE: stop-motion claymation photographed on a real set, visible fingerprints and tool marks, uneven handmade texture, tilt-shift miniature look.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating figure; a missing contact shadow; a smoothed or CG-rendered surface; dirt, sweat, blood or grim realism; a different or restyled face; the figure looking at the camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the prehistoric valley from image 2, three-quarter body, occupying roughly 60% of the frame height, lunging toward the camera in the lower third, twisting to look back at the T-rex, mouth open, chest heaving.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, torn dusty jacket and every mark of dirt, sweat and injury exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+INTEGRATION: match the lighting, colour temperature, haze, grain and rendering style of image 2 exactly. Light him with the same hot orange backlight low on the horizon behind, with a cool teal fill from the front right. Ground him with a contact shadow; dust surges around his legs and torn fronds fall past him.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the ferns and the T-rex fall slightly soft, heavy dust and haze in the air, teal-and-orange grade, high contrast, crushed but open blacks, fine grain and halation on the backlight.
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating subject; a missing contact shadow; lighting that disagrees with the scene; a clean face or clean clothing; a different or beautified face; him looking at the camera; a flat evenly-lit look; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the sunken temple corridor from image 2, full body floating just above the seabed in the lower third, occupying roughly 50% of the frame height, feet drifting free, camera at chest height. He looks straight up at the leviathan passing overhead, hair and mantle drifting in the current, the patterns on his skin lighting up in sequence.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, scale armor and every mark of wear exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+INTEGRATION: match the lighting, colour temperature, underwater scattering, grain and rendering style of image 2 exactly. Light him with the turquoise glow from directly above and the scattering jellyfish, with a warm amber accent from a distant temple fire behind on the right. NO contact shadow — he floats; instead wrap the ambient turquoise light around him and let sediment swirl beneath and past him at his own depth.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, visible god rays and suspended particles, high contrast, crushed but open blacks, fine grain and halation on the brightest shaft of light.
+Photorealistic cinematic fantasy, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a contact shadow or a grounded standing pose; a pasted-on subject; lighting that disagrees with the scene; a monochrome all-blue look; a different or beautified face; him looking at the camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the space station corridor from image 2, three-quarter body floating at a ten-degree tilt, occupying roughly 50% of the frame height, slightly right of centre, feet out of frame below. One gloved hand grips a handrail at the left edge, arm braced; he looks straight up at the breach.
+IDENTITY: keep his face, hairstyle, eyewear, earrings, EVA suit and every scuff and dust mark exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or suit. The visor stays fully raised and the glass perfectly transparent across the face.
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering style of image 2 exactly. Light him with the cold blue window light from the upper left and the pulsing red alarm strobe at about a quarter of its strength on his right edge. NO contact shadow — zero gravity; instead let debris and torn insulation drift past at the same depth as his body.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, weightless debris with motion blur, cold steel-blue grade with red accents, high contrast, crushed but open blacks, fine grain and halation on the window and the strobe.
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a contact shadow or a grounded standing pose; a pasted-on subject; a closed, tinted or mirrored visor; reflections across the face; a calm or smiling expression; equal-strength blue and red lighting; a different or beautified face; him looking at the camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the character from image 1 into the aurora snowfield from image 2, standing full body in the untouched snow of the lower third, occupying roughly 50% of the frame height, feet fully visible, camera at chest height. He raises the crystal staff and looks straight up at the aurora dragon, cloak billowing.
+IDENTITY: keep his face, hairstyle, hair colour, eyewear, earrings and cloak exactly as in image 1 — instantly recognizable. Do not restyle or change the stylized proportions.
+INTEGRATION: match the stylized 3D rendering, soft rounded shapes, subsurface scattering, colour palette and lighting of image 2 exactly. Light him with the green-violet aurora from directly above and the warm gold rune glow from the ice spires behind. Ground him with a soft blue contact shadow and boot prints; powder snow swirls around his boots.
+STYLE: polished stylized 3D render in the manner of a modern CG family feature, subtle bloom on the staff and the runes, rich subsurface scattering in skin and ice.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating subject; a missing contact shadow; dirt, sweat, wounds or grim realism; a photorealistic live-action look; film grain or lens flare; a different or restyled face; him looking at the camera; text or watermark.`
+];
+
 function sleepMs(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 
 /* 撮影データを API が受け付ける形（JPEG）へ正規化する。
@@ -3581,24 +3776,48 @@ function toJpeg(src, maxSide){
   });
 }
 
-function submitCard(image, prompt){
-  return fetch(API+"/"+MODEL,{
+function submitJob(model, body){
+  return fetch(API+"/"+model,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      prompt: prompt,
-      image: image,
-      size: CARD_SIZE,
-      // standard は提示語を書き換えてしまい、細かい指定が潰れる。fast を使う。
-      optimize_prompt_mode: "fast",
-      output_format: "png"
-    })
+    body:JSON.stringify(body)
   }).then(function(r){ return r.text(); }).then(function(t){
     var j; try{ j=JSON.parse(t); }catch(e){ throw new Error("応答を解釈できませんでした: "+t.slice(0,90)); }
     if(!j.data || !j.data.task_id) throw new Error(j.message || "生成を開始できませんでした");
     var u=(j.data.get_result && j.data.get_result.url) || (API+"/tasks/"+j.data.task_id);
     try{ var x=new URL(u); return x.pathname+x.search; }catch(e){ return u; }
   });
+}
+
+/* ② キャラクターカード（自撮り 1 枚 → 角色卡） */
+function submitCard(image, prompt){
+  return submitJob(MODEL,{
+    prompt: prompt,
+    image: image,
+    size: CARD_SIZE,
+    // standard は提示語を書き換えてしまい、細かい指定が潰れる。fast を使う。
+    optimize_prompt_mode: "fast",
+    output_format: "png"
+  });
+}
+
+/* ③ 入景（角色卡＋場景図 → 完成カット）。参考画像の順番は入れ替えないこと。
+   プロンプト中の image 1 / image 2 は、この配列の並びをそのまま指している。 */
+function submitScene(images, prompt){
+  return submitJob(MODEL_SCENE,{
+    prompt: prompt,
+    image: images,
+    size: CARD_SIZE,
+    optimize_prompt_mode: "fast",
+    output_format: "png"
+  });
+}
+
+/* 参考画像として送れる形に整える。公開 URL はそのまま、
+   撮影データやサンプルの SVG は JPEG の data URL に変換する。 */
+function prepImage(src){
+  if(/^https?:/i.test(src)) return Promise.resolve(src);
+  return toJpeg(src, 1280);
 }
 
 function pollTask(path, onTick){
@@ -3639,9 +3858,9 @@ function ticker(k){
   return function(){ clearInterval(id); setNodeTime(k, Math.round((Date.now()-t0)/1000)+" 秒"); };
 }
 
-function genError(msg){
+function genError(msg, what){
   var e=$("#genErr"); e.hidden=false;
-  e.innerHTML = "生成に失敗しました（"+msg+"）。<br>展示を止めないよう、サンプルのカードで先に進みます。";
+  e.innerHTML = (what||"生成")+"に失敗しました（"+msg+"）。<br>展示を止めないよう、サンプルの絵で先に進みます。";
 }
 
 $("#btnRandom").addEventListener("click",function(){
@@ -3665,16 +3884,20 @@ function runGen(){
   stageCard.classList.remove("on"); stageCard.removeAttribute("src");
   stageShot.src=state.shot||sampleShot(); stageShot.classList.add("on");
   sweep.classList.add("on");
-  state.cardUrl=null;
+  state.cardUrl=null; state.sceneUrl=null; state.sceneIsSample=false;
+  var stageScene=$("#tScene");
+  stageScene.classList.remove("on"); stageScene.removeAttribute("src");
+  $("#sceneThumb").hidden=true;
+  $("#resCardThumb").hidden=true;
 
   /* 01 解析（ローカル処理：送れる形へ整える） */
   setNode(0,"run");
   var stop0=ticker(0);
-  toJpeg(state.shot||sampleShot(), 1280).then(function(jpeg){
+  prepImage(state.shot||sampleShot()).then(function(jpeg){
     if(my!==runToken) return;
     stop0(); setNode(0,"done");
 
-    /* 02 キャラクターカード生成（実 API） */
+    /* 02 キャラクターカード生成（実 API・② 角色卡） */
     setNode(1,"run"); note(1);
     var stop1=ticker(1);
     return submitCard(jpeg, PROMPTS[w.i])
@@ -3707,9 +3930,50 @@ function onCardReady(url, isSample){
   $("#cardThumbImg").src=url;
   $("#cardThumb").hidden=false;
   note(2);
-  // ③ と ④ は枠だけ。まだ動かないことを、状態としてもはっきり見せる
   setNode(2,"wait"); setNode(3,"wait");
-  later(showResult, 1400);
+
+  // ③ 入景は角色卡そのものを参考画像として送る。API 側から取りに行ける URL でないと
+  // 組み立てられないので、サンプルに落ちた回は ③ を飛ばして完成カットの見本を出す。
+  if(isSample || !/^https?:/i.test(String(url))){
+    state.sceneUrl=null;
+    later(showResult, 1400);
+    return;
+  }
+  later(function(){ runScene(runToken, WORLDS[state.world]); }, 700);
+}
+
+/* ③ 入景：角色卡 ＋ 世界の背景 → 完成カット（multi-reference） */
+function runScene(my, w){
+  if(my!==runToken) return;
+  setNode(2,"run"); note(2);
+  $("#tSweep").classList.add("on");
+  var stop2=ticker(2);
+  submitScene([state.cardUrl, SCN_URL[w.i]], SCENE_PROMPTS[w.i])
+    .then(function(taskPath){ return pollTask(taskPath); })
+    .then(function(url){
+      if(my!==runToken) return;
+      stop2(); setNode(2,"done");
+      onSceneReady(url);
+    })
+    .catch(function(err){
+      if(my!==runToken) return;
+      stop2(); setNode(2,"done");
+      genError(err.message||String(err), "入景の生成");
+      onSceneReady(WLD[w.i], true);
+    });
+}
+
+function onSceneReady(url, isSample){
+  state.sceneUrl=url; state.sceneIsSample=!!isSample;
+  var stageCard=$("#tCard"), stageScene=$("#tScene");
+  stageScene.src=url;
+  stageScene.onload=function(){ stageCard.classList.remove("on"); stageScene.classList.add("on"); };
+  $("#tSweep").classList.remove("on");
+  $("#sceneThumbImg").src=url;
+  $("#sceneThumb").hidden=false;
+  note(3);
+  setNode(3,"wait");   // ④ 動画はまだ枠だけ
+  later(showResult, 1600);
 }
 
 /* ───── 拡大表示 ───── */
@@ -3719,7 +3983,11 @@ function onCardReady(url, isSample){
   function close(){ lb.classList.remove("on"); }
   $("#cardThumb").addEventListener("click",function(){ open(state.cardUrl); });
   $("#tCard").addEventListener("click",function(){ open(state.cardUrl); });
-  $("#resImg").addEventListener("click",function(){ open(state.cardUrl); });
+  $("#sceneThumb").addEventListener("click",function(){ open(state.sceneUrl); });
+  $("#tScene").addEventListener("click",function(){ open(state.sceneUrl); });
+  $("#resCardThumb").addEventListener("click",function(){ open(state.cardUrl); });
+  $("#resImg").addEventListener("click",function(){ open(state.sceneUrl||state.cardUrl); });
+  window.openLightbox=open;
   $("#lbClose").addEventListener("click",close);
   lb.addEventListener("click",function(e){ if(e.target===lb) close(); });
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") close(); });
@@ -3728,13 +3996,27 @@ function onCardReady(url, isSample){
 /* ───── 結果 ───── */
 function showResult(){
   var w=WORLDS[state.world];
-  $("#resImg").src=state.cardUrl||CRD[w.i];
+  var hero=state.sceneUrl||state.cardUrl||CRD[w.i];
+  $("#resImg").src=hero;
   $("#resCap").textContent=w.cap;
   $("#resTitle").textContent="「"+w.nm+"」が完成しました";
-  $("#resSub").textContent = state.cardIsSample
-    ? w.sub+" ／ "+w.tag+"。今回はサンプルのカードを表示しています。"
-    : w.sub+" ／ "+w.tag+"。あなたの写真から、1440×2560 のキャラクターカードを生成しました。";
+
+  var made=[];
+  if(!state.cardIsSample) made.push("キャラクターカード");
+  if(state.sceneUrl && !state.sceneIsSample) made.push("入景カット");
+  var from = state.subject==="pet" ? "「"+(state.label||"うちの子")+"」の写真" : "あなたの写真";
+  $("#resSub").textContent = made.length
+    ? w.sub+" ／ "+w.tag+"。"+from+"から、1440×2560 の"+made.join("と")+"を生成しました。"
+    : w.sub+" ／ "+w.tag+"。今回はサンプルの絵を表示しています。";
+
+  // 入景まで進んだ回は、主役が入景カット。②のカードは小さく添えて拡大できるようにする
+  var t=$("#resCardThumb");
+  if(state.sceneUrl && state.cardUrl && state.sceneUrl!==state.cardUrl){
+    $("#resCardImg").src=state.cardUrl; t.hidden=false;
+  } else { t.hidden=true; }
+
   drawQR(takeawayUrl());
+  saveHistory();
   show("result");
 }
 
@@ -3742,15 +4024,27 @@ function showResult(){
    （公開ドメインでも localhost でも、いま開いている場所を基準にする） */
 function takeawayUrl(){
   var base=location.href.split("?")[0].split("#")[0].replace(/[^/]*$/,"")+"thanks.html";
+  return itemUrl({
+    card: state.cardUrl,
+    scene: state.sceneUrl,
+    nm: state.world!=null ? WORLDS[state.world].nm : ""
+  });
+}
+
+/* 履歴の 1 件からも同じ持ち帰りページを組み立てられるようにしておく */
+function itemUrl(it){
+  var base=location.href.split("?")[0].split("#")[0].replace(/[^/]*$/,"")+"thanks.html";
   var u=new URL(base, location.href);
-  if(state.cardUrl) u.searchParams.set("c", state.cardUrl);
-  if(state.world!=null) u.searchParams.set("w", WORLDS[state.world].nm);
+  var hero=it.scene||it.card;
+  if(hero) u.searchParams.set("c", hero);
+  if(it.scene && it.card && it.scene!==it.card) u.searchParams.set("k", it.card);
+  if(it.nm) u.searchParams.set("w", it.nm);
   return u.href;
 }
 
 /* ───── QR（実物。qrcode-generator で生成し canvas へ描く） ───── */
-function drawQR(text){
-  var cv=$("#qrCanvas"); if(!cv||typeof qrcode!=="function") return;
+function drawQR(text, target){
+  var cv=target||$("#qrCanvas"); if(!cv||typeof qrcode!=="function") return;
   var q=qrcode(0,"M"); q.addData(text); q.make();
   var n=q.getModuleCount(), pad=2, S=Math.floor(cv.width/(n+pad*2)), off=Math.floor((cv.width-S*n)/2);
   var g=cv.getContext("2d");
@@ -3759,23 +4053,129 @@ function drawQR(text){
   for(var y=0;y<n;y++) for(var x=0;x<n;x++) if(q.isDark(y,x)) g.fillRect(off+x*S, off+y*S, S, S);
 }
 
+/* ══════════════════════════════════════════════════════════
+   生成履歴
+   ──────────────────────────────────────────────────────────
+   端末の localStorage に「いつ・どの世界で・どの URL を作ったか」だけを残す。
+   画像そのものは持たない（Modellix の URL は 7 日で失効する）。
+   その場を離れたお客様が、あとから QR を読み直せるようにするための入口。
+   ══════════════════════════════════════════════════════════ */
+var HKEY="modellix.studio.history.v1", HMAX=60;
+
+function loadHistory(){
+  try{
+    var a=JSON.parse(localStorage.getItem(HKEY)||"[]");
+    return Object.prototype.toString.call(a)==="[object Array]" ? a : [];
+  }catch(e){ return []; }
+}
+function writeHistory(a){
+  try{ localStorage.setItem(HKEY, JSON.stringify(a.slice(0,HMAX))); }catch(e){}
+  updateHistCount();
+}
+function saveHistory(){
+  if(state.world==null) return;
+  var w=WORLDS[state.world];
+  var hero=state.sceneUrl||state.cardUrl;
+  // サンプルに落ちた回（同梱画像）は履歴に残さない。あとで開いても本人の作品ではない。
+  if(!hero || !/^https?:/i.test(String(hero))) return;
+  var a=loadHistory();
+  a.unshift({
+    t: Date.now(), nm: w.nm, tag: w.tag, sub: w.sub, wi: w.i,
+    card: /^https?:/i.test(String(state.cardUrl||"")) ? state.cardUrl : null,
+    scene: state.sceneUrl && !state.sceneIsSample ? state.sceneUrl : null,
+    who: state.label||""
+  });
+  writeHistory(a);
+}
+function updateHistCount(){
+  var n=loadHistory().length, e=$("#histCount");
+  if(e) e.textContent = n ? "（"+n+"）" : "";
+}
+function stamp(t){
+  var d=new Date(t);
+  function p(n){ return (n<10?"0":"")+n; }
+  return (d.getMonth()+1)+"/"+d.getDate()+" "+p(d.getHours())+":"+p(d.getMinutes());
+}
+
+function renderHistory(){
+  var g=$("#histGrid"), a=loadHistory();
+  g.innerHTML="";
+  $("#histEmpty").hidden = a.length>0;
+  g.hidden = a.length===0;
+  a.forEach(function(it,i){
+    var b=document.createElement("button");
+    b.className="hcard"; b.type="button";
+    var src=it.scene||it.card||WLD[it.wi||0];
+    b.innerHTML='<img src="'+src+'" alt="'+it.nm+'" loading="lazy">'+
+                '<b>'+it.nm+'</b><i>'+stamp(it.t)+(it.who?" ／ "+it.who:"")+'</i>';
+    b.addEventListener("click",function(){ openHistItem(i); });
+    g.appendChild(b);
+  });
+  updateHistCount();
+}
+
+var hvItem=null;
+function openHistItem(i){
+  var it=loadHistory()[i]; if(!it) return;
+  hvItem=it;
+  var w=WORLDS.filter(function(x){ return x.i===it.wi; })[0];
+  if(w) setAccent(w.a,w.b);
+  $("#hvImg").src=it.scene||it.card;
+  $("#hvTitle").textContent="「"+it.nm+"」";
+  $("#hvSub").textContent=(it.sub?it.sub+" ／ ":"")+(it.tag||"")+"　"+stamp(it.t)+" 生成";
+  $("#hvCard").hidden = !(it.scene && it.card);
+  drawQR(itemUrl(it), $("#hvQr"));
+  $("#hv").classList.add("on");
+  resetIdle();
+}
+function closeHistItem(){ $("#hv").classList.remove("on"); }
+(function(){
+  var hv=$("#hv");
+  $("#hvClose").addEventListener("click",closeHistItem);
+  $("#hvClose2").addEventListener("click",closeHistItem);
+  hv.addEventListener("click",function(e){ if(e.target===hv) closeHistItem(); });
+  $("#hvCard").addEventListener("click",function(){
+    if(hvItem && hvItem.card && window.openLightbox) window.openLightbox(hvItem.card);
+  });
+  $("#btnHistClear").addEventListener("click",function(){
+    if(!loadHistory().length) return;
+    var b=$("#btnHistClear");
+    if(b.dataset.armed!=="1"){
+      b.dataset.armed="1"; b.textContent="もう一度押すと消えます";
+      setTimeout(function(){ b.dataset.armed=""; b.textContent="履歴を消す"; },4000);
+      return;
+    }
+    b.dataset.armed=""; b.textContent="履歴を消す";
+    writeHistory([]); renderHistory();
+  });
+})();
+
 /* ───── ナビ ───── */
 document.querySelectorAll("[data-go]").forEach(function(b){
   b.addEventListener("click",function(){ show(b.dataset.go); });
 });
-$("#btnBack").addEventListener("click",function(){
-  var p=hist.pop()||"attract";
+function goBack(){
+  // 生成中に戻るときは、走っている生成を切り離してから帰る（結果が後から割り込まないように）
+  if(current==="gen"){ runToken++; clearAll(); $("#genErr").hidden=true; }
   if(current==="capture") stopCam();
+  if(pvOpen) closePreview();
+  var p=hist.pop()||"attract";
   show(p,false);
   if(p==="capture") startCam();
+}
+$("#btnBack").addEventListener("click",goBack);
+document.querySelectorAll("[data-stepback]").forEach(function(b){
+  b.addEventListener("click",goBack);
 });
 $("#btnRestart").addEventListener("click",restart);
 
 function restart(){
   clearAll(); stopCam(); closePreview();
   runToken++;
-  state={subject:null,shot:null,petSvg:null,petG:null,label:"",world:null,cardUrl:null,cardIsSample:false};
+  state=blankState();
   hist=[];
+  closeHistItem();
+  $("#cardThumb").hidden=true; $("#sceneThumb").hidden=true; $("#resCardThumb").hidden=true;
   document.querySelectorAll("[aria-pressed]").forEach(function(x){
     if(!x.closest(".lang")) x.setAttribute("aria-pressed","false");
   });
@@ -3791,7 +4191,9 @@ function resetIdle(){
   clearTimeout(idleT); $("#idle").textContent="";
   // 生成中と結果表示中は、放っておくのが正しい状態なので自動リセットしない。
   // 生成物が黙って消えると、その場を離れていたお客様に見せられなくなる。
+  // 履歴の詳細を開いているあいだも、QR を読み終わるまで待つ
   if(current==="attract"||current==="gen"||current==="result") return;
+  if($("#hv").classList.contains("on")) return;
   idleT=setTimeout(function(){
     $("#idle").textContent="操作がないため最初の画面に戻ります";
     setTimeout(restart,2600);
@@ -3803,6 +4205,7 @@ function resetIdle(){
 document.addEventListener("keydown",function(e){ if(e.key==="Escape") restart(); });
 
 /* ───── 起動 ───── */
+updateHistCount();
 setWorldBg(0); setAccent(WORLDS[0].a,WORLDS[0].b);
 show("attract",false);
 })();

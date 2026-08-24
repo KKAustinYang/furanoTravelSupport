@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Modellix Try-On Demo — RINKAN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --accent: #BD4A3E;
+    --accent-soft: #fdf2ed;
+    --text: #1a1a1a;
+    --muted: #555;
+    --line: #eaeaea;
+    --panel: #F0F0F0;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+      "Hiragino Sans", "Yu Gothic UI", "Meiryo", "Noto Sans JP", system-ui, sans-serif;
+    margin: 0; color: var(--text); background: #fff; font-size: 14px;
+  }
+  button { font-family: inherit; }
+
+  /* ---- API key bar (sticky) ---- */
+  .apikey-bar {
+    background: #111; color: #fff; padding: 10px 24px;
+    display: flex; align-items: center; gap: 12px; font-size: 12px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .apikey-bar .lbl { font-weight: 700; letter-spacing: 0.5px; }
+  .apikey-bar input {
+    flex: 1; max-width: 520px; padding: 6px 10px;
+    border: 1px solid #444; background: #1f1f1f; color: #fff;
+    border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+  }
+  .apikey-bar button {
+    background: var(--accent); color: #fff; border: none;
+    padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 700;
+  }
+  .apikey-bar .status { font-size: 11px; opacity: 0.75; }
+  .apikey-bar .doc-link { color: #ccc; text-decoration: underline; font-size: 11px; margin-left: auto; }
+  .apikey-bar .doc-link:hover { color: #fff; }
+
+  /* ---- Coupon strip ---- */
+  .coupon-strip {
+    background: #111; color: #fff; text-align: center;
+    padding: 9px; font-size: 13px; font-weight: 700; letter-spacing: 0.2px;
+  }
+
+  /* ---- RINKAN header ---- */
+  .nav {
+    display: flex; align-items: center; padding: 20px 32px;
+    border-bottom: 1px solid var(--line); gap: 24px;
+  }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 3px; }
+  .nav-links { display: flex; gap: 28px; flex: 1; margin-left: 20px; }
+  .nav-links span { color: var(--text); font-size: 14px; cursor: pointer; }
+  .nav-icons { display: flex; gap: 18px; align-items: center; font-size: 16px; color: var(--text); }
+
+  /* ---- Breadcrumb ---- */
+  .crumb { padding: 18px 32px; font-size: 12px; color: #555; }
+
+  /* ---- Product switcher (demo: 3 garments) ---- */
+  .product-switcher {
+    display: flex; gap: 10px; padding: 4px 32px 18px 32px; flex-wrap: wrap;
+  }
+  .product-switcher .ps-label {
+    width: 100%; font-size: 11px; color: #888; letter-spacing: 1.5px;
+    margin-bottom: 4px; text-transform: uppercase;
+  }
+  .product-switcher .ps-tile {
+    flex: 1; min-width: 220px; display: flex; gap: 10px; padding: 10px;
+    background: #fafafa; border: 2px solid transparent; border-radius: 6px;
+    cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease;
+    align-items: center;
+  }
+  .product-switcher .ps-tile:hover { background: #f0f0f0; }
+  .product-switcher .ps-tile.active { border-color: var(--accent); background: #fff; }
+  .product-switcher .ps-tile .ps-thumb {
+    width: 56px; height: 56px; background: #eee; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    border-radius: 4px;
+  }
+  .product-switcher .ps-tile .ps-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .product-switcher .ps-tile .ps-thumb .ph { font-size: 10px; color: #aaa; text-align: center; padding: 4px; }
+  .product-switcher .ps-tile .ps-meta { font-size: 11px; line-height: 1.4; color: #333; min-width: 0; flex: 1; }
+  .product-switcher .ps-tile .ps-meta .ps-b { font-weight: 700; font-size: 12px; }
+  .product-switcher .ps-tile .ps-meta .ps-n { color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .product-switcher .ps-tile .ps-meta .ps-p { color: var(--accent); font-weight: 700; margin-top: 2px; }
+
+  /* ---- Product layout ---- */
+  .product-wrap {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px;
+    padding: 0 64px 80px 64px; max-width: 1320px; margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .product-wrap { grid-template-columns: 1fr; padding: 0 24px 60px 24px; gap: 32px; }
+  }
+
+  .product-image {
+    background: var(--panel); padding: 40px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; min-height: 560px;
+  }
+  .product-image img { max-width: 100%; max-height: 480px; object-fit: contain; }
+  .heart { position: absolute; top: 22px; left: 22px; font-size: 22px; color: #888; }
+  .arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 42px; height: 42px; border-radius: 50%; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; font-size: 18px; color: #555;
+    user-select: none;
+  }
+  .arrow.left { left: 12px; }
+  .arrow.right { right: 12px; }
+
+  .product-info { padding-top: 8px; }
+  .brand { font-size: 14px; color: var(--text); margin-bottom: 8px; }
+  .pname { font-size: 28px; font-weight: 700; margin: 0 0 8px 0; }
+  .pname-en { font-size: 13px; color: var(--text); margin-bottom: 28px; }
+  .attrs {
+    display: grid; grid-template-columns: 110px 1fr; row-gap: 10px;
+    font-size: 14px; margin-bottom: 28px;
+  }
+  .attrs > div:nth-child(odd) { color: #1a1a1a; }
+  .price { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .price .tax { font-size: 13px; color: var(--muted); margin-left: 6px; font-weight: 400; }
+  .coupon-note { font-size: 13px; color: var(--muted); margin: 10px 0 24px 0; }
+  .period-label { font-size: 13px; margin-bottom: 8px; }
+  .period { color: var(--accent); font-weight: 700; font-size: 15px; margin-bottom: 24px; }
+
+  .tryon-btn {
+    background: var(--accent); color: #fff; padding: 18px;
+    width: 100%; border: none; border-radius: 4px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    position: relative;
+    transition: filter 0.15s ease;
+  }
+  .tryon-btn:hover { filter: brightness(1.08); }
+  .tryon-btn .badge-new {
+    position: absolute; top: -10px; right: -10px;
+    background: #d4a85a; color: #fff;
+    padding: 4px 10px; font-size: 11px; border-radius: 2px; font-weight: 700; letter-spacing: 1px;
+  }
+  .tryon-btn .shirt-icon { font-size: 20px; }
+
+  .secondary-btn {
+    background: #111; color: #fff; padding: 16px 22px;
+    width: 100%; border: none; border-radius: 0;
+    font-size: 14px; margin-top: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .secondary-btn:hover { background: #2a2a2a; }
+
+  /* ---- Modal ---- */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 100;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 10px; padding: 32px;
+    max-width: 1020px; width: 100%; max-height: 92vh; overflow: auto;
+    position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; gap: 16px;
+  }
+  .modal-title {
+    font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--text);
+  }
+  .modal-title .shirt-icon { color: var(--accent); font-size: 22px; }
+  .modal-sub { font-size: 12px; color: #777; font-style: italic; margin-right: 8px; }
+  .close {
+    background: none; border: none; cursor: pointer; font-size: 22px;
+    padding: 0 4px; color: #333;
+  }
+
+  .modal-body { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 760px) { .modal-body { grid-template-columns: 1fr; } }
+
+  .panel-label { font-size: 12px; color: #444; margin-bottom: 12px; font-weight: 600; }
+  .panel-img {
+    background: var(--panel); height: 360px;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .panel-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab {
+    padding: 8px 14px; background: #f3f3f3; cursor: pointer;
+    font-size: 13px; border: 1px solid transparent; border-radius: 4px; user-select: none;
+  }
+  .tab.active { background: #fff; border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .upload-area {
+    border: 2px dashed var(--accent); padding: 32px 20px;
+    text-align: center; border-radius: 6px; cursor: pointer; background: var(--accent-soft);
+    display: block;
+  }
+  .upload-area .upload-icon { font-size: 36px; color: var(--accent); margin-bottom: 8px; }
+  .upload-area input[type=file] { display: none; }
+  .upload-hint { font-size: 11px; color: #777; margin-top: 4px; }
+
+  .models-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .model-thumb {
+    background: #f5f5f5; cursor: pointer; padding: 6px;
+    border: 2px solid transparent; border-radius: 4px; transition: border-color 0.15s ease;
+  }
+  .model-thumb img { width: 100%; height: 150px; object-fit: cover; display: block; }
+  .model-thumb.selected { border-color: var(--accent); }
+  .model-thumb .label { font-size: 11px; text-align: center; margin-top: 4px; color: #555; }
+
+  .url-input {
+    width: 100%; padding: 10px; border: 1px solid #ddd;
+    border-radius: 4px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .url-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+  .generate-btn {
+    background: #111; color: #fff; padding: 14px;
+    width: 100%; border: none; margin-top: 16px;
+    cursor: pointer; font-size: 14px; font-weight: 700;
+    border-radius: 4px; letter-spacing: 0.5px;
+  }
+  .generate-btn:hover:not(:disabled) { background: #2a2a2a; }
+  .generate-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+  /* loading & result */
+  .loading-state, .result-state { display: none; }
+  .loading-state.show, .result-state.show { display: block; }
+  .form-state.hidden { display: none; }
+
+  .spinner {
+    width: 90px; height: 90px;
+    border: 4px solid #f0e0dd; border-top: 4px solid var(--accent);
+    border-radius: 50%; animation: spin 1s linear infinite;
+    margin: 60px auto 20px auto;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .loading-text { text-align: center; color: var(--accent); font-weight: 700; font-size: 16px; }
+  .loading-sub { text-align: center; color: #777; font-size: 13px; margin-top: 8px; padding-bottom: 40px; }
+
+  .result-img-wrap {
+    position: relative; background: var(--panel); height: 360px;
+    padding: 24px; display: flex; align-items: center; justify-content: center;
+  }
+  .result-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .ai-badge {
+    position: absolute; top: 8px; left: 8px; background: #111; color: #fff;
+    padding: 4px 8px; font-size: 10px; font-weight: 900; letter-spacing: 2px;
+  }
+
+  .result-cta { display: flex; gap: 8px; margin-top: 14px; }
+  .result-cta button { padding: 14px; border: none; cursor: pointer; font-size: 13px; border-radius: 2px; }
+  .cta-primary { flex: 1; background: #111; color: #fff; font-weight: 700; }
+  .cta-primary:hover { background: #2a2a2a; }
+  .cta-secondary { flex: 1; background: #fff; color: #111; border: 1px solid #111 !important; font-weight: 700; }
+  .cta-secondary:hover { background: #f5f5f5; }
+
+  .point-note {
+    background: var(--accent-soft); padding: 14px;
+    margin-top: 20px; font-size: 12px; color: #555;
+  }
+  .point-note b { color: var(--accent); }
+
+  .error-msg {
+    color: var(--accent); padding: 12px; background: var(--accent-soft);
+    border-radius: 4px; margin-top: 12px; font-size: 13px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+  .error-msg pre {
+    white-space: pre-wrap; word-break: break-all;
+    font-size: 11px; margin: 6px 0 0 0; color: #555;
+    background: rgba(255,255,255,0.5); padding: 6px; border-radius: 3px;
+  }
+
+  .debug-log {
+    margin-top: 14px; background: #1a1a1a; color: #ddd;
+    padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px; border-radius: 4px; max-height: 140px; overflow: auto;
+    white-space: pre-wrap; display: none;
+  }
+  .debug-log.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===== API Key bar ===== -->
+<div class="apikey-bar">
+  <span class="lbl">🔑 Modellix API Key</span>
+  <input type="password" id="apikey" placeholder="Bearer token (例: sk-xxxxxx) — 'Bearer ' は不要">
+  <button onclick="saveKey()">保存</button>
+  <span class="status" id="keystatus"></span>
+  <a class="doc-link" href="https://docs.modellix.ai/openai/gpt-image-2-edit" target="_blank">API ドキュメント ↗</a>
+</div>
+
+<!-- ===== Coupon strip ===== -->
+<div class="coupon-strip">LINE友だち追加で「5%OFFクーポン」プレゼント中!</div>
+
+<!-- ===== Header ===== -->
+<header class="nav">
+  <div class="logo">RINKAN</div>
+  <div class="nav-links">
+    <span>新着</span><span>ブランド</span><span>ウェア</span><span>シューズ</span>
+    <span>アクセサリー</span><span>グッズ</span><span>バッグ</span><span>店舗一覧</span>
+  </div>
+  <div class="nav-icons">
+    <span>👤</span><span>🔍</span><span>🛒 (0)</span>
+  </div>
+</header>
+
+<!-- ===== Breadcrumb ===== -->
+<div class="crumb">HOME &nbsp;&gt;&nbsp; <span id="crumbBrand"></span> &nbsp;&gt;&nbsp; <span id="crumbName"></span></div>
+
+<!-- ===== Product switcher ===== -->
+<div class="product-switcher" id="productSwitcher">
+  <div class="ps-label">デモ商品セレクト / Choose a garment</div>
+</div>
+
+<!-- ===== Product ===== -->
+<main class="product-wrap">
+  <div class="product-image">
+    <span class="heart">♡</span>
+    <span class="arrow left">‹</span>
+    <span class="arrow right">›</span>
+    <img id="productImg" alt="">
+  </div>
+
+  <div class="product-info">
+    <div class="brand" id="productBrand"></div>
+    <h1 class="pname" id="productName"></h1>
+    <div class="pname-en" id="productCode"></div>
+
+    <div class="attrs">
+      <div>性別タイプ</div><div id="productGender">: メンズ</div>
+      <div>サイズ</div><div id="productSize">: -</div>
+      <div>カラー</div><div id="productColor">: -</div>
+    </div>
+
+    <div class="price"><span id="productPrice">¥0</span> <span class="tax">税込</span></div>
+    <div class="coupon-note">ログイン後にご利用可能なクーポンが表示されます。</div>
+
+    <div class="period-label">販売期間</div>
+    <div class="period">2026.05.19 12:00 〜 2027.05.19 11:59</div>
+
+    <button class="tryon-btn" onclick="openModal()">
+      <span class="badge-new">NEW</span>
+      <span class="shirt-icon">👕</span>
+      AIで試着する &nbsp;/&nbsp; Virtual Try-On
+    </button>
+    <button class="secondary-btn">販売期間外 <span>→</span></button>
+    <button class="secondary-btn">カート一覧へ <span>→</span></button>
+  </div>
+</main>
+
+<!-- ===== Modal ===== -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><span class="shirt-icon">👕</span> AIバーチャル試着</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="modal-sub">powered by Modellix.ai / GPT Image 2 Edit</span>
+        <button class="close" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+
+    <!-- Form state -->
+    <div id="formState" class="modal-body form-state">
+      <!-- Product side -->
+      <div>
+        <div class="panel-label">商品</div>
+        <div class="panel-img"><img id="productImgInModal" alt=""></div>
+        <div style="margin-top: 14px;">
+          <div style="font-size: 14px;" id="productLabelModal"></div>
+          <div style="font-weight: 700; margin-top: 8px;"><span id="productPriceModal"></span> <span style="font-size:12px;color:#555;font-weight:400;">税込</span></div>
+        </div>
+        <div style="margin-top: 16px;">
+          <label style="font-size:12px;color:#555;display:block;margin-bottom:4px;">商品画像URL（変更可能）:</label>
+          <input type="text" class="url-input" id="clothUrl">
+        </div>
+      </div>
+
+      <!-- Person side -->
+      <div>
+        <div class="panel-label">あなた</div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="upload">写真をアップロード</div>
+          <div class="tab" data-tab="models">モデルから選ぶ</div>
+          <div class="tab" data-tab="url">URL貼り付け</div>
+        </div>
+
+        <div class="tab-content active" id="tab-upload">
+          <label class="upload-area" for="uploadInput">
+            <div class="upload-icon">⬆</div>
+            <div style="font-weight: 700;">写真をアップロード</div>
+            <div class="upload-hint">.jpg / .png / 最大 10MB / 推奨: 全身フロント写真</div>
+            <input type="file" id="uploadInput" accept="image/*">
+          </label>
+          <div id="uploadPreview" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="tab-content" id="tab-models">
+          <div class="models-grid" id="modelsGrid"></div>
+          <div class="upload-hint" style="margin-top:8px;">※ サンプルモデル画像。本番では自社モデル画像を埋め込み可能。</div>
+        </div>
+
+        <div class="tab-content" id="tab-url">
+          <input type="text" class="url-input" id="humanUrl" placeholder="https://example.com/your-photo.jpg">
+          <div class="upload-hint" style="margin-top:6px;">公開アクセス可能な全身写真のURLを貼り付けてください。</div>
+        </div>
+
+        <button class="generate-btn" id="genBtn" onclick="generate()">試着する → AI生成</button>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="debug-log" id="debugLog"></div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <div class="loading-text">生成中…</div>
+      <div class="loading-sub" id="loadingSub">GPT Image 2 Edit が高解像度の着用画像を生成しています（約30秒〜数分）</div>
+    </div>
+
+    <!-- Result state -->
+    <div class="result-state" id="resultState">
+      <div class="modal-body">
+        <div>
+          <div class="panel-label">商品</div>
+          <div class="panel-img"><img id="productImgResult" alt=""></div>
+          <div style="margin-top: 12px;">
+            <div style="font-size: 13px;" id="productLabelResult"></div>
+            <div style="font-weight: 700; margin-top: 6px;"><span id="productPriceResult"></span> <span style="font-size:12px;color:#555;font-weight:400;">税込</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel-label" style="color:var(--accent);font-weight:700;">試着結果 / あなたが着るとこんなイメージ</div>
+          <div class="result-img-wrap">
+            <div class="ai-badge">AI&nbsp;&nbsp;GENERATED</div>
+            <img id="resultImg" alt="AI generated try-on">
+          </div>
+          <div class="result-cta">
+            <button class="cta-primary">このままカートに入れる</button>
+            <button class="cta-secondary" onclick="resetModal()">もう一度試す</button>
+          </div>
+        </div>
+      </div>
+      <div class="point-note"><b>ポイント /</b> 生成から購入決定までを1モーダル内で完結。「商品ページに戻る」遷移が発生しない設計でCVR最大化。</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ============================================================
+   *  Modellix GPT Image 2 Edit virtual try-on demo
+   *  POST   https://api.modellix.ai/api/v1/openai/gpt-image-2-edit
+   *  POST   https://api.modellix.ai/api/v1/media/files (local image upload)
+   *  GET    https://api.modellix.ai/api/v1/tasks/{task_id}
+   * ============================================================ */
+
+  // --- Products (demo: 3 garments) ---
+  // For each product:
+  //   - clothUrl is used both for display AND as a GPT Image reference image.
+  //   - If clothUrl is a relative path (starts with /) or points at localhost,
+  //     the page will fetch it via the local proxy and upload it to Modellix's
+  //     temporary media store (because Modellix's server can't reach your laptop).
+  //   - Recommended: drop image files into outputs/products/ with the filenames
+  //     below, or paste a public URL into the modal's "商品画像URL" field.
+  const PRODUCTS = [
+    {
+      id: 'off-white',
+      brand: 'OFF-WHITE',
+      name: 'バックアロースキニーバーシティブルゾン 19SS',
+      code: 'OMEA145S19272024',
+      gender: 'メンズ',
+      size: 'XL',
+      color: 'ブラック',
+      price: 36960,
+      clothUrl: '/products/off-white.jpg',
+    },
+    {
+      id: 'supreme',
+      brand: 'Supreme',
+      name: 'ロゴナイロンプルオーバーブルゾン',
+      code: 'Warthog Warm Up Pullover',
+      gender: 'メンズ',
+      size: 'XL',
+      color: 'ブラック×オレンジ',
+      price: 18480,
+      clothUrl: '/products/supreme.jpg',
+    },
+    {
+      id: 'chrome-hearts',
+      brand: 'Chrome Hearts',
+      name: 'ナイキドレイク総柄ナイロンダウンジャケット',
+      code: 'NOCTA PUFFER DRAKE',
+      gender: 'メンズ',
+      size: 'L',
+      color: 'ブラウン×ブラック×シルバー',
+      price: 3172400,
+      clothUrl: '/products/chrome-hearts.jpg',
+    },
+  ];
+
+  // Preset full-body model photos (publicly accessible)
+  const PRESET_MODELS = [
+    { name: 'Male — casual',  url: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80' },
+    { name: 'Female — casual',url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80' },
+    { name: 'Male — street',  url: 'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=600&q=80' },
+    { name: 'Female — street',url: 'https://images.unsplash.com/photo-1488161628813-04466f872be2?w=600&q=80' },
+  ];
+
+  const formatPrice = (n) => '¥' + n.toLocaleString('ja-JP');
+
+  // Auto-route: when this page is opened from a local proxy (e.g. proxy.py at
+  // http://localhost:8787/), use a relative path so the proxy can forward the
+  // request and add CORS headers. Otherwise (file:// or hosted) call Modellix
+  // directly — which will trigger a CORS error in the browser, since Modellix
+  // does not allow browser-direct calls.
+  const IS_LOCAL_PROXY = (location.protocol === 'http:' || location.protocol === 'https:')
+    && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  const API_BASE = IS_LOCAL_PROXY
+    ? '/api/v1'
+    : 'https://api.modellix.ai/api/v1';
+
+  // --- API key ---
+  const apikeyInput = document.getElementById('apikey');
+  const keyStatus = document.getElementById('keystatus');
+  apikeyInput.value = localStorage.getItem('modellix_key') || '';
+  if (apikeyInput.value) keyStatus.textContent = '✅ 保存済み';
+  function saveKey() {
+    localStorage.setItem('modellix_key', apikeyInput.value.trim());
+    keyStatus.textContent = '✅ 保存済み';
+  }
+  window.saveKey = saveKey;
+
+  // --- Product state + switcher ---
+  let currentProduct = PRODUCTS[0];
+
+  function applyProduct(p) {
+    currentProduct = p;
+    // breadcrumb
+    document.getElementById('crumbBrand').textContent = p.brand;
+    document.getElementById('crumbName').textContent = p.name;
+    // main product info
+    document.getElementById('productBrand').textContent = p.brand;
+    document.getElementById('productName').textContent = p.name;
+    document.getElementById('productCode').textContent = p.code;
+    document.getElementById('productGender').textContent = ': ' + p.gender;
+    document.getElementById('productSize').textContent = ': ' + p.size;
+    document.getElementById('productColor').textContent = ': ' + p.color;
+    document.getElementById('productPrice').textContent = formatPrice(p.price);
+    // images
+    document.getElementById('productImg').src = p.clothUrl;
+    document.getElementById('productImg').alt = p.brand + ' ' + p.name;
+    document.getElementById('productImgInModal').src = p.clothUrl;
+    document.getElementById('productImgResult').src = p.clothUrl;
+    // modal labels
+    const label = p.brand + '  ' + p.name;
+    document.getElementById('productLabelModal').textContent = label;
+    document.getElementById('productLabelResult').textContent = label;
+    document.getElementById('productPriceModal').textContent = formatPrice(p.price);
+    document.getElementById('productPriceResult').textContent = formatPrice(p.price);
+    // cloth URL field
+    document.getElementById('clothUrl').value = p.clothUrl;
+    // switcher active state
+    document.querySelectorAll('#productSwitcher .ps-tile').forEach((el) => {
+      el.classList.toggle('active', el.dataset.id === p.id);
+    });
+  }
+
+  function renderProductSwitcher() {
+    const root = document.getElementById('productSwitcher');
+    PRODUCTS.forEach((p) => {
+      const tile = document.createElement('div');
+      tile.className = 'ps-tile';
+      tile.dataset.id = p.id;
+      tile.innerHTML = `
+        <div class="ps-thumb">
+          <img src="${p.clothUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+          <div class="ph" style="display:none;">画像未設定<br>products/${p.id}.jpg</div>
+        </div>
+        <div class="ps-meta">
+          <div class="ps-b">${p.brand}</div>
+          <div class="ps-n">${p.name}</div>
+          <div class="ps-p">${formatPrice(p.price)}</div>
+        </div>`;
+      tile.onclick = () => applyProduct(p);
+      root.appendChild(tile);
+    });
+  }
+
+  renderProductSwitcher();
+  applyProduct(PRODUCTS[0]);
+
+  // Editing the cloth URL field updates the current product's cloth URL (and the displayed images)
+  document.getElementById('clothUrl').addEventListener('input', (e) => {
+    currentProduct.clothUrl = e.target.value;
+    document.getElementById('productImg').src = currentProduct.clothUrl;
+    document.getElementById('productImgInModal').src = currentProduct.clothUrl;
+    document.getElementById('productImgResult').src = currentProduct.clothUrl;
+    // update the matching switcher thumb too
+    const tileImg = document.querySelector(`#productSwitcher .ps-tile[data-id="${currentProduct.id}"] .ps-thumb img`);
+    if (tileImg) {
+      tileImg.style.display = '';
+      tileImg.src = currentProduct.clothUrl;
+    }
+  });
+
+  // --- Helpers: GPT Image 2 only accepts direct HTTPS image URLs. Local files
+  // are therefore uploaded to Modellix's temporary media store first. ---
+  async function urlToBlob(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Cannot fetch local image ${url}: HTTP ${resp.status}`);
+    return await resp.blob();
+  }
+  function isLocalUrl(u) {
+    return u.startsWith('/') || /^https?:\/\/(localhost|127\.0\.0\.1)/.test(u);
+  }
+  function isHttpsUrl(u) {
+    return /^https:\/\//i.test(u);
+  }
+
+  async function uploadMedia(blob, filename, key) {
+    const form = new FormData();
+    form.append('file', blob, filename);
+    log(`POST ${API_BASE}/media/files (${filename})`);
+    const resp = await fetch(`${API_BASE}/media/files`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key },
+      body: form,
+    });
+    const text = await resp.text();
+    if (!resp.ok) throw new Error(`Media upload HTTP ${resp.status}: ${text.slice(0, 400)}`);
+    let data;
+    try { data = JSON.parse(text); } catch (_) { throw new Error('Media upload returned invalid JSON'); }
+    if (data.code !== 0 || !data.data || !data.data.url) {
+      throw new Error(`Media upload failed: ${data.message || text.slice(0, 400)}`);
+    }
+    log(`  → uploaded: ${data.data.url}`);
+    return data.data.url;
+  }
+
+  const grid = document.getElementById('modelsGrid');
+  PRESET_MODELS.forEach((m) => {
+    const div = document.createElement('div');
+    div.className = 'model-thumb';
+    div.dataset.url = m.url;
+    div.innerHTML = `<img src="${m.url}" alt="${m.name}"><div class="label">${m.name}</div>`;
+    div.onclick = () => {
+      grid.querySelectorAll('.model-thumb').forEach(t => t.classList.remove('selected'));
+      div.classList.add('selected');
+      selectedHumanInput = { type: 'url', value: m.url };
+    };
+    grid.appendChild(div);
+  });
+
+  // --- Tabs ---
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // --- Modal controls ---
+  let selectedHumanInput = null; // { type:'url'|'file', value:url|File }
+
+  function openModal() { document.getElementById('modal').classList.add('show'); }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('show');
+    resetModal();
+  }
+  function resetModal() {
+    document.getElementById('formState').classList.remove('hidden');
+    document.getElementById('loadingState').classList.remove('show');
+    document.getElementById('resultState').classList.remove('show');
+    document.getElementById('errorMsg').classList.remove('show');
+    document.getElementById('debugLog').classList.remove('show');
+    document.getElementById('uploadPreview').innerHTML = '';
+    document.querySelectorAll('.model-thumb').forEach(t => t.classList.remove('selected'));
+    selectedHumanInput = null;
+  }
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.resetModal = resetModal;
+
+  // --- Select a local image; it is uploaded to Modellix when generation starts. ---
+  document.getElementById('uploadInput').addEventListener('change', (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      showError('ファイルサイズが 10MB を超えています');
+      return;
+    }
+    selectedHumanInput = { type: 'file', value: file };
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      document.getElementById('uploadPreview').innerHTML =
+        `<img src="${dataUrl}" style="max-width:100%;max-height:180px;border:1px solid #eee;">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // --- Logging ---
+  const debugEl = document.getElementById('debugLog');
+  function log(msg) {
+    console.log('[Modellix demo]', msg);
+    debugEl.classList.add('show');
+    debugEl.textContent += msg + '\n';
+    debugEl.scrollTop = debugEl.scrollHeight;
+  }
+
+  // --- Errors ---
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.classList.add('show');
+    const isFetchFail = /failed to fetch|networkerror|load failed/i.test(String(msg));
+    const isFileProto = location.protocol === 'file:';
+    let hint = '';
+    if (isFetchFail) {
+      hint = `
+※ "Failed to fetch" = API Key の問題ではありません。ブラウザの CORS により、リクエストが
+   サーバーに届く前にブロックされています（${isFileProto ? 'file:// で開いた場合は必ず発生します' : '直接 api.modellix.ai を呼ぶと発生します'}）。
+
+   解決方法（30秒）:
+   1) ターミナルを開く
+   2) cd "$(dirname '${location.pathname || 'modellix_tryon_demo.html'}')"
+   3) python3 proxy.py
+   4) ブラウザで http://localhost:8787/modellix_tryon_demo.html を開く
+   現在の API_BASE: ${API_BASE}  (proxy 経由なら /api/v1, 直接なら https://...)`;
+    }
+    el.innerHTML = `<b>エラー:</b> ${escapeHtml(msg)}<pre>${escapeHtml(hint)}</pre>`;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // --- Generate (submit + poll) ---
+  async function generate() {
+    const key = (localStorage.getItem('modellix_key') || apikeyInput.value).trim();
+    if (!key) { showError('API Key を入力してください（画面上部）'); return; }
+
+    const activeTab = document.querySelector('.tab.active').dataset.tab;
+    let humanSource = null;
+    if (activeTab === 'upload') {
+      if (!selectedHumanInput || selectedHumanInput.type !== 'file') {
+        showError('全身写真をアップロードしてください'); return;
+      }
+      humanSource = selectedHumanInput;
+    } else if (activeTab === 'models') {
+      if (!selectedHumanInput || selectedHumanInput.type !== 'url') {
+        showError('モデルを選択してください'); return;
+      }
+      humanSource = selectedHumanInput;
+    } else {
+      const url = document.getElementById('humanUrl').value.trim();
+      if (!url) { showError('URLを入力してください'); return; }
+      if (!isHttpsUrl(url)) { showError('人物画像には直接アクセス可能な HTTPS URL を指定してください'); return; }
+      humanSource = { type: 'url', value: url };
+    }
+
+    const rawClothUrl = document.getElementById('clothUrl').value.trim() || currentProduct.clothUrl;
+    if (!rawClothUrl) { showError('商品画像URLが空です'); return; }
+
+    // Loading
+    document.getElementById('formState').classList.add('hidden');
+    document.getElementById('loadingState').classList.add('show');
+    document.getElementById('errorMsg').classList.remove('show');
+    debugEl.textContent = '';
+    debugEl.classList.add('show');
+
+    try {
+      let humanImage;
+      if (humanSource.type === 'file') {
+        humanImage = await uploadMedia(humanSource.value, humanSource.value.name || 'person.jpg', key);
+      } else {
+        humanImage = humanSource.value;
+      }
+
+      let clothImage = rawClothUrl;
+      if (isLocalUrl(rawClothUrl)) {
+        log(`garment image is local (${rawClothUrl}) — uploading to Modellix...`);
+        const blob = await urlToBlob(rawClothUrl);
+        const ext = (blob.type && blob.type.split('/')[1]) || 'jpg';
+        clothImage = await uploadMedia(blob, `garment.${ext}`, key);
+      } else if (!isHttpsUrl(rawClothUrl)) {
+        throw new Error('商品画像には直接アクセス可能な HTTPS URL を指定してください');
+      }
+
+      const prompt = `Create a photorealistic virtual try-on result. Image 1 is the person and Image 2 is the garment reference. Dress the person from Image 1 in exactly the garment shown in Image 2. Preserve the person's identity, face, hairstyle, body proportions, pose, hands, legs, background, camera angle and lighting. Preserve the garment's design, colors, logos, patterns, materials and distinctive details accurately. Make the fit, folds, shadows and occlusion physically natural. Remove the person's original upper-body garment only where it must be replaced. Do not add accessories, text, watermarks, extra people, extra limbs or unrelated changes. Return a polished full-body e-commerce fashion photograph.`;
+
+      log(`POST ${API_BASE}/openai/gpt-image-2-edit`);
+      const submitResp = await fetch(`${API_BASE}/openai/gpt-image-2-edit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + key,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          images: [humanImage, clothImage],
+          prompt,
+          size: '2048x3072',
+          quality: 'high',
+        }),
+      });
+
+      if (!submitResp.ok && submitResp.status !== 200) {
+        const txt = await submitResp.text();
+        throw new Error(`HTTP ${submitResp.status}: ${txt.slice(0, 400)}`);
+      }
+      const submitData = await submitResp.json();
+      log('submit response: ' + JSON.stringify(submitData).slice(0, 400));
+      if (submitData.code !== 0) {
+        throw new Error(`API error code=${submitData.code} message=${submitData.message || ''}`);
+      }
+      const taskId = submitData.data.task_id;
+      log(`task_id = ${taskId}`);
+      document.getElementById('loadingSub').textContent =
+        `Task ${taskId} — 結果をポーリング中…`;
+
+      // Poll task
+      const maxAttempts = 100;
+      let attempt = 0;
+      let imageUrl = null;
+      while (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, 3000));
+        attempt++;
+        const r = await fetch(`${API_BASE}/tasks/${taskId}`, {
+          headers: { 'Authorization': 'Bearer ' + key }
+        });
+        const rd = await r.json();
+        if (rd.code !== 0) throw new Error('Query failed: ' + (rd.message || ''));
+        const status = rd.data.status;
+        log(`poll #${attempt}: status=${status}`);
+        document.getElementById('loadingSub').textContent =
+          `Task ${taskId} — status: ${status} (${attempt * 3}s elapsed)`;
+        if (['success', 'succeeded', 'completed'].includes(status)) {
+          const resources = (rd.data.result && rd.data.result.resources) || [];
+          imageUrl = resources[0] && resources[0].url;
+          if (!imageUrl) throw new Error('No image in result resources');
+          break;
+        }
+        if (['failed', 'error', 'cancelled'].includes(status)) {
+          throw new Error('Task failed. Full response: ' + JSON.stringify(rd.data).slice(0, 400));
+        }
+      }
+      if (!imageUrl) throw new Error('タスクがタイムアウトしました（5分超）');
+
+      log('✅ generated: ' + imageUrl);
+      document.getElementById('resultImg').src = imageUrl;
+      document.getElementById('loadingState').classList.remove('show');
+      document.getElementById('resultState').classList.add('show');
+    } catch (e) {
+      log('❌ ' + (e.message || e));
+      document.getElementById('loadingState').classList.remove('show');
+      document.getElementById('formState').classList.remove('hidden');
+      showError(e.message || String(e));
+    }
+  }
+  window.generate = generate;
+</script>
+
+</body>
+</html>

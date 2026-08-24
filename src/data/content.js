@@ -39,6 +39,7 @@ const DEMOS=[
   {cat:'engage', icon:'sms', ja:{t:'SMS 配信',d:'到達性の高いSMSをグローバルに配信するデモ。'},en:{t:'SMS Delivery',d:'Send high-deliverability SMS to customers worldwide.'},tags:['EngageLab','SMS']},
   {cat:'engage', icon:'phone', ja:{t:'WhatsApp Business 対話',d:'WhatsApp 公式 API を活用した、お客様との双方向コミュニケーションのデモ。'},en:{t:'WhatsApp Business Conversations',d:'Two-way customer conversations on the official WhatsApp Business API.'},tags:['EngageLab','WhatsApp']},
   {cat:'engage', icon:'lock', ja:{t:'Silent Auth 番号認証',d:'SMSレスでシームレスに本人確認を行う、番号認証(Silent Auth)のデモ。'},en:{t:'Silent Auth Verification',d:'Seamless SMS-less phone-number verification (Silent Auth).'},tags:['EngageLab','Silent Auth']},
+  {cat:'model', icon:'tag', url:'/d/tryon-aurora/index.html', ja:{t:'AIバーチャル試着（EC商品ページ）',d:'アパレルECの商品ページに試着ボタンを1つ追加。商品画像とお客様の写真の2枚だけで、AIが着用イメージを生成し、そのままカートへ進める導線までを見せるデモ。'},en:{t:'AI Virtual Try-On (E-commerce PDP)',d:'One try-on button on a product page: from the product photo plus the shopper\'s own photo, AI generates how it looks worn — and the shopper goes straight to cart without leaving the modal.'},tags:['Modellix','EC','試着']},
   {cat:'model', icon:'spark', url:'/d/property-video/index.html', ja:{t:'物件写真 → 内見動画 自動生成',d:'物件写真をアップロードするだけで、AIが各部屋を動画化し1本の内見動画として連続再生。撮影・編集なしで内見動画をつくるライブデモ。'},en:{t:'Property Photos → Walkthrough Video',d:'Upload property photos and AI turns each room into video, played back as a single walkthrough. No filming, no editing.'},tags:['Modellix','不動産','Live']},
   {cat:'model', icon:'cpu', ja:{t:'Modellix AI モデルコンソール',d:'主要なマルチモーダルAIモデルを、ひとつのコンソールから呼び出せる MaaS のデモ。'},en:{t:'Modellix AI Model Console',d:'Access leading multimodal AI models from a single MaaS console.'},tags:['Modellix','MaaS','AI']}
 ];
@@ -54,6 +55,7 @@ const I18N={
     hero_title:'顧客体験の<br><span class="grad-text">すべて</span>を、ひとつに。',
     hero_lead:'GPTBots・EngageLab・Modellix の製品を、実際に動かして体験。AIエージェントから全チャネル配信まで、ひとつのショーケースに。',
     hero_cta1:'デモを見る',hero_cta2:'お問い合わせ →',
+    hero_new_tag:'NEW',hero_new:'AIバーチャル試着を、その場で試す',
     mock_title:'Aurora Console',mock_n1:'概要',mock_n2:'AIエージェント',mock_n3:'キャンペーン',mock_n4:'分析',mock_n5:'設定',
     mock_s1:'アクティブ会話',mock_s2:'AI 返信率',mock_s3:'本日配信',mock_ch:'月間アクティブ推移',
     trust_line:'NASDAQ 上場。GPTBots・EngageLab・Modellix で世界中の顧客体験を支えています。',
@@ -68,6 +70,7 @@ const I18N={
     hero_title:'Everything for<br><span class="grad-text">customer experience</span>.',
     hero_lead:'Experience GPTBots, EngageLab and Modellix — from AI agents to omnichannel delivery, all in one showcase.',
     hero_cta1:'View demos',hero_cta2:'Contact us →',
+    hero_new_tag:'NEW',hero_new:'Try the AI virtual try-on, right now',
     mock_title:'Aurora Console',mock_n1:'Overview',mock_n2:'AI Agents',mock_n3:'Campaigns',mock_n4:'Analytics',mock_n5:'Settings',
     mock_s1:'Active chats',mock_s2:'AI reply rate',mock_s3:'Sent today',mock_ch:'Monthly active trend',
     trust_line:'NASDAQ-listed. Powering customer experience worldwide with GPTBots, EngageLab and Modellix.',

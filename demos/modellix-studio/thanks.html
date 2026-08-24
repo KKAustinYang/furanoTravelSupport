@@ -20,6 +20,8 @@
   --font:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium",system-ui,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box}*{margin:0}
+/* display を持つ要素にも hidden を効かせる（.ph は display:grid、img は display:block） */
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--font);font-size:16px;line-height:1.85;letter-spacing:.02em;
   color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;
@@ -106,7 +108,12 @@ h1{font-size:clamp(22px,6.4vw,30px)}
   <span class="tag" id="worldTag" hidden></span>
 
   <div class="acts">
-    <a class="btn btn-p" id="dlCard" href="#" download="modellix-character-card.png">
+    <a class="btn btn-p" id="dlCard" href="#" download="modellix-scene.png">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+      <span id="dlCardTxt">キャラクターカードを保存</span>
+    </a>
+
+    <a class="btn btn-g" id="dlCard2" href="#" download="modellix-character-card.png" hidden>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
       キャラクターカードを保存
     </a>
@@ -132,7 +139,8 @@ h1{font-size:clamp(22px,6.4vw,30px)}
 (function(){
   "use strict";
   var q = new URLSearchParams(location.search);
-  var card = q.get("c");
+  var card = q.get("c");   // 主役の 1 枚（入景カットがあればそれ、なければキャラクターカード）
+  var card2 = q.get("k");  // 入景まで進んだ回だけ入る、工程 ② のキャラクターカード
   var video = q.get("v");
   var world = q.get("w");
 
@@ -142,7 +150,7 @@ h1{font-size:clamp(22px,6.4vw,30px)}
     try{ var x=new URL(u, location.href); return (x.protocol==="https:"||x.protocol==="http:") ? x.href : null; }
     catch(e){ return null; }
   }
-  card = safe(card); video = safe(video);
+  card = safe(card); card2 = safe(card2); video = safe(video);
 
   if(card){
     var img=document.getElementById("card");
@@ -151,6 +159,13 @@ h1{font-size:clamp(22px,6.4vw,30px)}
     document.getElementById("dlCard").href=card;
   } else {
     document.getElementById("dlCard").setAttribute("aria-disabled","true");
+  }
+
+  // 入景カットとキャラクターカードの両方があるときは、2 本のボタンに分ける
+  if(card && card2){
+    document.getElementById("dlCardTxt").textContent = "入景カットを保存";
+    var d2 = document.getElementById("dlCard2");
+    d2.href = card2; d2.hidden = false;
   }
 
   if(video){

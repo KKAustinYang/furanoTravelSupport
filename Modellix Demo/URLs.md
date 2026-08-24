@@ -47,3 +47,5 @@
 ![③-7 宇宙飛行士.png](https://jp.srcgptbots.com/ailab/images/iho2zp962gsxwvi.png)
 
 ![③-8 氷の魔導士.png](https://jp.srcgptbots.com/ailab/images/nug9jamxlt61rbx.png)
+
+![neko.png](https://jp.srcgptbots.com/ailab/images/v0bt0m/neko.png)

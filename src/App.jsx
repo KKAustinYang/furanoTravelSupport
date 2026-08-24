@@ -120,6 +120,11 @@ export default function App() {
               <a className="btn btn-primary btn-md" href="#showcase">{t('hero_cta1')}</a>
               <a className="btn btn-ghost btn-md" href="#contact">{t('hero_cta2')}</a>
             </div>
+            <a className="hero-new" href="/d/tryon-aurora/index.html">
+              <span className="tag">{t('hero_new_tag')}</span>
+              <span>{t('hero_new')}</span>
+              <span className="chev">→</span>
+            </a>
 
             {/* product frame: analytics console */}
             <div className="frame reveal">
