@@ -54,7 +54,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ══════════════ 3. 背景レイヤー ══════════════ */
 
 /* ① 世界の壁：斜めに流れるポスターウォール（トップ画面） */
-:root{--pw:clamp(212px,18.8vw,372px); --pg:clamp(12px,1.15vw,21px)}
+:root{--pw:clamp(168px,13.4vw,264px); --pg:clamp(10px,.95vw,18px)}
 
 .wall{position:fixed;inset:-28%;z-index:0;display:flex;justify-content:center;gap:var(--pg);
   transform:rotate(-8deg);pointer-events:none;
@@ -371,6 +371,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 @keyframes fl{from{opacity:.92}to{opacity:0}}
 
 /* ペット */
+/* ペット画面は 8 スタイルの一覧も載るので、主役タイルは小さめに。
+   大きいままだと見出しと決定ボタンが上下に見切れる。 */
+#s-pet{gap:clamp(8px,1.4vh,18px)}
+#s-pet .pets{grid-template-columns:repeat(auto-fit,minmax(132px,164px))}
+#s-pet .cardrow{max-width:1180px}
 .pets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,240px));
   gap:12px;width:100%;max-width:1000px;justify-content:center}
 .pet{position:relative;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;
@@ -384,6 +389,13 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .pet span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
 .pet:hover{transform:translateY(-5px);border-color:var(--line-2)}
 .pet[aria-pressed=true]{border-color:var(--a1);box-shadow:0 0 0 1px var(--a1),0 10px 40px color-mix(in srgb,var(--a1) 22%,transparent)}
+/* 別の子をアップロードするタイル */
+.pet-add .pa{border:1px dashed var(--line-2);background:rgba(255,255,255,.03);
+  display:grid;place-items:center;gap:6px;color:var(--muted)}
+.pet-add:hover .pa{border-color:var(--a1);color:var(--a1)}
+.pet-add .pa svg{width:26px;height:26px}
+.pet-add .pa em{font-style:normal;font-size:10.5px;letter-spacing:.04em}
+.pet-add .pa img{width:100%;height:100%;object-fit:cover;border-radius:12px}
 
 /* ══════════════ 10. 生成中（タイムライン） ══════════════ */
 .tl{display:flex;align-items:center;gap:clamp(24px,4vw,68px);width:100%;max-width:1400px;justify-content:center}
@@ -453,6 +465,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   overflow:hidden;background:#04050a;border:1px solid var(--line-2);flex:none;
   box-shadow:0 40px 110px rgba(0,0,0,.75),0 0 90px color-mix(in srgb,var(--a1) 20%,transparent)}
 .player img{width:100%;height:100%;object-fit:cover;animation:kb 12s ease-in-out infinite alternate}
+.player video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.tthumb video{width:46px;aspect-ratio:9/16;object-fit:cover;border-radius:7px;background:#000}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.09)}}
 .player .pg{position:absolute;inset:0;opacity:.14;mix-blend-mode:overlay;pointer-events:none;
   background-image:radial-gradient(rgba(255,255,255,.55) .5px,transparent .6px);background-size:3px 3px;
@@ -688,8 +702,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
             <path d="M11 16h2l-1 1.4z" fill="var(--a1)" stroke="none"/>
           </svg></span>
           <span class="txt">
-            <h3>うちの子を主役に</h3>
-            <p>看板ねこの「スイカ」で体験できます。撮影は不要です。</p>
+            <h3>ペットを主役に</h3>
+            <p>看板ねこの スイカ🍉 で、そのまま体験できます。お手持ちの写真を使うこともできます。</p>
           </span>
         </button>
       </div>
@@ -723,9 +737,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     <section class="screen" id="s-pet" aria-label="ペットを選ぶ">
       <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
-      <h2 class="h2">この子が主役になります</h2>
-      <p class="lead" style="font-size:13px">タップして選ぶと、人物と同じ工程でキャラクターカードと入景カットを生成します。</p>
+      <h2 class="h2">主役になる子を選んでください</h2>
+      <p class="lead" style="font-size:13px">看板ねこの スイカ🍉 か、お手持ちの写真から。人物と同じ工程でキャラクターカードと入景カットを生成します。</p>
       <div class="pets" id="petGrid"></div>
+      <input type="file" id="petFile" accept="image/*" hidden>
+      <p class="rowcap" style="margin-top:2px">スイカ🍉 は、この <b>8 スタイル</b>になります</p>
+      <div class="cardrow" id="catRow" aria-hidden="true"></div>
       <div class="acts"><button class="btn btn-p" id="btnPetNext" disabled>この子で進む</button></div>
     </section>
 
@@ -777,8 +794,13 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           </li>
           <li class="tn" data-k="3" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>動画をレンダリング</b><span>静止画 2 枚から 7 秒の縦型映像へ</span>
-              <span class="soon">準備中</span></div>
+            <div class="tx"><b>動画をレンダリング</b>
+              <span>キャラクターカードと入景カットを、始まりと終わりのコマにして 7 秒の縦型映像へ</span>
+              <span class="soon" id="vidSoon" hidden>準備中</span>
+              <button class="tthumb" id="vidThumb" type="button" hidden>
+                <video id="vidThumbV" muted playsinline preload="metadata"></video>
+                <i><b>動画ができました</b>タップすると大きく再生します</i>
+              </button></div>
             <em class="tt"></em>
           </li>
         </ol>
@@ -798,6 +820,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <div class="res">
         <div class="player">
           <img id="resImg" alt="生成されたキャラクターカード">
+          <video id="resVid" playsinline loop muted hidden></video>
           <div class="pv"></div><div class="pg"></div>
           <div class="live"><span class="dot"></span>SEEDREAM 5.0 PRO</div>
           <div class="cap" id="resCap"></div>
@@ -816,7 +839,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
           <div class="vslot">
             <span class="vi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="14" height="13" rx="2.4"/><path d="m17 12 4.5-3v9L17 15z"/></svg></span>
-            <p><b>動画の生成は準備中です</b>このデモでは、キャラクターカードと入景カットまでを生成しています。</p>
+            <p id="vslotTxt"><b>動画の生成は準備中です</b>このデモでは、キャラクターカードと入景カットまでを生成しています。</p>
           </div>
 
           <div class="qr-row">
@@ -3249,6 +3272,29 @@ var VIDS = [
   VID_B+"%E2%91%A2-8%20%E6%B0%B7%E3%81%AE%E9%AD%94%E5%B0%8E%E5%A3%AB.mp4"              // 氷の魔導士
 ];
 
+
+/* ───── スイカ🍉 の素材（URLs.md の猫版）─────
+   並びは WORLDS[i]（①〜⑧）と一致させてある。
+   ② 角色卡  … ペット選択画面で「この8スタイルになります」を見せる見本
+   ③ 入景    … トップのポスターウォールに混ぜる完成カット
+   動画      … 世界プレビューで流すサンプル映像                       */
+/* 表示に使うのはローカルの縮小版。原本は 1 枚 5MB 超の PNG が 16 枚（計 85MB）で、
+   ウォールも一覧も最後まで埋まらなかった。表示サイズは 360px 前後なので画質は落ちない。 */
+var CAT_CRD = ["img/cc1.jpg","img/cc2.jpg","img/cc3.jpg","img/cc4.jpg","img/cc5.jpg","img/cc6.jpg","img/cc7.jpg","img/cc8.jpg"]; // ②
+var CAT_SCN = ["img/cs1.jpg","img/cs2.jpg","img/cs3.jpg","img/cs4.jpg","img/cs5.jpg","img/cs6.jpg","img/cs7.jpg","img/cs8.jpg"]; // ③
+var CAT_VID = [   // ④ 動画
+  VID_B+'%E2%91%A0%20%E6%A9%9F%E7%94%B2mp4neko.mp4',
+  VID_B+'%E2%91%A1%20%E5%8B%87%E8%80%85mp4neko.mp4',
+  VID_B+'%E2%91%A2%E4%BE%8D%E3%82%B9%E3%82%A4%E3%82%ABmp4neko.mp4',
+  VID_B+'%E2%91%A3%20%E9%BB%8F%E5%9C%9Fmp4neko.mp4',
+  VID_B+'%E2%91%A4%20%E6%81%90%E7%AB%9Cmp4neko.mp4',
+  VID_B+'%E2%91%A5%20%E6%B7%B1%E6%B5%B7mp4neko.mp4',
+  VID_B+'%E2%91%A6%20%E5%AE%87%E5%AE%99mp4neko.mp4',
+  VID_B+'%E2%91%A7%20%E6%B0%B7mp4neko.mp4'
+];
+/* いま主役がスイカかどうか。素材とプロンプトの切り替えはすべてこれで判定する。 */
+function isCat(){ return state.subject === "pet"; }
+
 var WORLDS = [
  {id:"mech", ttl:"見つかった", nm:"機甲パイロット", sub:"雨のネオン街 × 半機械化", tag:"実写CG",
   a:"#2ee6c8", b:"#ff4fd8", cap:"第 1 話「見つかった」", i:0},
@@ -3271,7 +3317,9 @@ var WORLDS = [
 /* ペットの主役は看板ねこ「スイカ」1 匹。写真をそのまま参考画像として API に渡すので、
    ここだけは data URL ではなく公開 URL を持たせる。 */
 var PETS=[
- {id:"suika", n:"スイカ", s:"我が家の猫 🍉", img:"https://jp.srcgptbots.com/ailab/images/v0bt0m/neko.png"}
+ {id:"suika", n:"スイカ🍉", s:"8つの世界の主役になれます",
+  img:"img/suika.jpg",        // 生成の参照に渡す 1024px 版
+  thumb:"img/t/suika.jpg"}    // 一覧タイル用の 300px 版
 ];
 
 var NOTES=[
@@ -3288,7 +3336,8 @@ var bg=$("#worldbg"), bgImgs=[];
 
 /* ───── 背景の世界レイヤー ───── */
 WORLDS.forEach(function(w){
-  var im=new Image(); im.src=WLD[w.i]; im.alt=""; bg.appendChild(im); bgImgs.push(im);
+  // src は入れない。世界画面に入ったとき refreshWorldArt() が主役に合わせて入れる。
+  var im=new Image(); im.alt=""; bg.appendChild(im); bgImgs.push(im);
 });
 function setWorldBg(idx){
   bgImgs.forEach(function(im,k){ im.classList.toggle("on", k===idx); });
@@ -3299,12 +3348,20 @@ function setAccent(a,b){ root.style.setProperty("--a1",a); root.style.setPropert
 (function(){
   var wrap=$("#wall"); if(!wrap) return;
   // ① 世界 + ② キャラクターカード + ③ 完成カット＝24 種。同じ絵の再登場を減らす
+  /* ウォールは 220 枚の要素で全種類を引っ張るので、ここだけ 168px の縮小版を使う。
+     表示幅は 264px までなので見た目は変わらず、初回の通信量が 5.0MB → 0.8MB になる。 */
+  var thumb = function(u){ return u.replace(/^img\//, "img/t/"); };
   var POOL=[];
-  WORLDS.forEach(function(w,k){ POOL.push({src:SCN[w.i], w:k}); });
-  WORLDS.forEach(function(w,k){ POOL.push({src:CRD[w.i], w:k}); });
-  WORLDS.forEach(function(w,k){ POOL.push({src:WLD[w.i], w:k}); });
-  var COLS=7;
-  var DUR=[86,104,72,96,80,112,76];   // 列ごとの周回秒数
+  WORLDS.forEach(function(w,k){ POOL.push({src:thumb(SCN[w.i]), w:k}); });
+  WORLDS.forEach(function(w,k){ POOL.push({src:thumb(CRD[w.i]), w:k}); });
+  WORLDS.forEach(function(w,k){ POOL.push({src:thumb(WLD[w.i]), w:k}); });
+  // 猫の角色卡と入景カットも混ぜる。人と猫が交互に流れて、両方できることが目で分かる。
+  WORLDS.forEach(function(w,k){ POOL.push({src:thumb(CAT_CRD[w.i]), w:k}); });
+  WORLDS.forEach(function(w,k){ POOL.push({src:thumb(CAT_SCN[w.i]), w:k}); });
+  // ウォールは -28% はみ出させたうえ 8 度傾けてあるので、画面内に 7 列入れるには
+  // 実際にはもっと多く並べる必要がある。1 枚を小さくして列を足した。
+  var COLS=11;
+  var DUR=[86,104,72,96,80,112,76,92,68,108,84];   // 列ごとの周回秒数
   for(var c=0;c<COLS;c++){
     var col=document.createElement("div");
     col.className="pcol";
@@ -3313,7 +3370,7 @@ function setAccent(a,b){ root.style.setProperty("--a1",a); root.style.setPropert
     col.style.animationDelay=(-(c*6.5))+"s";
     // 列ごとに並び順をずらす（同じ絵が横に揃わないように）
     var order=[];
-    for(var n=0;n<8;n++) order.push((n*5+c*7)%POOL.length);
+    for(var n=0;n<10;n++) order.push((n*7+c*13)%POOL.length);
     for(var pass=0;pass<2;pass++){          // 2 周ぶん並べて -50% でシームレスに
       order.forEach(function(pi,oi){
         var e=POOL[pi], w=WORLDS[e.w];
@@ -3343,14 +3400,52 @@ var cRow=[], cTimer=null, cIdx=0;
     var d=document.createElement("div");
     d.className="crd"; d.style.setProperty("--cc",w.a);
     d.style.animationDelay=(k*60)+"ms";
-    var im=new Image(); im.decoding="async"; im.src=CRD[w.i]; im.alt=""; d.appendChild(im);
+    var im=new Image(); im.decoding="async"; im.dataset.src=CRD[w.i]; im.alt=""; d.appendChild(im);
     var sc=document.createElement("span"); sc.className="cs"; d.appendChild(sc);
     var g=document.createElement("span"); g.className="cg"; d.appendChild(g);
     var n=document.createElement("span"); n.className="cn"; n.textContent=w.nm; d.appendChild(n);
     box.appendChild(d); cRow.push(d);
   });
 })();
+/* ───── スイカ🍉 の 8 スタイル（ペット選択画面）───── */
+var catRow=[], catTimer=null, catIdx=0;
+(function(){
+  var box=$("#catRow"); if(!box) return;
+  WORLDS.forEach(function(w,k){
+    var d=document.createElement("div");
+    d.className="crd"; d.style.setProperty("--cc",w.a);
+    d.style.animationDelay=(k*60)+"ms";
+    var im=new Image(); im.decoding="async"; im.dataset.src=CAT_CRD[w.i]; im.alt=""; d.appendChild(im);
+    var sc=document.createElement("span"); sc.className="cs"; d.appendChild(sc);
+    var g=document.createElement("span"); g.className="cg"; d.appendChild(g);
+    var n=document.createElement("span"); n.className="cn"; n.textContent=w.nm; d.appendChild(n);
+    box.appendChild(d); catRow.push(d);
+  });
+})();
+function catRowLoop(on){
+  clearInterval(catTimer);
+  catRow.forEach(function(d){ d.classList.remove("hot"); });
+  if(!on) return;
+  function light(){
+    catRow.forEach(function(d,j){ d.classList.toggle("hot", j===catIdx); });
+    setAccent(WORLDS[catIdx].a, WORLDS[catIdx].b);
+  }
+  light();
+  catTimer=setInterval(function(){
+    if(current!=="pet") return;
+    catIdx=(catIdx+1)%catRow.length; light();
+  },1600);
+}
+
 /* 1 枚ずつ順に光らせて、8 種類あることを目で分からせる */
+/* 隠れている画面の絵まで最初に読むと、トップの表示が遅くなる。
+   その画面に入った時点で初めて src を入れる。 */
+function fillRow(sel){
+  document.querySelectorAll(sel+" img[data-src]").forEach(function(im){
+    im.src=im.dataset.src; im.removeAttribute("data-src");
+  });
+}
+
 function cardRowLoop(on){
   clearInterval(cTimer);
   cRow.forEach(function(d){ d.classList.remove("hot"); });
@@ -3392,7 +3487,7 @@ function attractLoop(){
     b.className="world"; b.type="button"; b.setAttribute("aria-pressed","false");
     b.dataset.k=k; b.style.setProperty("--wa",w.a);
     b.innerHTML =
-      '<img src="'+WLD[w.i]+'" alt="'+w.nm+'">'+
+      '<img class="wimg" alt="'+w.nm+'">'+
       '<span class="scrim"></span><span class="glow"></span>'+
       '<span class="ttl">'+w.ttl+'</span>'+
       '<span class="ring"></span>'+
@@ -3410,6 +3505,20 @@ function attractLoop(){
   });
 })();
 
+/* 世界カードとぼかし背景の絵を主役に合わせる。
+   猫を選んだのに人物の完成カットが並ぶと、何が出来上がるのか伝わらない。 */
+function refreshWorldArt(){
+  var pics = isCat() ? CAT_SCN : WLD;
+  document.querySelectorAll("#worldGrid .world .wimg").forEach(function(im,k){
+    var src = pics[WORLDS[k].i];
+    if(im.getAttribute("src")!==src) im.src=src;
+  });
+  bgImgs.forEach(function(im,k){
+    var src = pics[WORLDS[k].i];
+    if(im.getAttribute("src")!==src) im.src=src;
+  });
+}
+
 function selectWorld(k){
   state.world=k;
   document.querySelectorAll(".world").forEach(function(x,j){ x.setAttribute("aria-pressed", j===k?"true":"false"); });
@@ -3425,17 +3534,19 @@ function selectWorld(k){
 var pvOpen=false;
 function openPreview(k){
   var w=WORLDS[k], lay=$("#pvLay"), v=$("#pvVideo"), soon=$("#pvSoon");
-  $("#pvBg").src=WLD[w.i];
-  $("#pvPoster").src=WLD[w.i];
+  // 主役がスイカなら、見本も猫版に差し替える（人の映像を見せてから猫が出てくると齟齬になる）
+  var cat=isCat(), still=cat?CAT_SCN[w.i]:WLD[w.i];
+  $("#pvBg").src=still;
+  $("#pvPoster").src=still;
   $("#pvTag").textContent=w.cap;
   $("#pvName").textContent=w.nm;
   $("#pvSub").textContent=w.sub+" ／ "+w.tag;
 
-  var src=VIDS[w.i];
+  var src=cat?CAT_VID[w.i]:VIDS[w.i];
   if(src){
     soon.hidden=true;
     v.hidden=false; v.currentTime=0;
-    v.poster=WLD[w.i];
+    v.poster=still;
     if(v.src!==src) v.src=src;
     // カードのタップという操作を挟んでいるので、音ありで再生できる。
     // それでもブラウザに止められたら、ミュートで鳴らし直して画だけは見せる。
@@ -3482,7 +3593,7 @@ function setSound(on){
   PETS.forEach(function(p){
     var b=document.createElement("button");
     b.className="pet"; b.type="button"; b.setAttribute("aria-pressed","false");
-    b.innerHTML='<span class="pa"><img src="'+p.img+'" alt="'+p.n+'"></span>'+
+    b.innerHTML='<span class="pa"><img src="'+(p.thumb||p.img)+'" alt="'+p.n+'"></span>'+
                 '<b>'+p.n+'</b><span>'+p.s+'</span>';
     b.addEventListener("click",function(){
       g.querySelectorAll(".pet").forEach(function(x){x.setAttribute("aria-pressed","false")});
@@ -3492,12 +3603,44 @@ function setSound(on){
     });
     g.appendChild(b);
   });
+
+  /* 別の子の写真を持ち込む口。スイカ🍉 以外でも同じ工程を流せる。 */
+  var add=document.createElement("button");
+  add.className="pet pet-add"; add.type="button"; add.setAttribute("aria-pressed","false");
+  add.innerHTML='<span class="pa">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
+    '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+    '<em>タップして選ぶ</em></span>'+
+    '<b>別の子の写真</b><span>JPG / PNG・10MB まで</span>';
+  add.addEventListener("click",function(){ $("#petFile").click(); });
+  g.appendChild(add);
+
+  /* 選ばれた写真は、その場で縮小して data URL にする。端末の外へは出さない。 */
+  $("#petFile").addEventListener("change",function(ev){
+    var f=ev.target.files && ev.target.files[0];
+    if(!f) return;
+    if(f.size > 10*1024*1024){ alert("ファイルサイズが 10MB を超えています。"); return; }
+    var r=new FileReader();
+    r.onload=function(){
+      toJpeg(r.result, 1280).then(function(data){
+        g.querySelectorAll(".pet").forEach(function(x){x.setAttribute("aria-pressed","false")});
+        add.setAttribute("aria-pressed","true");
+        add.querySelector(".pa").innerHTML='<img src="'+data+'" alt="">';
+        add.querySelector("b").textContent="この写真で進む";
+        state.shot=null; state.petImg=data; state.label="うちの子";
+        $("#btnPetNext").disabled=false; resetIdle();
+      }).catch(function(e){ alert("画像を読み込めませんでした。"); });
+    };
+    r.onerror=function(){ alert("ファイルを読み込めませんでした。"); };
+    r.readAsDataURL(f);
+  });
 })();
 
 /* ───── 状態と画面遷移 ───── */
 function blankState(){
   return {subject:null,shot:null,petImg:null,label:"",world:null,
-          cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false};
+          cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false,
+          videoUrl:null,videoIsSample:false};
 }
 var state=blankState();
 var STEP={subject:1,capture:2,pet:2,world:3,gen:4,result:4};
@@ -3518,8 +3661,11 @@ function show(name,push){
   // 生成中も戻れるようにした（各画面の左上と、フッターの両方から）
   $("#btnBack").hidden = (name==="attract");
   if(name==="attract"){ attractLoop(); } else { clearInterval(attractTimer); }
+  if(name==="subject") fillRow("#cardRow");
+  if(name==="pet") fillRow("#catRow");
   cardRowLoop(name==="subject");
-  if(name==="world" && state.world!=null){ setWorldBg(state.world); }
+  catRowLoop(name==="pet");
+  if(name==="world"){ refreshWorldArt(); if(state.world!=null) setWorldBg(state.world); }
   if(name==="history"){ renderHistory(); }
   // 世界選択の戻り先は、人物なら撮影・ペットなら選び直しと、実際の来た道に合わせる
   if(name==="world"){
@@ -3558,8 +3704,8 @@ function sampleShot(){
   return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(s)));
 }
 function petShot(){
-  // 公開 URL なので、変換せずそのまま参考画像として渡せる
-  return (PETS[0] && PETS[0].img) || sampleShot();
+  // スイカ🍉 は公開 URL、アップロードは data URL。どちらもそのまま参考画像にできる。
+  return state.petImg || (PETS[0] && PETS[0].img) || sampleShot();
 }
 
 $("#btnSample").addEventListener("click",function(){
@@ -3603,6 +3749,11 @@ function capture(){
 var API   = "/api/v1";
 var MODEL = "bytedance/seedream-5.0-pro-edit";                       // ② 角色卡
 var MODEL_SCENE = "bytedance/seedream-5.0-pro-multi-reference";      // ③ 入景
+var MODEL_VIDEO = "bytedance/seedance-2.0-i2v";                      // ④ 動画
+var VIDEO_TIMEOUT = 10 * 60 * 1000;   // 動画は静止画より長い。10 分で打ち切る。
+/* seedance 2.0 は実在の人物の顔を含む画像を受け付けない（API 側の制約）。
+   なので動画まで走らせるのはスイカ🍉 のときだけ。人物は ③ で止める。 */
+function canVideo(){ return isCat(); }
 var CARD_SIZE = "1440x2560";          // 9:16。1K〜2K の範囲内
 var CARD_TIMEOUT = 4 * 60 * 1000;     // 実測 80〜120 秒。余裕を持って 4 分で打ち切る
 
@@ -3754,6 +3905,1795 @@ STYLE: polished stylized 3D render in the manner of a modern CG family feature, 
 Do NOT: a pasted-on or floating subject; a missing contact shadow; dirt, sweat, wounds or grim realism; a photorealistic live-action look; film grain or lens flare; a different or restyled face; him looking at the camera; text or watermark.`
 ];
 
+
+/* ───── ② 角色卡：スイカ🍉 版のプロンプト（8 世界）─────
+   人物版とは別物。猫の解剖（前足は短い・肉球は掴めない・ヒゲと耳毛が身元）を
+   毎回書かないと、モデルは人間の腕や手を生やしてくる。 */
+var CAT_PROMPTS = [
+`Transform the cat in the reference image into a cybernetic mech-armoured feline
+operative in a rain-soaked neon alley. Big-budget action film still.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+
+TRANSFORMATION: a matte-black cybernetic half-mask on the RIGHT side of the head,
+from the crown below the ear down over the temple and cheek, ending level with the
+muzzle. A large circular lens bezel over the right eye ringed by a bright cyan
+band - the amber eye fully visible inside it. A cyan light-line runs forward across
+the cheek plate. A small circular port with a dark red indicator at the rear of the
+mask. Both ears free of the mask and fully furnished. Muzzle, nose, whisker pads
+and the entire left side of the face completely exposed.
+Body: a matte-black segmented chest plate, one domed pauldron on the LEFT shoulder
+scuffed through to bare metal, cuffs on both forelegs. All armour matte, never
+glossy. NO shield - the shield is not deployed.
+
+WEATHERING (high): water running off the guard hairs in visible threads, the fur
+tips of one flank clumped into wet strands, mud spatter across the white chest
+ruff, a small old nick in the left ear rim, the cyan seams flickering dead along
+one short section.
+
+PERFORMANCE - caught in a searchlight, resolute, squinting hard against the glare:
+the light is blinding and that is the physical reason the eyes are narrow. The upper
+lids come DOWN and the lower lids push UP, closing the eyes to narrow slots - only a
+band of the copper-amber iris shows. Pupils contracted to narrow vertical ovals. The
+brow fur bunched and pushed forward and down over the eyes; the fur across the bridge
+of the nose slightly wrinkled. THE CHIN IS TUCKED DOWN toward the chest - he looks up
+from UNDER a lowered brow. This is defiance, not wonder. The LEFT ear locked hard
+forward, the RIGHT rotated back and out - split attention, tracking two things at
+once, both rotated slightly down at the base. Whisker pads pushed hard forward and
+bunched, whiskers stiff and fanned. Mouth closed hard, lips pressed into a flat line,
+the jaw muscle bulging below the ear. Neck COMPRESSED, shoulders raised toward the
+ears. Head turned three-quarters to camera, eyes locked off-frame UPPER RIGHT.
+
+POSE: framed from the tops of the forelegs up, shoulders level and square, both
+forelegs down at the sides, nothing reaching toward the lens. Natural adult cat
+proportions. Slightly left of centre with look room on the right.
+
+LIGHT AND LENS: hard white searchlight from high right raking the wet plating and
+every guard hair; magenta rim from behind left and cyan bounce from the front -
+the two colours clash across the face, the white searchlight dominates. Rain
+streaks and steam drift through the beams with motion blur. Deep smoky darkness
+behind, not flat black, a faint out-of-focus neon glow far back. Anamorphic, oval
+bokeh, subtle horizontal blue flare. High contrast, crushed blacks, Kodak Vision3
+500T grain and halation. 85mm anamorphic at T2, shallow depth of field, slightly
+underexposed.
+
+9:16 vertical, photorealistic film still, highly detailed.
+
+Do NOT: wide round open eyes; a lifted chin; a raised or smooth brow; an upward gaze of
+wonder or curiosity; a lengthened curious neck; a calm, serene, curious or sleepy
+expression; the neutral expression of a posed studio pet portrait; both ears in the
+same position; loose hanging whiskers; ears flattened back; a deployed shield or
+projected energy panel; plating over the
+left eye, the nose, the muzzle or the whisker pads; a clean or dry costume; a
+humanoid or bipedal body; human hands; kitten proportions or an oversized head; a
+shortened muzzle; missing or shortened whiskers; missing ear furnishings; tidied or
+symmetrical markings; a raised paw reaching toward the camera; any street, signage,
+drone, building or ground; a flat studio background; smoothed or plush fur; a
+video-game-render look; looking at camera; text or watermark.`,
+
+`Redraw the cat in the reference image as a heroic feline knight facing a diving
+dragon, as a frame of high-end Japanese theatrical animation.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+Translated to cel animation while keeping the exact pattern: the grey markings
+become flat hard-edged colour shapes in the same positions, still asymmetric; the
+fur is drawn as clustered pointed tufts with clean outlines, the chest ruff a bold
+silhouette of overlapping tufts, never individual hairs; the ear furnishings are
+long spiked tufts; the whiskers are at least six confident white line strokes per
+side extending past the width of the head; the eyes stay unmistakably COPPER-AMBER
+with a dark limbal ring, a vertical gradient from deep amber below to bright gold
+above, one large hard-edged highlight; the nose stays a small rose-pink triangle.
+
+TRANSFORMATION: fitted silver-and-blue plate barding with a raised central boss,
+one articulated pauldron on the LEFT shoulder, greave cuffs on both forelegs, and
+a deep crimson cloak clasped at the throat with a gold fitting, worn open so the
+white ruff stays visible. A short straight sword sheathed diagonally across the
+back, hilt above the left shoulder. No helmet, head bare, face fully visible.
+Drawn in cel: flat metal colour with hard-edged highlight shapes and one bright
+rim stroke along each lit edge; bold confident fold lines on the cloak.
+
+WEATHERING (medium): the breastplate dented and scorched black along one edge, the
+cloak hem torn and singed, ash flecks caught in the chest ruff, the fur tips along
+one flank drawn singed and darkened, one whisker stroke crimped by the heat.
+
+PERFORMANCE - fear and resolve at once: both ears driven forward but the tips
+tilted back a fraction against the blast - the conflict is visible. The eye nearer
+the fire narrowed to a slit against the heat, the far eye wide, pupils tight.
+Whisker pads pushed hard forward. Mouth slightly open, breathing shallow through
+it. Neck extended, shoulders bunched, the fur along the back edge blown backward.
+Head turned three-quarters to camera, eyes locked off-frame UPPER RIGHT at the
+dragon.
+
+POSE: framed from the tops of the forelegs up, shoulders level and square, natural
+adult cat proportions, nothing reaching toward the lens. Slightly right of centre.
+
+LIGHT AND STYLE: intense orange firelight key from the UPPER LEFT, cool violet-blue
+sky rim from behind right - the two clash, the fire dominates. The white coat takes
+orange below and violet above as two distinct flat tones, never a blend. Drawn
+embers and ash drift through the frame, bloom on the fire core. Clean anime line
+work, flat cel shading with crisp light/shadow separation, hand-painted background
+darkness. This is DRAWN, not shot - no film grain, no photographic lens flare, no
+bokeh discs.
+
+9:16 vertical, theatrical anime key visual, highly detailed.
+
+Do NOT: a cat-girl, catgirl, kemonomimi, or any humanoid or anthropomorphic
+character; a chibi, super-deformed, mascot or Q-version design; a human face or
+human hands; a calm, neutral or posed expression; both eyes the same shape; a clean
+undamaged costume; a helmet covering the face; photorealistic or 3D-rendered
+shading; soft airbrushed gradients on the character; individually rendered hair
+strands; film grain or lens flare; a shortened muzzle or rounded skull; eyes that
+are not copper-amber; missing whiskers or ear tufts; tidied or symmetrical
+markings; the back sword drawn; flat even lighting; looking at camera; text or
+watermark.`,
+
+`Transform the cat in the reference image into an Edo-period masterless samurai cat
+in a merchant street on an overcast day. Japanese period drama film still.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+
+COSTUME: a deep indigo haori sun-faded at the shoulders, worn OPEN so the full white
+chest ruff stays visible, with a woven obi around the barrel and a small sheathed
+tanto tucked along the left flank. Mud flecks along the hem, the cuffs frayed.
+Nothing on the head.
+
+WEATHERING (high): street dust filmed through the coat and greying the white ruff, a
+dry burr caught in the ruff, mud packed between the toes, a small old nick in the
+right ear rim, one whisker crimped short.
+
+PERFORMANCE - breath held before the strike: the eyes NARROWED to hard focused slits
+under a driven-down brow, the pupils contracted to vertical slits. Both ears locked
+hard FORWARD and slightly down at the base. Whisker pads pushed hard forward, the
+whiskers stiff and fanned. Mouth closed hard, the lips pressed flat, the jaw muscle
+bulging below the ear. The chin TUCKED toward the chest. Neck compressed, shoulders
+raised, every tendon standing out. Head turned three-quarters to camera, eyes locked
+off-frame to the LEFT at an opponent. Cold, still and precise - never wild, never
+curious, never the neutral expression of a posed studio pet portrait.
+
+POSE: framed from the tops of the forelegs up, shoulders level and square, natural
+adult cat proportions. Slightly right of centre with look room on the left.
+
+LIGHT AND LENS: flat soft overcast daylight from above, low saturation, plus a faint
+warm bounce from a charcoal brazier off to the left - the only warm note. Dust and
+smoke hanging in the air. Long lens compression, shallow depth of field, deep but
+open blacks, fine film grain, halation only on the brazier coals. 85mm at T2,
+slightly underexposed.
+
+9:16 vertical, photorealistic film still, highly detailed.
+
+Do NOT: the tanto drawn; a sword in the paws or mouth; a paw shaped like a hand or
+mitten; a calm, serene, curious or sleepy expression; the neutral expression of a
+posed studio pet portrait; loose hanging whiskers; ears flattened back; an open
+mouth; a clean pressed costume; a clean white ruff; the haori closed over the chest
+ruff; a humanoid or bipedal body; human hands; kitten proportions or an oversized
+head; a shortened muzzle; missing or shortened whiskers; missing ear furnishings;
+tidied or symmetrical markings; sunset or golden-hour light; cherry blossoms;
+anamorphic lens flare; a glossy blockbuster grade; smoothed or plush fur; looking at
+camera; text or watermark.`,
+
+`Transform the cat in the reference image into a stop-motion claymation puppet
+fleeing a clay dinosaur. Frame from a stop-motion comedy.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+Translated to clay, felt and wool while keeping the exact pattern and placement:
+every grey marking in the same position and still asymmetric; the fur is FELT FIBRE
+and combed wool, visibly fibrous and individually placed, never smooth clay; the
+face, paws and nose are clay with visible thumbprints and sculpting-tool marks; the
+whiskers are fine white wire, long and springy, at least six per side; the ear
+furnishings are wisps of teased wool; the eyes are warm copper-amber glass beads
+with a painted highlight; the nose is a rose-pink clay triangle.
+
+TRANSFORMATION: a small knitted mustard-yellow bobble hat between the ears and a
+short red felt scarf at the neck, tucked so the white ruff stays visible below it.
+The hat knocked askew and popped clear of the head, the scarf flying out sideways.
+
+WEATHERING (low): NO dirt, NO sweat, NO wounds. Only honest handmade texture -
+fingerprints, tool marks, a loose wool fibre or two. Bright, clean and toy-like.
+
+PERFORMANCE - comic alarm, not real fear: pupils blown completely round and huge,
+the amber iris a thin ring, the lids fully retracted so the whole circle of each eye
+shows. Ears snapped bolt upright and rotated wide apart. Whiskers flared out hard in
+every direction. Mouth open in a small round "o". Every fibre of fur standing
+straight out, the body puffed to twice its width, the tail bottled into a rigid
+brush. Broad, readable and funny - never actually afraid, never distressed. Body
+turned toward camera, head twisted to look BACK over the shoulder at something
+off-frame behind.
+
+POSE: framed from the tops of the forelegs up, natural clay-puppet cat proportions,
+nothing stretched or contorted. Slightly right of centre.
+
+LIGHT AND LENS: warm tungsten key from the upper left with a soft fill, photographed
+on a real tabletop set, tilt-shift miniature look, shallow tabletop depth of field,
+saturated toy-like colours, deep charcoal backdrop.
+
+9:16 vertical, photorealistic stop-motion still, highly detailed.
+
+Do NOT: looking at camera; a calm, composed or curious expression; flat unpuffed
+fur; ears flattened back; a genuinely frightened, cowering or suffering expression;
+dirt, mud, blood, wounds or grim realism; smooth glossy clay fur instead of felt
+fibre; a CG, 3D-render or photorealistic-cat look; a stretched or contorted body;
+the hat leaving frame; the scarf covering the chest ruff; a humanoid or bipedal
+body; any dinosaur, fern or jungle set; text or watermark.`,
+
+`Transform the cat in the reference image into a field-expedition cat that has just
+escaped death. Big-budget action film still.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+
+COSTUME: a worn tan canvas expedition harness across the chest and behind the
+forelegs with two small brass buckles, a scuffed leather satchel on the LEFT flank,
+and a small brass compass on the chest strap. The harness sits BELOW the chest ruff
+so the ruff stays visible above it. Nothing on the head.
+
+WEATHERING (maximum) - as important as the framing: thick dried dust caked
+unevenly through the coat, grey and matted, clumped hardest at the shoulders and
+along the spine; water and sweat from the run cutting clean wet streaks down
+through it; the white ruff no longer white - grey-brown and separated into damp
+clumped strands; torn leaf fragments and grass seed caught deep in the fur; mud
+packed solid between the toes of all four paws; a shallow fresh scratch across the
+bridge of the nose with dried blood at its edge; one whisker snapped short; the
+tail tip matted and dragging. Nothing about the coat or the harness is clean, even
+or lofted.
+
+PERFORMANCE - real, undisguised terror: this is the ONE image where the ears go
+BACK - both ear leathers pinned flat down and back against the skull, the classic
+signal of genuine fear. Pupils blown fully round and black, a crescent of white
+showing at the inner corner of each eye. Whiskers swept BACK along the cheeks by
+the airspeed. Mouth OPEN, panting hard - a cat only breathes open-mouthed at the
+limit of exhaustion or terror, and that is exactly what this is. Tongue back, jaw
+loose. Neck fully extended, the throat tendons standing out, the chest heaving.
+Shoulders level and square to the lens; only the HEAD is twisted to look off-frame
+to the LEFT at something behind.
+
+POSE: framed from the tops of the forelegs up, both shoulders inside the frame,
+natural adult cat proportions. Nothing reaching toward the lens. Slightly right of
+centre with look room on the left.
+
+LIGHT AND LENS: one hard orange backlight low and behind camera-left, catching only
+the edge of the jaw, one shoulder and the loose flying guard hairs - the rest falls
+into darkness; a soft cold teal fill from the front right just holding detail on the
+shadow side. Heavy haze, embers and dust drifting through the beams with motion
+blur. Deep smoky darkness behind with a faint distant fire glow, not flat black.
+Anamorphic, oval bokeh, subtle horizontal flare. Teal-and-orange grade, high
+contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at
+T2, shallow depth of field, slightly underexposed.
+
+9:16 vertical, photorealistic film still, highly detailed.
+
+Do NOT: a calm, neutral, curious or posed expression; the neutral expression of a
+posed studio pet portrait; ears forward or upright; a closed mouth; narrow or slit
+pupils; a clean coat, a white ruff or clean undamaged gear; lofted fluffy fur; a
+humanoid or bipedal body; human hands; kitten proportions or an oversized head; a
+shortened muzzle; tidied or symmetrical markings; a twisted torso; an arm or paw
+reaching toward the camera; smoothed or plush fur; an evenly glowing outline; a flat
+studio background; single-colour lighting; any jungle, fern or dinosaur; a
+video-game-render look; looking at camera; text or watermark.`,
+
+`Transform the cat in the reference image into a guardian of the deep, underwater.
+Big-budget fantasy film still.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+
+TRANSFORMATION: faintly luminous turquoise bioluminescent lines tracing the
+cheekbones, the brow, the shoulders and the forelegs like living markings, lighting
+up in sequence. The glow is IN the fur, coming from within, and never obscures the
+features, the eyes, the nose or the whisker pads. A slim dark blue-black harness of
+woven kelp-fibre and worn bronze fittings across the chest, sitting BELOW the ruff.
+A translucent fin-like mantle behind the shoulders drifting in the current. No
+helmet and no breathing apparatus - he belongs to this water.
+
+WEATHERING (medium): small barnacles crusted along one edge of the bronze fittings,
+the mantle edge torn ragged, fine pale sediment settled into the fur along the back
+and slowly lifting off it, the kelp harness frayed at one strap.
+
+THE FUR IS THE STAR: every hair of the semi-long coat fanned out and floating free
+in the water - the ruff haloed all the way around the face, the shoulder fur spread,
+individual guard hairs drifting. Slow weightless motion throughout.
+
+PERFORMANCE - awe, not fear: both ears rotated forward and carried HIGH, held rigid
+and completely still - listening hard. Pupils wide and round in the dark water, the
+copper-amber iris ring glowing and clearly readable. Whiskers spread wide and
+drifting, held stiff at the base. The lids pulled fully BACK - the eyes are wide
+because they are straining to see. Brow fur lifted. Neck fully extended, head thrown
+back, THROAT EXPOSED AND TAUT. Mouth very slightly open, breathing shallow. Head
+turned three-quarters to camera, eyes locked straight UPWARD off-frame.
+
+POSE: framed from the tops of the forelegs up, forelegs drifting loose and slightly
+away from the body - weightless in water, never standing, never bearing weight.
+Natural adult cat proportions. Slightly right of centre.
+
+LIGHT AND LENS: turquoise key from directly above through the water, a warm amber
+glow from a distant temple fire far behind on the right - the two clash, the
+turquoise dominates. His own bioluminescence throws cyan-green up into the white
+ruff and across the underside of the muzzle. The amber eyes are the only other warm
+note. Sediment and bubbles drift through the beams. Deep blue-black water behind,
+not flat black. Anamorphic, oval bokeh, visible underwater scattering and god rays.
+High contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm
+anamorphic at T2, shallow depth of field, slightly underexposed.
+
+9:16 vertical, photorealistic film still, highly detailed.
+
+Do NOT: a calm, blank, curious or sleepy expression; the neutral expression of a
+posed studio pet portrait; loose relaxed ears; a lowered or level chin; a slack
+throat; glow covering the eyes, the nose, the muzzle or the whisker pads;
+bioluminescence painted on the surface instead of glowing from within the fur; a
+diving helmet, mask or breathing gear; the fur lying flat instead of floating; a
+rigid standing or grounded pose; a swimming or paddling pose; a clean undamaged
+costume; a monochrome all-blue light scheme; a humanoid or bipedal body; a flat
+studio background; any leviathan, jellyfish, column or ruin; smoothed or plush fur;
+looking at camera; text or watermark.`,
+
+`Transform the cat in the reference image into an astronaut cat during a hull-breach
+alarm. Big-budget space-feature film still.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+
+SUIT: a fitted multi-layer off-white EVA suit sized to a cat's body, rigid
+hard-shell torso, padded limbs with ring joints, a chest control module with soft
+green readouts, blue patches and a red shoulder stripe. All four legs suited, paws
+in padded grey boots.
+THE HELMET: a LARGE clear spherical glass bubble, deliberately oversized - big
+enough that the full chest ruff sits lofted inside it and the whiskers fan to their
+complete natural width without touching the glass or bending. The glass is optically
+clear and non-reflective across the face: muzzle, nose, whisker pads, whiskers and
+both eyes all completely visible through it. A thin white sealing collar at the base.
+
+WEATHERING (medium): dust ground into the white suit fabric and grey along the
+forearms, scuffs across the hard-shell torso, a hairline crack across one corner of
+the helmet ring, the red shoulder stripe worn through in a patch.
+
+ZERO-G FUR: the semi-long coat lifts and haloes in every direction inside the helmet
+and above the suit collar, individual hairs standing out weightless. Nothing hangs
+down.
+
+PERFORMANCE - mid-emergency, not stargazing: the EYES ARE MOVING - scanning along
+the breach rather than fixed on one point, the pupils caught mid-contraction, one
+slightly wider than the other. The ears are working independently: the LEFT ear
+forward, the RIGHT ear rotated out to the side, tracking sound. Whiskers fanned hard
+forward. Mouth open, breathing fast and shallow. The fur at the bridge of the nose
+slightly wrinkled. Neck tendons taut under the collar. The condensation inside the
+glass pulsing visibly with each breath. Head tilted back, turned three-quarters to
+camera, eyes UPWARD off-frame but sweeping, never settled.
+
+POSE: floating in zero gravity at a ten-degree tilt, hind legs out of frame below.
+He hooks a handrail at the left edge by curling the WHOLE MITTEN GLOVE over the bar and
+pressing down - the rounded glove bends over the rail from above and takes his weight
+through the mitten. He does not grip with fingers, does not wrap toes around it, and
+does not use claws. That foreleg is short with the elbow visible and bent. The other
+foreleg drifts loose. Natural adult cat proportions inside the suit. Framed from the
+mid-body up, slightly right of centre.
+
+THE GLOVES - both forepaws are ENCLOSED in sealed pressure gauntlets, and both gloves
+are INTACT: each glove is a MITTEN shaped to a cat's paw - one rounded compartment for
+all the toes, no separate fingers, no thumb, no finger seams. Soft white multi-layer
+fabric with a rigid metal sealing ring at the wrist joining it to the suit sleeve.
+NO CLAWS ANYWHERE: the claws are inside the sealed gloves and are never visible, never
+extended, never puncturing or protruding through the fabric. There are no claw holes
+and no tears - an EVA glove is airtight, and a puncture would be fatal.
+NO BARE FUR below either wrist ring: no bare paw, no exposed toes, no fur outside a
+glove. Both gloves are complete, sealed and continuous with the sleeve.
+
+LIGHT AND LENS: hard cold blue-white key from a window high on the left; a red
+emergency strobe from low right at about a quarter of its strength, catching only the
+right edge of the helmet and shoulder. Debris and torn insulation drift weightless
+through the beams with motion blur. Smoky dark corridor behind, not flat black.
+Anamorphic, oval bokeh, subtle horizontal blue flare. Cold steel-blue grade, high
+contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at
+T2, shallow depth of field, slightly underexposed.
+
+9:16 vertical, photorealistic film still, highly detailed.
+
+Do NOT: a bare, ungloved or exposed paw; fur visible below the wrist ring; claws
+visible, extended, or protruding through a glove; a torn, split, holed or damaged
+glove; a five-fingered human-shaped glove; separate fingers or a thumb on a glove; a
+glove that does not seal to the sleeve; only one glove; a calm, serene, dreamy,
+awestruck, curious or smiling expression; the neutral expression of a posed studio pet
+portrait; a fixed unmoving stare; both ears in the same position; a closed mouth; loose
+hanging whiskers; an opaque, tinted, mirrored or closed visor; reflections across the
+face; a helmet too small for the ruff or the whiskers; whiskers bent, compressed or
+shortened inside the helmet; the fur lying flat instead of haloing; a grounded standing
+pose with all paws down; a humanoid or bipedal body; human hands; a slim unpadded suit;
+equal-strength blue and red lighting; a flat studio background; any module interior,
+viewport, handrail beyond the one gripped, or Earth; smoothed or plush fur; looking at
+camera; text or watermark.`,
+
+`Transform the cat in the reference image into a stylized 3D animated feline ice mage,
+in the style of a modern CG family feature.
+
+IDENTITY: keep the coat pattern and the exact position of every grey marking, the
+COPPER-AMBER iris colour, the rose-pink nose, the ear shape with its long white
+inner furnishings, the exceptionally long white whiskers at full length and
+density, the full lofted white chest ruff and the plumed grey tail exactly as in
+the reference - instantly recognizable as the same individual cat.
+The IRIS COLOUR is the identity anchor and must always read. The eye's OPENING and
+the pupil size are NOT fixed traits - they are set by the PERFORMANCE section of
+each image and change from image to image. Markings stay
+ASYMMETRIC; never tidy, balance or simplify them. Real semi-long fur with visible
+individual guard hairs; no smoothing, no plush softening. True adult cat anatomy -
+correct muzzle length and head-to-body ratio, four legs, digitigrade; not
+kitten-proportioned, not humanoid, no human hands, no bipedal body.
+Rebuilt as a fully groomed CG character while keeping the exact pattern and placement:
+every grey marking in the same position with the same soft blended boundary, still
+asymmetric; the coat is a full CG groom with directional strand clumps, visible
+flyaways and a soft undercoat beneath a longer guard layer, the ruff simulated and
+lofted; the ear furnishings are long groomed wisps standing clear of each ear with
+light passing through them; the whiskers are stiff modelled strands at full length,
+at least six per side, each catching a thin specular; the eyes stay unmistakably
+COPPER-AMBER with a refractive cornea, a bright caustic inside the iris and a crisp
+specular highlight; the nose is rose-pink with visible subsurface scattering.
+Stylised for appeal and readability - but the MUZZLE LENGTH, muzzle width and skull
+shape stay exactly as in the reference, never shortened, never rounded, never
+enlarged toward a baby-faced mascot.
+
+TRANSFORMATION: a hooded ice-blue cloak with soft white fur trim that blends into his
+own coat and frost-crystal shoulder ornaments, worn open so the white ruff stays
+visible. The hood pushed back off the head onto the shoulders - the head bare, both
+ears free and fully furnished. A glowing pale-blue crystal staff standing upright
+beside the shoulder, supporting its own weight. One forepaw rests FLAT against the
+shaft, pads pressed to it, toes closed together - he leans on it, he never wraps a
+paw around it and never grips it. That foreleg is short with the elbow visible, bent
+and tucked close to the chest. The cloth is simulated with real
+weight, hanging and folding over the shoulders; the crystal is refractive and throws
+caustics onto the fur beneath it.
+
+WEATHERING (low): NO dirt, NO wounds, NO grime. Only snowflakes caught in the fur
+trim, powder snow dusting one shoulder, and the cloak hem lifted by the wind.
+
+PERFORMANCE - pure wonder: both ears forward and carried high but RELAXED, not rigid
+- this is delight, not alert. Pupils fully dilated round and shining in the darkness,
+the copper-amber iris ring the single warmest colour in the frame. Whiskers spread
+wide and relaxed. Mouth open in a small round "o". Chin lifted high, neck extended
+softly. A puff of visible breath in the freezing air. Head turned three-quarters to
+camera, eyes locked straight UPWARD off-frame at something vast and luminous.
+
+POSE: framed from the tops of the forelegs up, one forepaw resting flat against the
+staff shaft beside the shoulder, natural stylised adult cat proportions. Slightly
+right of centre.
+
+LIGHT AND STYLE: green-violet aurora key from directly above, warm gold rune glow from
+behind - the two clash, the aurora dominates. Light passes visibly through the ear
+leather as subsurface scattering. The white groom takes teal on top and violet on the
+flanks and holds both; the ruff glows with light scattering through it. Snow crystals
+drift through the light. Polished stylised 3D render, soft global illumination, rich
+subsurface scattering in fur and ice, ambient occlusion in every fold, subtle bloom on
+the staff, deep blue-black background.
+
+9:16 vertical, theatrical CG animation hero render, highly detailed.
+
+Do NOT: a paw gripping, holding or wrapping around the staff; toes curled around the
+shaft; a paw shaped like a hand, mitten or fist; a long, straight or tube-like foreleg;
+a foreleg the length of a human arm; a missing or invisible elbow; looking at camera; a
+calm, neutral or posed expression; rigid tense ears; narrow or slit pupils; a closed
+mouth; a chibi, super-deformed or mascot design;
+enlarged cartoon-baby eyes; a shortened muzzle or a rounded skull; kitten
+proportions; a plush-toy or vinyl-figure finish; the fur rendered as a smooth solid
+surface instead of a groom; dirt, mud, wounds or grim realism; the hood covering the
+face or the ears; a photorealistic live-action look; film grain or lens flare; flat
+cel shading or visible line art; a humanoid or bipedal body; human hands; tidied or
+symmetrical markings; missing whiskers or ear tufts; any snowfield, spire, rune stone
+or aurora dragon; text or watermark.`
+];
+
+
+/* ───── ③ 入景：スイカ🍉 版のプロンプト（8 世界）─────
+   参照画像は [角色卡, 場景図] の順。①⑧ は後ろ足で立つので、
+   手足の本数を明示しないとモデルが前足をもう一対生やす。 */
+var CAT_SCENE_PROMPTS = [
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the cat from image 1 into the neon alley from image 2, reared up on the wet
+asphalt in the lower third, occupying roughly 50% of the frame height, slightly left
+of centre, hind paws fully visible, camera at his own chest height. He glances back
+and up over his shoulder into the searchlight - his head LOWERED and turned back, chin
+tucked toward the chest, looking up at the light from UNDER a lowered brow. The right
+foreleg is raised as a shield panel unfolds from its armoured cuff.
+
+EXACTLY FOUR LIMBS: two forelegs and two hind legs, no more. The raised forelegs are
+the ONLY forelegs in frame. The two limbs on the ground are unmistakably HIND legs -
+heavy muscled thighs, a visible haunch and rump mass behind and below the body, a
+sharp backward-pointing hock on each, thick at the thigh and thin at the ankle. The
+body is upright and vertical with the belly and rump visible, weight sitting back over
+the haunches. This is a cat reared on its back legs, never a cat standing on all fours
+with arms added above it.
+
+THE SHIELD IS NOT HELD - critical, a cat cannot grip:
+The shield is a rigid panel that UNFOLDS FROM THE ARMOURED CUFF ON THE RIGHT FORELEG.
+Its base is bolted into the cuff and it extends outward and upward from the outer side
+of the forearm, like a buckler strapped to a limb. There is no handle, no grip, no
+stem, and nothing in the paw.
+The right FOREPAW stays a completely natural cat paw at the end of the leg - toes
+closed and together, pads down, claws sheathed. It is not curled around anything, not
+wrapped around a handle, not shaped like a hand, and it does not grip.
+
+FORELEG ANATOMY - a cat's foreleg is SHORT:
+The raised right foreleg is short and thick relative to the body, exactly as a real
+cat's is. The upper arm stays close to the chest and is largely hidden by the ruff;
+the ELBOW is clearly visible, bent and pointing DOWN and BACK; below it the forearm is
+short and angled forward to the paw. The limb is never long, never straight, never
+tube-like, never the length or shape of a human arm. The left foreleg is drawn in
+tight against the chest, elbow tucked, paw closed.
+
+FORCE: the searchlight beam is interposed by the shield - the beam STRIKES the shield
+face square and scatters outward across it, brightest at the point of impact, light
+spilling around its edges, raindrops igniting white where the beam breaks against it.
+His head, chest and shoulder sit PARTLY IN THE SHIELD'S SHADE - a hard-edged band of
+shadow cast by the shield falls across his upper body, and a second falls on the wet
+ground behind him. He is not evenly lit. The weight sits back on the haunches; he is
+holding a load, not balancing.
+
+IDENTITY: keep his coat pattern and every grey marking in position, the copper-amber
+eyes, the pink nose, the ear furnishings, the full-length whiskers, the chest ruff,
+the plumed tail, the half-mask with its cyan lens ring and red rear port, the chest
+plate and left pauldron, and every mark of weathering exactly as in image 1 -
+instantly recognizable. Do not restyle, clean up or beautify the face or the costume.
+
+STATE - resolute under load, squinting into the glare: the upper lids DOWN and the
+lower lids pushed UP so the eyes close to narrow slots, only a band of copper-amber
+iris showing; the pupils contracted to narrow vertical ovals; the brow fur bunched and
+pushed down over the eyes; the fur across the nose bridge slightly wrinkled; the CHIN
+TUCKED toward the chest so he looks up from under the brow - defiance, not wonder; both
+ears driven forward and rotated slightly down at the base; whisker pads pushed hard
+forward, whiskers stiff; the mouth closed hard with the lips pressed flat and the jaw
+muscle bulging below the ear; the neck compressed and the shoulders raised toward the
+ears. Never wide round eyes, never a lifted chin, never the neutral expression of a
+posed pet portrait.
+
+SCALE: he is a domestic-cat-sized figure in a human-sized alley - the camera is on the
+ground at his eye level, which makes him monumental against an alley that towers and
+recedes above him. Signage, kerb height, puddles and drone size all read at correct
+scale against a real cat. Exactly three drones above, the nearest lowest and largest,
+its searchlight visibly emitting the beam that strikes the shield.
+
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering
+style of image 2 exactly. Light him with the same hard white searchlight from the
+upper right plus the magenta and cyan neon. Ground him with a contact shadow and his
+reflection in the wet asphalt; rain splashes at his hind paws.
+
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the alley walls
+fall soft, heavy rain and steam, high contrast with crushed but open blacks, fine
+grain and halation on the neon and the searchlight.
+
+Photorealistic cinematic CG, 9:16 vertical, frozen at the peak moment, highly detailed.
+
+Do NOT: wide round open eyes; a lifted chin; a raised or smooth brow; an upward gaze of
+wonder or curiosity; a soft, calm or serene face; loose hanging whiskers; a lengthened
+curious neck; a paw gripping, holding, clutching or wrapping around anything; a shield
+with a handle, grip, stem or pole; a paw shaped like a hand, mitten or fist; a long,
+straight, thin or tube-like foreleg; a foreleg the length of a human arm; a missing or
+invisible elbow; anything held in the paw; more than four limbs; an extra pair of
+forelegs; two front paws on the ground while two more are raised; hind legs shaped like
+forelegs; missing thighs or hocks; the shield detached from the foreleg cuff; the beam
+passing beside the shield; an evenly lit body with no shield shadow across it; the left
+foreleg hanging limp; a paw batting at the air; more or fewer than three drones; a
+searchlight beam with no drone attached; a pasted-on or floating subject; a missing
+contact shadow or reflection; a different or beautified face or costume; a clean dry
+costume; a calm or curious expression; a giant cat or a miniature alley; looking at
+camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Redraw the character from image 1 into the floating-island scene from image 2 as a
+frame of high-end Japanese theatrical animation. Captured MID-LEAP on a diagonal in
+the lower half, occupying roughly 55% of the frame height, all four paws off the
+ground, body stretched to full extension, crimson cloak and plumed tail streaming.
+
+DIRECTION OF THE LEAP: he leaps ALONG the platform and slightly TOWARD camera, with
+more solid stone visible ahead of him in the direction of travel. He is clearing the
+strike and has somewhere to land - never leaping out over open sky.
+
+FORCE: a dragon fills the upper third seen from below, HEAD lowest and nearest, jaws
+wide open with the fire pouring out of them, wings flared across the top of frame. The
+fire is one continuous unbroken column running from the open jaws down to the point of
+impact - never fire without a visible source. It slams into the platform exactly where
+he was standing. Drawn in cel: the fire is layered hard-edged shapes - white-hot core,
+orange mid-tone, deep red outer edge, crisp outlines between them, never a soft
+gradient. The stone cracks open into hard-edged radiating shards. He is edged by a
+single hard orange rim stroke along his back. The fire NEVER touches his body.
+
+IDENTITY: keep his drawn coat pattern and every grey colour shape in position, the
+copper-amber eyes with their limbal ring and hard highlight, the pink triangle nose,
+the spiked ear tufts, the six-plus white whisker strokes per side, the tufted ruff
+silhouette, the silver-and-blue breastplate, the LEFT pauldron, the crimson cloak with
+its gold clasp and burnt corner, the sheathed back sword, and every mark of damage
+exactly as in image 1 - instantly recognizable. Do not restyle, clean up or beautify.
+
+STATE: ears forward with the tips tilted back against the blast; the near eye narrowed
+to a slit against the heat, the far eye wide; whisker pads pushed hard forward; mouth
+slightly open. Never a calm or neutral face.
+
+INTEGRATION: match the cel-shading, line work, colour palette and painted background
+art of image 2 exactly. Light him with the intense orange firelight from the UPPER LEFT
+where the fire strikes the platform, with a cool violet-blue sky rim from behind right -
+two distinct flat tones, never a blend. Ground him with a drawn contact shadow on the
+stone; embers, ash and falling rubble scatter around him.
+
+STYLE: clean anime line work, flat cel shading with crisp light and shadow separation,
+subtle bloom on the fire core, high-end Japanese animation film quality. This is DRAWN,
+not shot - no film grain, no photographic lens flare, no bokeh discs.
+
+9:16 vertical, frozen at the peak moment, highly detailed.
+
+Do NOT: a cat-girl, catgirl or any humanoid character; a chibi or Q-version design;
+human hands; no dragon in frame; a fire column with no visible source; the dragon's head
+cropped or occluded; the fire touching or engulfing him; a paw touching the platform;
+leaping out over open sky with nowhere to land; the leap reading as a fall; the back
+sword drawn; a pasted-on or floating subject; a missing contact shadow; a different or
+beautified face; a clean undamaged costume; photorealistic or 3D-render style; film
+grain or lens flare; a photographic background; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the cat from image 1 into the merchant street from image 2, braced on the
+packed-earth road, camera LOW at his own eye level looking slightly up.
+
+COMPOSITION - a wide diagonal action frame, never a centred portrait:
+The clash happens in the UPPER LEFT THIRD of the frame, never at the centre. The two
+weapons cross there in a hard X - the ronin's blade driving down from the upper left,
+the cat's extended claws thrown up and across from lower right to meet it. The whole
+image runs on that diagonal.
+The RONIN is a large, dark, OUT-OF-FOCUS mass in the LEFT FOREGROUND, seen from behind
+and cropped by the left edge - the back of his shoulder, his sleeve and his gripping
+hands, never his face. He is close to camera and soft.
+The CAT is sharp, in the middle ground on the RIGHT, his whole body in frame including
+both hind legs.
+Camera pulled BACK and LOW, wide lens, taking in the street, the shopfronts and the
+full arc of the crowd.
+
+THE CAT IS POUNCING, not receiving:
+He has just driven off his hind legs and is AIRBORNE on a rising diagonal, body
+stretched and committed forward and UP toward the clash. The hind legs are still
+extended behind and below from the push-off, one hind paw only just leaving the ground.
+The right foreleg is thrown up and across with all claws fully unsheathed, meeting the
+blade. The left foreleg is tucked in tight. The tail streams straight out behind for
+counterbalance.
+This is a cat's POUNCE - the most committed movement a cat makes. He is NEVER seated,
+NEVER crouched still, NEVER simply holding a paw up to block.
+
+NO CLIPPING - the single most important instruction in this image. The blade and the
+paw are SOLID objects and cannot occupy the same space:
+- The contact is the five CLAW TIPS against the blade's EDGE, biting into it and
+  taking the load.
+- The paw is IN FRONT of the blade from the camera's point of view. Where the paw
+  covers the blade the blade is HIDDEN - it never shows through the toes, the fur or
+  the claws, and it never appears on both sides of any part of the paw.
+- The blade's travel has STOPPED at the contact. BELOW the contact point there is NO
+  BLADE - no tip, no continuation, nothing reaching past the paw or toward the ground.
+  The blade is one unbroken line running from the ronin's grip DOWN TO the claws and
+  NO FURTHER.
+- The blade is bent very slightly by the load; the claws are bent back slightly under it.
+
+FORCE AND DEBRIS:
+At the contact a violent white-hot burst of sparks fans outward across the upper left -
+dozens of bright orange particles trailing thin light streaks, with a COLUMN OF PALE
+SMOKE rising off the point of impact. This is the brightest thing in the frame. Sparks
+originate at that contact and nowhere else.
+At the push-off point a hard BURST OF DUST explodes off the packed earth where his hind
+paws drove - a low expanding cloud with grit, straw and dry stalks thrown up through it
+and blown across the lower frame. Dust and smoke hang in the air throughout.
+
+THE CROWD REACTS: bystanders on both sides recoiling with mouths open, arms up, bodies
+twisting away - a full arc of alarmed motion around the two fighters, heavily out of
+focus.
+
+The raised foreleg is SHORT with the elbow visible, bent and pointing down and back.
+
+KEEP FROM IMAGE 2, UNCHANGED: every bystander pressed back against the shopfronts on both
+sides with faces indistinct and heavily out of focus; the near-foreground onlookers cropped
+at the bottom corners; the overcast sky, the shopfronts, the banners and the whole street.
+The crowd stays at the EDGES and in the background only - nobody else stands in the middle
+of the road, and no bystander competes with the two fighters for attention. The centre
+vertical band of the frame belongs to the ronin, the blade and the cat, and to nothing else.
+
+IDENTITY: keep his coat pattern and every grey marking in position, the copper-amber
+eyes, the pink nose, the ear furnishings and the nick in the right ear, the full-length
+whiskers, the dust-filmed chest ruff with its burr, the mud between his toes, the indigo
+haori, the obi and the sheathed tanto exactly as in image 1 - instantly recognizable. Do
+not restyle, clean up or beautify the face or costume.
+
+STATE - a battle cry, teeth bared: this is the ONE image where the mouth is open wide and
+the teeth show. The lips drawn hard back, the mouth open in a silent yell, the upper
+canines and front teeth clearly visible. The eyes NARROWED to hard slits under a
+driven-down brow - focused and precise, never wild, never rabid. Pupils contracted to
+vertical slits. The ears rotated BACK AND DOWN AT THE BASE but still standing - combat
+aggression, not fear. The whiskers swept forward and flared hard. The ruff blown back by
+the speed of the pounce. Every neck and shoulder tendon standing out. Never a calm,
+curious or neutral face.
+
+SCALE: he is a domestic-cat-sized figure on a full-sized street; the low camera makes him
+monumental against a street that towers and recedes above him. He is NOT giant; the
+street is NOT miniature.
+
+INTEGRATION: match the flat cool overcast daylight, low saturation, colour temperature,
+atmosphere and grain of image 2 exactly, plus a faint warm bounce from the charcoal
+brazier on the left. Ground him with a soft diffuse contact shadow; dust and loose straw
+swirl around his paws.
+
+CINEMATOGRAPHY: long lens compression stacking the crowd into flattened layers behind
+him, shallow depth of field so he is sharp while the side crowds fall soft, dust and
+brazier smoke in the air, low saturation with the brazier the only warm note, blacks deep
+but open, fine grain and halation only on the brazier coals.
+
+Photorealistic Japanese period drama, 9:16 vertical, frozen at the moment of impact,
+highly detailed.
+
+Do NOT: the cat seated, crouched still, or simply holding a paw up to block; all four
+paws on the ground; a static, symmetrical or centred composition; the clash at the centre
+of frame; a vertical blade; the ronin directly overhead; the ronin sharp or in focus; a
+closed mouth; a calm or neutral face; no dust at the push-off point; no smoke at the
+contact; the blade passing through, across or behind the paw, the toes, the claws or the
+fur; any part of the blade visible BELOW the contact point; the blade tip continuing past
+the paw or reaching the ground; the blade visible on both sides of the paw; the blade
+overlapping the paw with no occlusion; sparks anywhere except the claw-to-edge contact;
+the ronin reduced to disembodied hands and forearms; the ronin's face visible; the ronin
+occupying less than a third of the frame; a left-to-right confrontation; the cat swatting
+loosely instead of bracing under the load; a sword in the cat's paws or mouth; the tanto
+drawn; two swords crossing; a paw shaped like a hand or mitten; a long, straight or
+tube-like foreleg; a missing or invisible elbow; the cat standing upright on hind legs
+like a human; a third figure in the middle of the road; a pasted-on or floating subject;
+a missing contact shadow; a different or beautified face or costume; a clean coat; sunset
+or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade;
+a giant cat; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the clay puppet from image 1 into the miniature jungle set from image 2, launched
+straight UP in the lower half, occupying roughly 55% of the frame height, one step closer
+to camera, all four paws off the ground and splayed, body puffed, tail bottled into a
+rigid brush, the bobble hat popped clear and hanging in the air above it, head twisted
+back at the clay T-rex.
+
+FORCE: a clay tyrannosaur's HEAD smashes through a wall of felt ferns and fills the upper
+frame directly behind and above - the head is the nearest, largest and lowest part of it,
+jaws open in a comedic rubbery grin, both eyes visible and unobscured by debris. The fern
+wall bursts apart AT the point where the head comes through; shredded felt leaves and
+crumbs of clay blast outward from that exact point. The dinosaur NEVER touches him - there
+is always clear air between them.
+
+IDENTITY: keep the puppet's clay-and-felt coat pattern and every grey marking in position,
+the amber glass-bead eyes, the pink clay nose, the wool ear tufts, the wire whiskers, the
+felt-fibre ruff, the bobble hat and the red scarf, and the visible fingerprints and tool
+marks exactly as in image 1 - instantly recognizable. Do not restyle or smooth the clay.
+
+STATE: pupils blown fully round with the lids retracted; ears bolt upright and rotated wide
+apart; whiskers flared in every direction; mouth open in a small round "o". Funny, never
+distressed.
+
+INTEGRATION: match the tungsten studio lighting from the upper left, the handmade clay and
+felt textures, the saturated toy-like colours and the tabletop depth of field of image 2
+exactly. Ground the puppet with a hard tabletop contact shadow directly below it; small
+clay dust puffs kick up where it launched.
+
+STYLE: stop-motion claymation photographed on a real set, visible fingerprints and tool
+marks, uneven handmade texture, tilt-shift miniature look, slight deliberate frame judder.
+
+9:16 vertical, frozen at the peak moment, highly detailed.
+
+Do NOT: a pasted-on or floating figure; a missing contact shadow; smooth glossy clay fur
+instead of felt fibre; a smoothed, CG or photorealistic-cat look; dirt, mud, blood or grim
+realism; anything genuinely frightening or dark in tone; the dinosaur touching or biting
+him; the dinosaur's head cropped or hidden behind debris; the hat leaving frame; a real
+jungle instead of a handmade set; a different or restyled face; looking at camera; text or
+watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the cat from image 1 into the prehistoric valley from image 2 at FULL FOUR-LEGGED
+GALLOP coming straight AT camera in the lower half, occupying roughly 60% of the frame
+height, body stretched to maximum extension, forelegs reaching far forward, hind legs
+driving back, spine flexed, all four paws off the ground. Head twisted to look back over
+the shoulder. The satchel and compass fly out sideways. Camera LOW at ground level,
+retreating ahead of him, unstable and handheld.
+
+FORCE: the tyrannosaur fills the upper third directly behind him, running in the classic
+horizontal posture - body held LEVEL, tail extended straight back and raised as a
+counterweight, and the HEAD CARRIED LOW AND FORWARD, thrust down toward him. The entire
+head is visible and unobstructed: full skull, open jaws, teeth, nostrils and one eye all
+readable. The head is the CLOSEST, LARGEST and LOWEST part of the creature - it leads,
+everything else trails behind and above. Seen from slightly below and in front, never from
+above or behind. Behind and below the head one foot craters the mud, throwing a wall of mud
+and water outward to the SIDES - the spray stays clear of the head. Dust rolls up BEHIND
+the creature, never in front of its head. It is closing and NEVER touches him.
+
+IDENTITY: keep his coat pattern and every grey marking in position, the copper-amber eyes,
+the pink nose, the ear furnishings, the whiskers, the expedition harness with its satchel
+and compass, and every mark of caked dust, matting, torn leaf fragments, packed mud and the
+scratch across the nose bridge exactly as in image 1 - instantly recognizable. Do not
+restyle, clean up or beautify.
+
+STATE: BOTH ears pinned flat back and down against the skull - genuine terror, the one clip
+where this is correct. Pupils blown fully round with a crescent of white at the inner
+corner. Whiskers swept back by the airspeed. Mouth OPEN and panting hard. Throat tendons
+standing out.
+
+SCALE: he is a domestic-cat-sized animal in a full-sized valley; the low camera makes him
+monumental. He is NOT giant; the valley is NOT miniature.
+
+INTEGRATION: match the lighting, colour temperature, haze, grain and rendering style of
+image 2 exactly. Light him with the same hot orange backlight low on the horizon behind,
+with a cool teal fill from the front right. Ground him with a contact shadow beneath his
+airborne body; dust surges around him and torn fronds fall past.
+
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the ferns fall
+slightly soft, heavy dust and haze, teal-and-orange grade, high contrast, crushed but open
+blacks, fine grain and halation on the backlight, motion blur on the background with the
+cat sharp.
+
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly
+detailed.
+
+Do NOT: the tyrannosaur's head cropped, occluded, out of frame or missing; a headless
+creature; only a foot, leg, tail or torso visible; the head carried level with or above the
+hips; the creature seen from above or behind; a rearing, stumbling or face-planting posture;
+the head hidden behind mud spray or foliage; the creature catching, biting or touching him;
+the creature overtaking him in frame; the cat running or standing on its hind legs; any paw
+touching the ground; the cat stopping or sitting; ears forward or upright; a closed mouth; a
+calm or curious expression; a clean coat or lofted fluffy fur; a pasted-on subject; a
+different or beautified face; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the cat from image 1 into the sunken temple corridor from image 2, suspended
+neutrally buoyant just above the seabed in the lower third, occupying roughly 45% of the
+frame height, forelegs drifting free and bearing no weight, camera below him looking up. He
+looks straight up at the leviathan passing overhead, every hair of the coat fanned out and
+floating, the mantle drifting in the current, the glowing lines on his coat lighting up in
+SEQUENCE from the paws upward, never all at once.
+
+FORCE - the creature is NEVER shown: an enormous SHADOW crosses the top of the frame and
+blots out the single pale shaft of light from far above. No body, no head, no eye, no
+outline of a face - only the shadow and the sense of its scale. What it is stays unknown.
+Its passing displaces the water: a slow pressure wave pushes his floating fur, the suspended
+sediment and a scatter of jellyfish outward and away from it - the direction of every
+drifting thing in frame points away from the shadow. Darkness falls across the shot and his
+own bioluminescence becomes the only light on him. A stone column topples slowly behind.
+
+IDENTITY: keep his coat pattern and every grey marking in position, the copper-amber eyes,
+the pink nose, the ear furnishings, the whiskers, the kelp harness with its barnacles and
+frayed strap, the torn mantle edge, and the bioluminescent line placement exactly as in
+image 1 - instantly recognizable. Do not restyle, clean up or beautify.
+
+STATE: both ears forward and carried HIGH, rigid and still; pupils wide and round with the
+lids pulled fully back; whiskers spread wide and drifting, stiff at the base; neck fully
+extended, head thrown back, THROAT EXPOSED AND TAUT; mouth very slightly open. Awe with
+tension - never a calm or blank face.
+
+SCALE: he is a domestic-cat-sized figure in a full-sized sunken temple; the low upward
+camera makes him monumental against columns that tower and recede above him.
+
+INTEGRATION: match the lighting, colour temperature, underwater scattering, grain and
+rendering style of image 2 exactly. Light him with the turquoise glow from directly above
+and the scattering jellyfish, with a warm amber accent from a distant temple fire behind on
+the right. NO contact shadow - he floats; instead wrap the ambient turquoise light around
+him and let sediment swirl beneath and past him at his own depth.
+
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, visible god rays and
+suspended particles, high contrast, crushed but open blacks, fine grain and halation on the
+brightest shaft.
+
+Photorealistic cinematic fantasy, 9:16 vertical, frozen at the peak moment, highly detailed.
+
+Do NOT: a contact shadow or a grounded standing pose; showing the creature's body, head,
+face or outline; the fur lying flat instead of floating; the lines igniting all at once;
+bioluminescence painted on the surface instead of glowing from within the fur; a diving
+helmet or breathing gear; a swimming or paddling pose; a monochrome all-blue look; warm
+colour anywhere except the eyes, the glow and the distant fire; a pasted-on subject; a
+different or beautified face; a calm or blank expression; looking at camera; text or
+watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Place the cat from image 1 into the space station corridor from image 2, floating at a
+ten-degree tilt in the lower half, occupying roughly 50% of the frame height, slightly right
+of centre, hind legs out of frame below. He hooks a handrail at the left edge by curling
+the WHOLE MITTEN GLOVE over the bar and pressing down - the rounded glove bends over the
+rail from above and takes his weight through the mitten. He does not grip with fingers,
+does not wrap toes around it, and does not use claws. That foreleg is short with the
+elbow visible and bent. The other foreleg drifts loose.
+
+THE GLOVES - both forepaws are ENCLOSED in sealed pressure gauntlets and both gloves are
+INTACT: each is a MITTEN shaped to a cat's paw - one rounded compartment for all the toes,
+no separate fingers, no thumb, no finger seams, with a rigid metal sealing ring at the
+wrist joining it to the sleeve. NO CLAWS ANYWHERE - the claws are inside the sealed gloves
+and are never visible, extended, or protruding through the fabric; there are no claw holes
+and no tears, because an EVA glove is airtight and a puncture would be fatal. NO BARE FUR
+below either wrist ring.
+
+He looks up at
+the breach, the coat haloing weightless inside the helmet, the whiskers fanned to full width
+without touching the glass.
+
+FORCE: the torn viewport and the ruptured solar array fill the upper frame - the breach is
+the nearest and largest element, its torn edges clearly readable, the array tearing apart
+visibly BEYOND it. A stress crack runs across the remaining glass. Every piece of debris in
+frame visibly originates from that breach. The interior lighting has cut to a slow pulsing
+red. Loose objects lift off every surface and drift upward toward the breach. Nothing rests
+still; nothing falls downward.
+
+IDENTITY: keep his coat pattern and every grey marking in position, the copper-amber eyes,
+the pink nose, the ear furnishings, the whiskers, the EVA suit with its blue patches, red
+shoulder stripe, chest module and every scuff and dust mark, and the oversized clear helmet
+exactly as in image 1 - instantly recognizable. Do not restyle, clean up or beautify. The
+visor glass stays perfectly transparent across the face.
+
+STATE: the eyes are MOVING - scanning along the breach, not fixed, the pupils caught
+mid-contraction and one slightly wider than the other. The LEFT ear forward, the RIGHT
+rotated out to the side. Whiskers fanned hard forward. Mouth open, breathing fast. The
+condensation inside the glass pulsing. Never a fixed serene stare.
+
+SCALE: he is a domestic-cat-sized figure in a human-sized module; the corridor towers and
+recedes above him.
+
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering style
+of image 2 exactly. Light him with the cold blue window light from the upper left and the
+pulsing red alarm strobe at about a quarter of its strength on his right edge. NO contact
+shadow - zero gravity; instead let debris and torn insulation drift past at the same depth
+as his body.
+
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, weightless debris with
+motion blur, cold steel-blue grade with red accents, high contrast, crushed but open blacks,
+fine grain and halation on the window and the strobe.
+
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly
+detailed.
+
+Do NOT: a bare, ungloved or exposed paw; fur visible below the wrist ring; claws visible,
+extended, or protruding through a glove; a torn, split, holed or damaged glove; a
+five-fingered human-shaped glove; separate fingers or a thumb on a glove; only one glove; a
+contact shadow or a grounded standing pose; a closed, tinted or mirrored visor; reflections
+across the face; a helmet too small for the ruff or whiskers; whiskers bent or shortened
+inside the helmet; the fur lying flat instead of haloing; objects resting still or
+falling downward; debris with no visible breach to have come from; a fixed unmoving stare;
+both ears in the same position; a closed mouth; a calm, dreamy or smiling expression;
+equal-strength blue and red lighting; a pasted-on subject; a different or beautified face;
+looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+
+Rebuild the character from image 1 into the aurora snowfield from image 2 as a hero frame
+from a theatrical CG animated feature. Reared up on the hind legs in the untouched snow of
+the lower third, occupying roughly 50% of the frame height, hind paws sinking into the snow
+and fully visible, camera low in the snow at his own eye level. Chest open, head tilted
+fully back looking straight up at the aurora dragon, cloak billowing.
+
+EXACTLY FOUR LIMBS: two forelegs and two hind legs, no more. The raised forelegs are
+the ONLY forelegs in frame. The two limbs on the ground are unmistakably HIND legs -
+heavy muscled thighs, a visible haunch and rump mass behind and below the body, a
+sharp backward-pointing hock on each, thick at the thigh and thin at the ankle. The
+body is upright and vertical with the belly and rump visible, weight sitting back over
+the haunches. This is a cat reared on its back legs, never a cat standing on all fours
+with arms added above it.
+
+THE STAFF IS NOT GRIPPED - critical, a cat cannot grip:
+The staff stands planted upright in the snow, supporting its own weight. Both forepaws
+rest FLAT against the shaft, pads pressed to it, toes closed and together - he leans on
+it and steadies it. He never wraps a paw around it, never curls his toes around it, and
+never grips it. There is no hand shape anywhere.
+
+FORELEG ANATOMY - a cat's foreleg is SHORT: both raised forelegs are short and thick
+relative to the body, exactly as a real cat's are. The upper arms stay close to the chest
+and are largely hidden by the ruff and the cloak; both ELBOWS are clearly visible, bent
+and pointing DOWN and BACK; below them the forearms are short. The limbs are never long,
+straight, tube-like, or the length or shape of human arms.
+
+FORCE: the aurora rotates and draws inward on itself, coiling tighter, and condenses into a
+dragon of FLOWING VOLUMETRIC LIGHT filling the upper half - its head the lowest, largest and
+nearest part of it, turned down toward him, fully formed and clearly readable as a head,
+never an abstract smear, never solid scaled flesh. Rendered as a volumetric emissive medium
+with visible internal density, translucent, light scattering through the atmosphere around
+it. The gathering pulls DOWN on the air: loose snow lifts off the ground in a simulated
+rising sheet all around him, the cloak hem and tail plume lift with it, and the runes on the
+ice spires ignite one after another in a RUNNING CHAIN toward him, their emissive shaders
+ramping up in sequence, never all at once, each throwing a pool of light onto the snow. The
+staff crystal answers with a brightening pulse and a burst of caustics across the fur.
+
+IDENTITY: keep his groomed coat pattern and every grey marking in position with its soft
+blended boundary, the copper-amber eyes with their caustic and specular, the pink nose with
+its subsurface scattering, the long groomed ear wisps, the modelled whiskers, the lofted
+ruff, the ice-blue cloak with its fur trim and frost-crystal ornaments, the pushed-back hood
+and the crystal staff exactly as in image 1 - instantly recognizable. The muzzle length and
+skull shape never shorten or round. Do not restyle or change the stylised proportions.
+
+STATE: both ears forward and high but RELAXED, not rigid; pupils fully dilated round and
+shining; whiskers spread and relaxed; mouth open in a small round "o"; chin lifted high; a
+puff of visible breath. Pure wonder - never a tense or aggressive face.
+
+SCALE: he is a domestic-cat-sized figure beneath a vast sky; the low camera makes him
+monumental against spires that tower above him.
+
+INTEGRATION: match the stylised 3D rendering, soft rounded shapes, subsurface scattering,
+colour palette and lighting of image 2 exactly. Light him with the green-violet aurora from
+directly above, rendered volumetrically with real depth through the falling snow, and the
+warm gold rune glow from the spires behind. Light passes visibly through the ear leather.
+Ground him with a soft blue contact shadow and paw prints; powder snow swirls around his
+hind paws.
+
+STYLE: polished stylised 3D render in the manner of a modern CG family feature, soft global
+illumination, cloth simulation on the cloak, full character groom with strand clumps and
+flyaways, ambient occlusion in every fold, subtle bloom on the staff and runes, rich
+subsurface scattering in fur and ice.
+
+9:16 vertical, frozen at the peak moment, highly detailed.
+
+Do NOT: a paw gripping, holding, clutching or wrapping around the staff; toes curled around
+the shaft; a paw shaped like a hand, mitten or fist; a long, straight, thin or tube-like
+foreleg; a foreleg the length of a human arm; a missing or invisible elbow; more than four
+limbs; an extra pair of forelegs; two front paws on the ground while two more are raised;
+hind legs shaped like forelegs; missing thighs or hocks; a solid, scaled or physical dragon;
+a dragon that reads as an abstract smear rather than a formed head; the runes lighting all
+at once; a chibi or mascot design; enlarged cartoon-baby eyes; a shortened muzzle or rounded
+skull; a plush-toy or vinyl finish; the fur as a smooth solid surface instead of a groom;
+dirt, mud, wounds or grim realism; a photorealistic live-action look; film grain or lens
+flare; flat cel shading or line art; the hood up; warm light sources beyond the runes; a
+pasted-on or floating subject; a missing contact shadow; a different or restyled face;
+looking at camera; text or watermark.`
+];
+
+
+/* ───── 動画のセリフ（1 箇所にまとめてある。文言の直しはここだけで済む）─────
+   ・reveal … 亮相のモノローグ（口は動かさない・内語）
+   ・cry    … beat の鳴き声／掛け声（口の動きと同期させる）
+   ・beat   … beat のモノローグ（口は動かさない）
+   空文字にすると、その行はプロンプトから外れる。 */
+var CAT_VOICE = [
+  { reveal:'「……雨、やんだか」',     cry:'',                  beat:'「この程度か」' },
+  { reveal:'「……来るか」',           cry:'',                  beat:'「——速いな」' },
+  { reveal:'「……動くな」',           cry:'「シャアアア！」',   beat:'「——ここまでだ」' },
+  { reveal:'「……いい天気だなあ」',   cry:'「ひゃっ」',         beat:'' },
+  { reveal:'「……なんだろうな」',     cry:'「ぎゃああああ！」', beat:'「——やば……っ！」' },
+  { reveal:'「……遠いな」',           cry:'「にゃお」',         beat:'「……起きたのか」' },
+  { reveal:'「……まだいけるな」',     cry:'「にゃっ」',         beat:'「酸素、あと九分か」' },
+  { reveal:'「……応えてくれ」',       cry:'「凍れ！」',         beat:'' }
+];
+
+/* ───── ④ 動画：スイカ🍉 版のプロンプト（8 世界）─────
+   0.0-1.5s 変身 → 1.5-2.5s 亮相 → 2.5-6.5s beat の 7 秒構成。
+   セリフは CAT_VOICE から差し込む。 */
+var CAT_VIDEO_PROMPTS_RAW = [
+`[FORMAT]
+7-second cinematic video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. Preserve
+the vertical composition of the supplied frames. He stays in the lower third; the
+searchlight, the drones and the signage occupy the upper two thirds. Match the supplied
+cat, costume, shield and environment exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens near-black - only rain streaks catch the light. Matte-black armour
+materializes onto him from the ground up: foreleg cuffs, the segmented chest plate, the
+left pauldron, and last the cybernetic half-mask snapping onto the RIGHT side of his head
+as the cyan ring around the right eye lights up. As each piece locks in, the neon alley
+fades up out of the darkness - vertical kanji signs stacked up both walls in pink and
+cyan, puddles throwing light back up, three drones holding high in the background.
+
+[1.5-2.5s] REVEAL
+He rears up onto his hind legs and holds, motionless, weight settled back over the
+haunches. The shield is still folded flat against the right foreleg cuff. Rain runs off
+his coat and the fur stays lofted and never mats. Camera pushes in slowly with a faint
+handheld drift.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT
+A searchlight swings down from a drone high in the upper right and pins him. He turns his
+head back and up over the shoulder - chin TUCKED toward the chest, squinting hard into
+the glare from under a lowered brow, eyes narrowed to slots, both ears rotated forward
+and slightly down. The shield panel UNFOLDS FROM THE ARMOURED CUFF on his right foreleg -
+never held, never gripped, there is no handle - and he drives it up into the beam. The
+beam strikes the shield face and scatters, raindrops igniting white, a hard-edged band of
+shield shadow falling across his chest. High above, a vertical neon sign shorts out and
+throws sparks down through the frame. The three drones stay in shot.
+At 4.0s a low growl forced through closed teeth - the mouth stays shut, the throat and
+jaw visibly tense.
+At 5.6s, INNER MONOLOGUE - mouth does NOT move: @BEAT@
+Camera continues the slow push with subtle handheld shake, one small jolt as the shield
+meets the beam.
+
+[AUDIO]
+Heavy rain drumming on wet asphalt and on metal armour throughout. 0.0-1.5s - layered
+metallic clacks and servo whirs as each plate locks in, building in rhythm. 1.5-2.5s -
+rain only, the city humming low behind it. 2.5s - a deep mechanical snap as the shield
+unfolds, then a sustained low electrical hum from the searchlight. 4.0s - a low chesty
+growl, close-miked. 5.8s - the neon sign shorts with a sharp crackle and pop.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+No music.
+
+[STYLE]
+Cinematic night, heavy rain, wet reflective asphalt, neon-lit vertical alley, high
+contrast, volumetric light shafts, shallow depth of field.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+The cybernetic half-mask on the RIGHT side of the head with its cyan lens ring, visible in
+every frame; the shield UNFOLDS FROM the foreleg cuff and is never held or gripped;
+exactly three drones at all times; the fur stays lofted and never mats in the rain; the
+chin stays TUCKED and the eyes stay narrowed from 3.0s onward.
+
+[AVOID]
+The paw gripping or wrapping around anything; a shield with a handle, grip or stem; a paw
+shaped like a hand or mitten; a long straight tube-like foreleg or a missing elbow; more
+than four limbs; an extra pair of forelegs; wide round open eyes; a lifted chin; an upward
+gaze of wonder or curiosity; the mask disappearing; the drone count changing; the fur
+matting or flattening; the mouth moving during the monologue; the subject drifting out of
+the lower third; letterboxing, black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second cel-animated video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. The
+hero holds the lower half; the dragon and the column of fire occupy the upper frame. Match
+the supplied cat, costume and environment exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens dark, the sky drained to near-black. Drawn in cel animation, silver-and-blue
+plate barding assembles onto him as flat hard-edged colour shapes - greave cuffs, the
+breastplate with its raised central boss, the left pauldron - and the crimson cloak drops
+into place behind the shoulders, the sword appearing SHEATHED across his back with the hilt
+above the left shoulder. As he completes, the sky bleeds back up into colour: violet and
+rose cloud, floating rock islands high in frame, the stone platform resolving beneath him.
+
+[1.5-2.5s] REVEAL
+He lands into a low ready stance on the platform, all four paws down, cloak settling, ears
+forward, chin level. Camera holds, drifting up very slightly.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT
+The dragon drops into the top of frame from the UPPER RIGHT, wings flared, jaws opening.
+Camera tilts UP to follow it, then falls back DOWN with the fire. One continuous unbroken
+column of flame pours from its open jaws and SLAMS INTO THE PLATFORM exactly where he is
+standing. He springs sideways and forward an instant before it lands - all four paws off
+the ground, body stretched to full extension on a rising diagonal, cloak and plumed tail
+streaming behind, the near eye narrowed to a slit against the heat and the far eye wide.
+The stone cracks open into hard-edged radiating shards behind him; embers and rubble hang
+in the air. A single hard orange rim stroke edges his back. THE FIRE NEVER TOUCHES HIM. He
+leaps ALONG the platform toward camera with solid stone ahead of him, never out over open
+sky.
+At 3.6s a short sharp exhale as he launches - the mouth opens briefly for the breath only.
+At 5.4s, INNER MONOLOGUE - mouth does NOT move: @BEAT@
+
+[AUDIO]
+Wind across open high altitude throughout. 0.0-1.5s - armour plates seating with metallic
+weight, a rising steel ring as the sword forms. 2.5s - a deep wingbeat concussion and the
+dragon's roar from above. 3.0s - sustained roaring flame with the stone cracking under it.
+3.6s - one sharp exhale.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+A single sustained low string under the fire only.
+
+[STYLE]
+Clean anime line work, flat cel shading with crisp light and shadow separation, hard-edged
+highlight and shadow shapes, subtle bloom on the fire core. DRAWN, not shot - no film
+grain, no photographic lens flare, no bokeh discs.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+Translated to cel animation: the grey markings become flat hard-edged colour shapes in the
+same positions; the fur is drawn as clustered pointed tufts; at least six white whisker
+strokes per side; the eyes stay copper-amber with a dark limbal ring; the back sword stays
+SHEATHED throughout; the fire never touches his body; he lands with solid stone ahead of him.
+
+[AVOID]
+A cat-girl, catgirl or any humanoid or anthropomorphic character; a chibi or Q-version
+design; human hands; more than four limbs; the fire touching or engulfing him; a fire
+column with no visible source; the dragon leaving frame before 6.0s; the back sword drawn;
+a paw touching the platform after 3.6s; leaping out over open sky with nowhere to land;
+photorealistic or 3D-rendered shading; film grain or lens flare; the mouth moving during
+the monologue; letterboxing, black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second cinematic video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. Camera low
+and pulled back, wide. The ronin is a large dark OUT-OF-FOCUS mass in the left foreground,
+seen from behind, face never visible. The cat is sharp on the right. The clash happens in
+the UPPER LEFT THIRD, never at centre. Match the supplied cat, costume and environment
+exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens near-black. The indigo haori settles onto his shoulders fold by fold, the
+woven obi cinches around the barrel, the sheathed tanto appears along his left flank. As he
+completes, the overcast merchant street fades up around him - packed earth, wooden
+shopfronts, noren, banners, and townspeople crowding back against both sides.
+
+[1.5-2.5s] REVEAL
+He drops low and coils on the packed earth, all four paws down, absolutely motionless - not
+one hair moving. Both ears locked hard forward. Pupils narrowed to hard vertical slits.
+Claws half unsheathed. Camera creeps in from a low angle.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT - three phases, in this exact order:
+2.5-3.5s WIND-UP. The ronin's blade rises and commits downward from the UPPER LEFT. The cat
+compresses, hind legs loading, shoulder blades rising.
+3.5-4.2s LAUNCH AND IMPACT. He DRIVES OFF HIS HIND LEGS and launches on a rising diagonal,
+airborne, hind legs still trailing from the push-off. His mouth opens WIDE with the upper
+canines showing, eyes narrowed to hard slits under a driven-down brow, ears rotated back and
+down at the base but still standing, whiskers flared forward. His right foreleg is thrown up
+and across with all claws fully unsheathed, and the CLAW TIPS MEET THE BLADE'S EDGE at a
+single point in the upper left - moment of contact, hard impact frame. THE BLADE STOPS
+THERE: the paw is IN FRONT of the blade, and below the contact point there is no blade at
+all. Sparks burst from that exact point in a wide fan with a column of pale smoke rising off
+it. A hard burst of dust explodes off the ground where his hind paws drove. The crowd recoils
+with mouths open and arms up. Camera jolts once, hard, on contact.
+At 4.0s - a full-throated cat HISS, @CRY@ - this is a real cat vocalization and
+the OPEN MOUTH IS SYNCHRONIZED TO IT precisely: the mouth opens as the hiss begins, holds
+open through it, and closes as it ends.
+4.2-6.5s LOCK. The claws hold against the edge, both bent slightly under the load, neither
+giving. Sparks continue to spit from the contact point. Dust drifts slowly back down. Camera
+resumes its slow low push.
+At 5.6s, INNER MONOLOGUE - mouth does NOT move: @BEAT@
+
+[AUDIO]
+Ambient outdoor daytime, cloth and footfall, a low crowd murmur at the edges. 3.5s - a sharp
+rush of air as the ronin commits. 4.0s - ONE loud clean ringing steel-on-claw strike, the
+single loudest sound in the clip, landing together with the hiss. Immediately after - a crowd
+gasp, then near-silence. 4.2-6.5s - the fine grinding whine of claw on edge under load, dust
+settling, breathing hard through the teeth.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+No music.
+
+[STYLE]
+Cinematic period Japan, natural overcast daylight, low camera, wide lens, shallow depth of
+field, dust and sparks in the air, high shutter clarity on the impact.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+The indigo haori worn open with the white chest ruff fully visible; the tanto stays SHEATHED
+throughout; the claws and the blade remain solid and visible from 3.5s onward; the blade ENDS
+at the claws with nothing below the contact point; sparks only at the contact point; the
+ronin stays out of focus in the left foreground with his face never visible; the open mouth
+is synchronized to the hiss at 4.0s.
+
+[AVOID]
+The blade passing through, across or behind the paw, the toes, the claws or the fur; any part
+of the blade visible below the contact point; the blade visible on both sides of the paw; a
+sword in the cat's paws or mouth; the tanto drawn; the ronin's face visible; the ronin sharp
+or in focus; sparks anywhere except the contact point; a left-to-right confrontation; the cat
+seated or crouched still instead of airborne; more than four limbs; a paw shaped like a hand;
+the mouth moving during the monologue; the mouth open when no vocalization is playing;
+letterboxing, black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second stop-motion claymation video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts.
+The clay cat stays in the lower half; the clay dinosaur looms in the upper frame behind him.
+Camera retreats ahead of him. Match the supplied puppet, materials and environment exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens dark. Lumps of modelling clay press themselves together into him from the
+ground up - paws, legs, body, then the head, thumbprints and sculpting-tool marks visible
+across every surface - felt fibre and combed wool applied as the coat, fine white wire
+whiskers set in place, and the knitted mustard bobble hat dropping on last, slightly crooked.
+As he finishes forming, the set fades up around him: felt ferns, cardboard rock, a paper sky,
+everything visibly handmade and tabletop-scale.
+
+[1.5-2.5s] REVEAL
+He stands square facing camera, straightens the crooked hat with one forepaw, and puffs his
+chest out, thoroughly pleased with himself and completely relaxed. Behind him the wall of felt
+ferns sits perfectly still. Camera holds close.
+At 1.8s he SPEAKS - this is the one clip with real lip sync, and this SLOW CALM LINE is where
+the sync showcase lives. His mouth moves and the movement matches the Japanese syllables
+precisely, cheerful and entirely oblivious: @REVEAL@
+
+[2.5-6.5s] BEAT - the comedy is PHYSICAL. Structure is CALM - FREEZE - EXPLOSION, never four
+seconds of continuous panic:
+
+2.5-3.5s  CALM (he still has no idea). He settles back on his haunches, lifts one forepaw and
+starts calmly GROOMING it, licking the pads, completely unhurried. Behind him the wall of felt
+ferns begins to shiver and bulge - the audience can see it, he cannot. He keeps grooming. The
+hat sits straight.
+
+3.5-4.5s  FREEZE. The fern wall bursts and a clay tyrannosaur's HEAD smashes through directly
+BEHIND and ABOVE him, jaws open in a comedic rubbery grin, both eyes visible and unobscured.
+Shredded felt leaves and wool fibres blast outward and hang in the air.
+HE DOES NOT MOVE. He holds absolutely still, frozen mid-groom with the paw still raised to his
+mouth and his tongue still out, only his EYES sliding sideways and up toward the thing behind
+him. Nothing else on him moves for a full beat. This stillness is the funniest moment in the
+clip - do not cut it short and do not let him react early.
+
+4.5-5.0s  THE SQUEAK. His mouth pops open and one tiny, small, high sound comes out,
+lip-synced: @CRY@
+That is the only sound he makes. He says nothing else for the rest of the shot.
+
+5.0-6.5s  EXPLOSION. Everything goes at once: every fibre of fur stands straight out and the
+body puffs to twice its width, the tail bottles into a rigid brush, the whiskers flare in every
+direction, the pupils blow fully round with the lids retracted, the ears snap bolt upright and
+rotate wide apart. The raised forepaw is still up by his mouth. All four paws leave the ground
+as he launches STRAIGHT UP, legs splayed, and the knitted bobble hat pops clear off his head and
+hangs in the air just above it. Felt leaves and clay crumbs tumble upward around him. The
+dinosaur stays in the upper frame behind him and NEVER touches him.
+Camera dollies back with the deliberate judder of stop-motion - visible frame steps, never
+smooth motion.
+
+[AUDIO]
+Foley-forward and obviously handmade throughout: felt rustle, soft clay squelch, tiny padded
+thumps on a wooden tabletop. 1.5-2.5s - quiet and peaceful, birdsong on a toy whistle. 2.5-3.5s
+- small wet licking foley as he grooms, and underneath it the ferns beginning to creak and
+rustle ominously. 3.5s - a big papery WHUMP as the ferns burst, then a comedic rubbery roar,
+more squeaky than frightening.
+3.6-4.5s - NEAR TOTAL SILENCE. Everything drops out for the freeze except one tiny creak of
+clay and the last felt leaves fluttering down. This silence is the engine of the joke; do not
+fill it.
+4.5s - the single small squeak. 5.0s - everything erupts at once, and playful ukulele and
+pizzicato strings kick in. This is the ONE clip of the eight with music.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+For this clip only the voice is bright and small rather than low and dry. Two short utterances
+in the whole shot and nothing else.
+
+[STYLE]
+Stop-motion claymation, visible fingerprints and tool marks, felt and wool fur, cardboard and
+paper set, tabletop scale, soft warm practical lighting, shallow macro depth of field,
+deliberate frame judder.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+Translated to clay, felt and wool: every grey marking in the same position; felt-fibre fur,
+never smooth clay; wire whiskers at full length; amber glass-bead eyes; the hat stays with him
+and never leaves frame; the dinosaur NEVER catches or touches him; deliberate stop-motion
+judder throughout.
+
+[AVOID]
+Continuous panic from 2.5s onward with no calm and no freeze; reacting before 4.5s; skipping or
+shortening the frozen beat; more than two short utterances in the whole shot; a long or rapid
+panicked line; the mouth moving when no utterance is playing; the grooming paw dropping before
+the explosion; smooth glossy clay fur instead of felt fibre; smooth interpolated motion; a CG,
+3D-render or photorealistic-cat look; the dinosaur catching, biting or touching him; the
+dinosaur's head cropped or hidden behind debris; the hat leaving frame; dirt, mud, blood or
+wounds; anything genuinely frightening or dark in tone; more than four limbs; letterboxing,
+black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second cinematic video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts.
+Photorealistic. The cat fills the lower two thirds and comes TOWARD camera at full gallop;
+the tyrannosaur and the dust wall occupy the upper frame behind him. Camera retreats fast,
+staying ahead of him, low to the ground. Match the supplied cat, gear and environment exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens near-black. The tan canvas expedition harness straps on across his chest, the
+scuffed leather satchel settles onto his left flank, the brass compass clips to the chest
+strap, and dust and grime work into his coat. As he completes, the prehistoric valley fades up
+around him - giant tree ferns, a smoking volcano on the horizon, low golden sun.
+
+[1.5-2.5s] REVEAL
+He stands square on all four paws, ears swivelled forward, head up, listening. Behind him the
+treeline is motionless. The insects go silent. Camera holds low, close to the ground.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT
+2.5-3.2s  A tyrannosaur smashes out through the treeline BEHIND and ABOVE him, splintering
+wood, running in the classic horizontal posture - body level, tail extended straight back and
+raised, HEAD CARRIED LOW AND FORWARD and thrust down toward him, the entire head visible and
+unobstructed. He flinches hard and his head snaps around.
+3.2-6.5s  He breaks into a FULL FOUR-LEGGED GALLOP straight at camera, body stretched to
+maximum extension, forelegs reaching far forward, hind legs driving back, all four paws leaving
+the ground at full stride. Both ears pin FLAT BACK against his skull, pupils blown fully round
+with a crescent of white at the inner corner, mouth OPEN and panting hard, whiskers swept back
+by the airspeed. He twists to look back over his shoulder mid-stride, then snaps forward. A
+foot craters the mud behind him throwing spray outward to the SIDES; dust rolls up BEHIND the
+creature, never in front of its head. The satchel and compass fly out sideways. Camera retreats
+fast, low and shaking, jolting with each of the creature's footfalls.
+At 3.4s - a full panicked cat SCREAM, @CRY@ - a real cat vocalization, and the
+OPEN MOUTH IS SYNCHRONIZED TO IT: the mouth opens wide as the scream begins and stays open,
+then settles into open-mouthed panting as it ends.
+At 5.4s, INNER MONOLOGUE, broken by breath - mouth does NOT change from its panting: @BEAT@
+
+[AUDIO]
+Dense jungle ambience - insects, distant calls, dripping water. 1.5-2.5s - his own breathing
+close-miked, then an unnatural silence as the insects stop. 2.5s - splintering wood and tearing
+foliage, then one chest-deep roar. 3.4s - the cat scream, raw and unprocessed. Ground-shaking
+footfalls with real sub-bass weight, each landing on a camera jolt. His own galloping paw-falls
+and ragged panting stay closest in the mix.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+No music.
+
+[STYLE]
+Photorealistic, natural jungle daylight, volumetric god rays through canopy, heavy atmospheric
+dust, low ground-level camera, motion blur on the sprint, handheld instability.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+The tyrannosaur's HEAD stays fully visible, low and forward, the closest and largest part of it,
+never cropped or hidden by spray; both ears stay pinned flat back from 3.2s onward; the mouth
+stays open and panting from 3.4s onward; the coat stays caked and matted with dust; the creature
+NEVER catches or touches him; the camera stays LOWER than his chest.
+
+[AVOID]
+The cat running or standing on its hind legs; any paw touching the ground at full stride; the
+cat stopping or sitting; ears forward or upright after 3.2s; a closed mouth after 3.4s; narrow
+or slit pupils; a calm or curious expression; the tyrannosaur's head cropped, occluded or
+missing; a headless creature; only a foot, leg or tail visible; the head carried level with or
+above the hips; the creature seen from above or behind; the creature catching or overtaking
+him; a clean coat or lofted fluffy fur; more than four limbs; the mouth changing shape during
+the monologue; letterboxing, black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second cinematic video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. He stays in
+the lower third looking UP; the leviathan's shadow crosses the upper frame. Camera rises
+slowly throughout. Match the supplied cat, harness, markings and environment exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens in near-total darkness. The dark kelp-fibre harness with its bronze fittings
+forms across his chest below the ruff, and fine cyan-green bioluminescent lines ignite IN his
+fur in SEQUENCE from the paws upward, one at a time, never all at once. As he completes, the
+sunken temple corridor fades up around him - carved columns rising out of frame, drifting
+particulate, a shoal of jellyfish pulsing above, a single shaft of pale light from far
+overhead. His coat begins to lift and float.
+
+[1.5-2.5s] REVEAL
+He hangs neutrally buoyant just above the seabed, forelegs drifting loose and bearing no
+weight. Every hair of the semi-long coat is fanned out and floating free - the ruff haloed all
+the way around his face, the tail plume opened into a wide fan. Camera begins its slow rise.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT
+An enormous SHADOW slides across the TOP of the frame and blots out the shaft of light - the
+creature itself is NEVER shown, no body, no head, no face, only the shadow and its scale.
+Darkness falls over the whole shot. He throws his head fully back and looks straight UP, throat
+exposed and taut, both ears forward and carried high and rigid, pupils wide and round with the
+lids pulled fully back, mouth very slightly open. Its passing displaces the water: a slow
+pressure wave pushes his floating fur, the suspended sediment and a scatter of jellyfish
+outward and away from it - every drifting thing in frame points away from the shadow. His own
+bioluminescence becomes the only light on him. A stone column topples slowly behind. Camera
+continues rising.
+At 3.8s a faint @CRY@ - barely audible, a small breath of a sound; the slightly open
+mouth moves once, minimally, in time with it.
+At 5.4s, INNER MONOLOGUE - mouth does NOT move: @BEAT@
+
+[AUDIO]
+Deep underwater pressure throughout - muffled, weighty, with a distant structural groan.
+1.5-2.5s - slow breathing, close and damped. 2.5s - a vast low displacement rumble as the
+shadow passes, felt more than heard. 3.0s - a soft ascending chime as each bioluminescent line
+brightens in sequence. 5.8s - the stone column collapsing, dull and far away.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+Damped by water. Sparse low sustained drone, no melody.
+
+[STYLE]
+Deep ocean, near-monochrome blue-black, single overhead light shaft, heavy particulate,
+bioluminescence as the key light source, slow drifting motion, vast scale.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+Every hair of the coat stays fanned out and FLOATING throughout, never lying flat; the
+bioluminescent lines glow from WITHIN the fur and ignite in SEQUENCE, never all at once; the
+leviathan is shown ONLY as shadow and scale, never its body or face; the throat stays exposed
+and taut from 3.0s onward; the amber eyes are the only warm colour in frame.
+
+[AVOID]
+Showing the creature's body, head, face or outline; the fur lying flat instead of floating; the
+lines igniting all at once; bioluminescence painted on the surface instead of glowing from
+within; a diving helmet, mask or breathing gear; a swimming or paddling pose; a grounded
+standing pose; warm colour anywhere except the eyes and the glow; fast or jerky motion; the
+camera descending; more than four limbs; the mouth moving during the monologue; letterboxing,
+black bars, or any horizontal reframing; text or watermarks.`,
+
+`[FORMAT]
+7-second cinematic video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. He stays
+lower-centre; the viewport and the breach occupy the upper frame. Slow push in with a faint
+zero-g drift. Match the supplied cat, suit, helmet and interior exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens dark, only a few instrument LEDs alive. The off-white EVA suit assembles onto
+him from the ground up - boots, legs, the rigid torso shell sealing, the chest control module
+with its green readouts, sealed MITTEN gloves closing over both forepaws - and the LARGE CLEAR
+BUBBLE HELMET lowers into place last with a quarter-turn lock, deliberately oversized so the
+full ruff sits lofted inside it and the whiskers fan to their complete natural width without
+touching the glass. As it seals, the module interior fades up around him: padded walls, stowage
+netting, instrument panels, and the viewport high in the upper frame with Earth's limb beyond.
+
+[1.5-2.5s] REVEAL
+He floats weightless at a slight tilt, minutely drifting, one mitten glove HOOKED over a
+handrail by curling the whole rounded glove over the bar - never gripping with fingers, never
+using claws. Both gloves are intact and sealed with no bare fur below the wrist rings. His coat
+lifts and haloes weightless inside the helmet; nothing hangs down. Fog blooms and clears on the
+inside of the glass with each breath. Camera pushes in slowly.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-6.5s] BEAT
+Beyond the viewport a solar array tears apart and debris sprays outward; a stress crack runs
+across the remaining glass. The interior lighting cuts to a slow pulsing red. He looks UP at the
+breach - the EYES MOVING, scanning along it rather than fixed, the pupils caught
+mid-contraction, the LEFT ear forward and the RIGHT rotated out to the side tracking sound, the
+mouth open and breathing fast. The visor fog pulses visibly with each breath, faster now. Loose
+objects lift off every surface and drift upward through the frame toward the breach. Nothing
+rests still and nothing falls downward. Camera continues the slow push, floating slightly off
+axis.
+At 3.0s a short sharp @CRY@ as the hull impact hits - the mouth opens once, briefly, in time
+with it.
+At 5.2s, INNER MONOLOGUE, level and professional - mouth does NOT move: @BEAT@
+
+[AUDIO]
+Close, enclosed helmet audio throughout - his own breathing loud and near, everything else
+muffled and distant. Low life-support hum. 2.5s - a deep structural groan and a sequence of dull
+impacts through the hull; no sound in vacuum for the debris itself. 2.8s - the alarm starts: a
+slow spaced two-tone electronic tone, not a shriek. Breathing rate rises audibly from 3.0s.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+Close-miked inside the helmet. No music.
+
+[STYLE]
+Hard sci-fi realism, practical interior lighting cutting to pulsing red, Earth's limb through the
+viewport, zero-gravity drift on every loose object, shallow depth of field.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+The helmet glass stays perfectly CLEAR and non-reflective across the face with the muzzle, nose,
+whisker pads and both eyes visible through it in every frame; the whiskers stay at full width
+inside the helmet and never bend or shorten; BOTH mitten gloves stay intact and sealed with no
+claws visible and no bare fur below the wrist rings; the coat haloes weightless and nothing hangs
+down; every loose object drifts and nothing rests; the eyes keep scanning and never settle into a
+fixed stare.
+
+[AVOID]
+A bare, ungloved or exposed paw; fur visible below the wrist ring; claws visible or protruding
+through a glove; a torn, split or holed glove; a five-fingered human-shaped glove; separate
+fingers or a thumb on a glove; only one glove; an opaque, tinted, mirrored or closed visor;
+reflections across the face; a helmet too small for the ruff or whiskers; the fur lying flat
+instead of haloing; objects falling downward or resting still; a fixed unmoving stare; both ears
+in the same position; a calm, dreamy or smiling expression; more than four limbs; the mouth
+moving during the monologue; letterboxing, black bars, or any horizontal reframing; text or
+watermarks.`,
+
+`[FORMAT]
+7-second stylized 3D animated video, VERTICAL 9:16 PORTRAIT. One continuous shot, no cuts. He
+stays in the lower third; the aurora and the dragon of light occupy the upper two thirds. Camera
+orbits slowly to the right throughout. Match the supplied cat, robes, staff and environment
+exactly.
+
+[0.0-1.5s] TRANSFORMATION
+The frame opens black. Rendered as CG feature animation, layered ice-blue robes with white fur
+trim form onto him with cloth simulation and settle over his shoulders, frost creeping across each
+surface, the hood pushed back off his head with both ears free. The pale-wood staff rises out of
+the snow beside him, its crystal brightening from within. As he completes, the world fades up: a
+snowfield, rune-carved ice spires, and the first threads of aurora appearing high above.
+
+[1.5-2.5s] REVEAL
+He rears up onto his hind legs and settles, hocks low, hind paws planted wide and sinking into the
+snow, and rests BOTH FOREPAWS FLAT against the staff shaft - pads pressed to it, toes closed,
+leaning on it and steadying it, never wrapping a paw around it and never gripping. He holds still.
+Breath visible in the cold. Camera begins its slow rightward orbit.
+At 1.9s, INNER MONOLOGUE - his mouth does NOT move, no lip sync: @REVEAL@
+
+[2.5-3.5s] WIND-UP
+His weight rocks BACK over the haunches and both forepaws lift clear of the shaft, drawn up and in
+toward the chest. The aurora high above begins to stir and turn. The snow around his hind paws goes
+still. He is loading, not waiting.
+
+[3.5-4.0s] STRIKE - HE CAUSES THIS, he does not watch it happen:
+He drives BOTH FOREPAWS DOWN onto the head of the staff in one hard strike. The pads hit the top of
+the shaft flat - toes closed, never wrapping around it, never gripping - and the staff is driven
+deeper into the snow. On impact a RING OF LIGHT AND SNOW blasts outward across the ground from his
+feet in every direction, and the runes carved into the ice spires fire one after another in a
+running chain OUTWARD FROM HIM toward the horizon - never toward him, he is the source. The spires
+resonate and hairline cracks race up them. His cloak and the fur along his back are thrown outward
+by the blast.
+At 3.7s his mouth opens WIDE in a hard short kiai - @CRY@ - the OPEN MOUTH IS SYNCHRONIZED TO
+IT: it snaps open on the strike and holds.
+
+[4.0-6.5s] THE ANSWER
+The aurora above rotates and draws inward on itself, coiling tighter, and condenses into a dragon of
+FLOWING VOLUMETRIC LIGHT - translucent, with visible internal density, never solid scaled flesh.
+Fully formed, it DIVES down toward him, its head lowest and nearest, filling the upper frame. He
+holds the strike pose, both pads still on the staff head, and tips his head slowly back to meet it -
+ears forward and high, releasing from tense to RELAXED, pupils dilating fully round and shining, the
+copper-amber iris the only warm colour in frame. Powder snow hangs in the air where the blast threw
+it.
+HIS MOUTH STAYS OPEN THE WHOLE TIME and no further sound comes out of it - the same open mouth
+changes read from a battle shout into a small round "o" of pure wonder as the dragon comes down. The
+whole scene is lit from above.
+
+[AUDIO]
+Wind across an open snowfield throughout, high and thin. 1.5-2.5s - near-silence, only wind and
+breath. 2.5-3.5s - the wind drops away almost completely as he loads; a low harmonic hum begins to
+rise. 3.7s - ONE deep crystalline BOOM as both paws hit the staff, the loudest sound in the clip,
+landing together with the kiai; then the runes firing outward in sequence, each a sharp crystalline
+chime, accelerating away from him toward the horizon. 4.8s - a resonant crystalline roar as the
+dragon takes form and dives, more chime than growl.
+VOICE: one single consistent voice across the whole piece - a low, slightly husky,
+unhurried male voice, dry and close-miked, never cute-voiced and never a cartoon
+falsetto. He is not narrating; he is thinking. Natural Tokyo Japanese. The monologue is
+INNER SPEECH - it is never lip-synced and his mouth does not move for it.
+Used for the monologue and the kiai only - nothing after 4.0s. A single sustained choral tone from
+4.8s.
+
+[STYLE]
+Polished stylized 3D render in the manner of a modern CG family feature, soft global illumination,
+subsurface scattering through the ear leather and the fur, cloth simulation on the cloak, full
+character groom with strand clumps and flyaways, volumetric aurora with real depth, ambient
+occlusion in every fold.
+
+[KEEP]
+IDENTITY LOCKED THROUGHOUT: the same coat pattern with every grey marking in the same
+position, the same COPPER-AMBER eyes, the same rose-PINK nose, the same exceptionally
+long white whiskers at full length and density, the same long white furnishings inside
+both ears, the same full lofted white chest ruff, the same plumed grey tail. No morphing
+of the face, the markings, the whiskers or the ear tufts at any point.
+ANATOMY LOCKED THROUGHOUT: exactly four limbs - two forelegs and two hind legs, never
+more, never an extra pair. The forelegs are SHORT with visible bent elbows, never the
+length of human arms. The paws never grip, hold, clutch or wrap around anything and are
+never shaped like hands or mittens. True adult cat anatomy at all times, never humanoid,
+never walking on two legs, no human hands.
+Rebuilt as a CG groom: directional strand clumps and visible flyaways; the ear furnishings as long
+groomed wisps with light passing through them; the whiskers as stiff modelled strands at full
+length; the muzzle length and skull shape exactly as supplied, never shortened or rounded; BOTH
+forepaws stay FLAT against the staff with toes closed and never grip or wrap around it, including
+during the strike; HE is the source of the event - the light ring and the rune chain travel OUTWARD
+from him, never inward toward him; the dragon is FLOWING LIGHT, never solid flesh; the runes ignite
+in SEQUENCE, never all at once; the aurora is the only light source; the mouth stays open from 3.7s
+to the end with no further sound.
+
+[AVOID]
+The cat standing passively and watching the aurora gather without causing it; the rune chain running
+INWARD toward him instead of outward from him; no strike, no impact, no shockwave ring; a paw
+gripping or wrapping around the staff; toes curled around the shaft; a paw shaped like a hand; a long
+straight tube-like foreleg or a missing elbow; more than four limbs; an extra pair of forelegs; two
+front paws on the ground while two more are raised; the cat walking or moving off the spot while
+reared up; the mouth closing after 3.7s; any spoken line after 4.0s; a solid or scaled dragon; a
+dragon that reads as an abstract smear rather than a formed head; the runes lighting all at once; a
+chibi or mascot design; enlarged cartoon-baby eyes; a shortened muzzle or rounded skull; a plush-toy
+or vinyl finish; the fur as a smooth solid surface instead of a groom; dirt, mud or wounds; a
+photorealistic live-action look; film grain or lens flare; flat cel shading or line art; the hood up;
+warm light sources beyond the runes; the camera reversing its orbit; the mouth moving during the
+monologue; letterboxing, black bars, or any horizontal reframing; text or watermarks.`
+];
+/* セリフを埋めて仕上げる。空の行は丸ごと落とす。 */
+var CAT_VIDEO_PROMPTS = CAT_VIDEO_PROMPTS_RAW.map(function(t,i){
+  var v = CAT_VOICE[i] || {};
+  return t.replace(/@REVEAL@/g, v.reveal || '')
+          .replace(/@BEAT@/g,   v.beat   || '')
+          .replace(/@CRY@/g,    v.cry    || '')
+          .replace(/[^\n]*INNER MONOLOGUE[^\n]*:\s*$/gm, '')
+          .replace(/\n{3,}/g, '\n\n');
+});
+
 function sleepMs(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 
 /* 撮影データを API が受け付ける形（JPEG）へ正規化する。
@@ -3815,13 +5755,28 @@ function submitScene(images, prompt){
 
 /* 参考画像として送れる形に整える。公開 URL はそのまま、
    撮影データやサンプルの SVG は JPEG の data URL に変換する。 */
+/* ④ 動画（角色卡＝始まりのコマ、入景＝終わりのコマ） */
+function submitVideo(first, last, prompt){
+  return submitJob(MODEL_VIDEO,{
+    prompt: prompt,
+    first_frame_image: first,
+    last_frame_image: last,
+    ratio: "9:16",
+    duration: 7,
+    resolution: "720p",
+    camera_fixed: false,
+    generate_audio: true,
+    return_last_frame: false
+  });
+}
+
 function prepImage(src){
   if(/^https?:/i.test(src)) return Promise.resolve(src);
   return toJpeg(src, 1280);
 }
 
-function pollTask(path, onTick){
-  var deadline=Date.now()+CARD_TIMEOUT;
+function pollTask(path, onTick, timeout){
+  var deadline=Date.now()+(timeout||CARD_TIMEOUT);
   function step(){
     if(Date.now()>deadline) throw new Error("時間内に完了しませんでした");
     return sleepMs(3000).then(function(){
@@ -3888,7 +5843,9 @@ function runGen(){
   var stageScene=$("#tScene");
   stageScene.classList.remove("on"); stageScene.removeAttribute("src");
   $("#sceneThumb").hidden=true;
+  $("#vidThumb").hidden=true; $("#vidSoon").hidden=true;
   $("#resCardThumb").hidden=true;
+  state.videoUrl=null; state.videoIsSample=false;
 
   /* 01 解析（ローカル処理：送れる形へ整える） */
   setNode(0,"run");
@@ -3900,7 +5857,7 @@ function runGen(){
     /* 02 キャラクターカード生成（実 API・② 角色卡） */
     setNode(1,"run"); note(1);
     var stop1=ticker(1);
-    return submitCard(jpeg, PROMPTS[w.i])
+    return submitCard(jpeg, (isCat()?CAT_PROMPTS:PROMPTS)[w.i])
       .then(function(taskPath){ return pollTask(taskPath); })
       .then(function(url){
         if(my!==runToken) return;
@@ -3911,13 +5868,13 @@ function runGen(){
         if(my!==runToken) return;
         stop1(); setNode(1,"done");
         genError(err.message||String(err));
-        onCardReady(CRD[w.i], true);   // 展示を止めない
+        onCardReady((isCat()?CAT_CRD:CRD)[w.i], true);   // 展示を止めない
       });
   }).catch(function(err){
     if(my!==runToken) return;
     stop0(); setNode(0,"done");
     genError(err.message||String(err));
-    onCardReady(CRD[w.i], true);
+    onCardReady((isCat()?CAT_CRD:CRD)[w.i], true);
   });
 }
 
@@ -3948,7 +5905,7 @@ function runScene(my, w){
   setNode(2,"run"); note(2);
   $("#tSweep").classList.add("on");
   var stop2=ticker(2);
-  submitScene([state.cardUrl, SCN_URL[w.i]], SCENE_PROMPTS[w.i])
+  submitScene([state.cardUrl, SCN_URL[w.i]], (isCat()?CAT_SCENE_PROMPTS:SCENE_PROMPTS)[w.i])
     .then(function(taskPath){ return pollTask(taskPath); })
     .then(function(url){
       if(my!==runToken) return;
@@ -3959,7 +5916,7 @@ function runScene(my, w){
       if(my!==runToken) return;
       stop2(); setNode(2,"done");
       genError(err.message||String(err), "入景の生成");
-      onSceneReady(WLD[w.i], true);
+      onSceneReady((isCat()?CAT_SCN:WLD)[w.i], true);
     });
 }
 
@@ -3972,8 +5929,47 @@ function onSceneReady(url, isSample){
   $("#sceneThumbImg").src=url;
   $("#sceneThumb").hidden=false;
   note(3);
-  setNode(3,"wait");   // ④ 動画はまだ枠だけ
-  later(showResult, 1600);
+
+  // ④ 動画。スイカ🍉 で、②③ とも実生成が通ったときだけ走らせる。
+  var ok = canVideo() && !isSample &&
+           /^https?:/i.test(String(state.cardUrl||"")) && /^https?:/i.test(String(url));
+  if(!ok){
+    setNode(3,"wait");
+    $("#vidSoon").hidden=false;
+    later(showResult, 1600);
+    return;
+  }
+  $("#vidSoon").hidden=true;
+  later(function(){ runVideo(runToken, WORLDS[state.world]); }, 700);
+}
+
+/* ④ 動画：②の角色卡から③の入景へ、7 秒でつなぐ */
+function runVideo(my, w){
+  if(my!==runToken) return;
+  setNode(3,"run");
+  $("#tSweep").classList.add("on");
+  var stop3=ticker(3);
+  submitVideo(state.cardUrl, state.sceneUrl, CAT_VIDEO_PROMPTS[w.i])
+    .then(function(taskPath){ return pollTask(taskPath, null, VIDEO_TIMEOUT); })
+    .then(function(url){
+      if(my!==runToken) return;
+      stop3(); setNode(3,"done");
+      onVideoReady(url);
+    })
+    .catch(function(err){
+      if(my!==runToken) return;
+      stop3(); setNode(3,"done");
+      genError(err.message||String(err), "動画の生成");
+      onVideoReady(CAT_VID[w.i], true);   // 展示を止めない
+    });
+}
+
+function onVideoReady(url, isSample){
+  state.videoUrl=url; state.videoIsSample=!!isSample;
+  $("#tSweep").classList.remove("on");
+  var tv=$("#vidThumbV"); tv.src=url; try{ tv.load(); }catch(e){}
+  $("#vidThumb").hidden=false;
+  later(showResult, 1400);
 }
 
 /* ───── 拡大表示 ───── */
@@ -3984,6 +5980,10 @@ function onSceneReady(url, isSample){
   $("#cardThumb").addEventListener("click",function(){ open(state.cardUrl); });
   $("#tCard").addEventListener("click",function(){ open(state.cardUrl); });
   $("#sceneThumb").addEventListener("click",function(){ open(state.sceneUrl); });
+  $("#vidThumb").addEventListener("click",function(){
+    // 動画は結果画面のプレイヤーで見せる方が早いので、そこへ送る
+    if(state.videoUrl) show("result");
+  });
   $("#tScene").addEventListener("click",function(){ open(state.sceneUrl); });
   $("#resCardThumb").addEventListener("click",function(){ open(state.cardUrl); });
   $("#resImg").addEventListener("click",function(){ open(state.sceneUrl||state.cardUrl); });
@@ -3996,17 +5996,26 @@ function onSceneReady(url, isSample){
 /* ───── 結果 ───── */
 function showResult(){
   var w=WORLDS[state.world];
-  var hero=state.sceneUrl||state.cardUrl||CRD[w.i];
+  var hero=state.sceneUrl||state.cardUrl||(isCat()?CAT_CRD:CRD)[w.i];
   $("#resImg").src=hero;
+  // 動画まで出来ていれば、静止画の上にそれを重ねて自動再生する
+  var rv=$("#resVid");
+  if(state.videoUrl){
+    rv.src=state.videoUrl; rv.hidden=false; rv.poster=hero;
+    var pr=rv.play(); if(pr&&pr.catch) pr.catch(function(){});
+  } else {
+    rv.hidden=true; try{ rv.pause(); rv.removeAttribute("src"); rv.load(); }catch(e){}
+  }
   $("#resCap").textContent=w.cap;
   $("#resTitle").textContent="「"+w.nm+"」が完成しました";
 
   var made=[];
   if(!state.cardIsSample) made.push("キャラクターカード");
   if(state.sceneUrl && !state.sceneIsSample) made.push("入景カット");
-  var from = state.subject==="pet" ? "「"+(state.label||"うちの子")+"」の写真" : "あなたの写真";
+  if(state.videoUrl && !state.videoIsSample) made.push("7 秒の動画");
+  var from = state.subject==="pet" ? "「"+(state.label||"スイカ🍉")+"」の写真" : "あなたの写真";
   $("#resSub").textContent = made.length
-    ? w.sub+" ／ "+w.tag+"。"+from+"から、1440×2560 の"+made.join("と")+"を生成しました。"
+    ? w.sub+" ／ "+w.tag+"。"+from+"から、"+made.join("・")+"を生成しました。"
     : w.sub+" ／ "+w.tag+"。今回はサンプルの絵を表示しています。";
 
   // 入景まで進んだ回は、主役が入景カット。②のカードは小さく添えて拡大できるようにする
@@ -4015,6 +6024,14 @@ function showResult(){
     $("#resCardImg").src=state.cardUrl; t.hidden=false;
   } else { t.hidden=true; }
 
+  var vs=$("#vslotTxt");
+  if(state.videoUrl && !state.videoIsSample){
+    vs.innerHTML="<b>動画まで生成しました</b>キャラクターカードを始まり、入景カットを終わりのコマにして、7 秒の縦型映像を生成しています。";
+  } else if(isCat()){
+    vs.innerHTML="<b>動画の生成は今回見送りました</b>②③ がサンプルに落ちた回は、動画までは進めません。";
+  } else {
+    vs.innerHTML="<b>動画の生成は主役がスイカ🍉 のときだけです</b>動画モデルが実在の人物の顔を含む画像を受け付けないため、人物は入景カットまでを生成しています。";
+  }
   drawQR(takeawayUrl());
   saveHistory();
   show("result");
@@ -4027,6 +6044,7 @@ function takeawayUrl(){
   return itemUrl({
     card: state.cardUrl,
     scene: state.sceneUrl,
+    video: state.videoUrl,
     nm: state.world!=null ? WORLDS[state.world].nm : ""
   });
 }
@@ -4038,6 +6056,7 @@ function itemUrl(it){
   var hero=it.scene||it.card;
   if(hero) u.searchParams.set("c", hero);
   if(it.scene && it.card && it.scene!==it.card) u.searchParams.set("k", it.card);
+  if(it.video) u.searchParams.set("v", it.video);
   if(it.nm) u.searchParams.set("w", it.nm);
   return u.href;
 }
@@ -4083,6 +6102,7 @@ function saveHistory(){
     t: Date.now(), nm: w.nm, tag: w.tag, sub: w.sub, wi: w.i,
     card: /^https?:/i.test(String(state.cardUrl||"")) ? state.cardUrl : null,
     scene: state.sceneUrl && !state.sceneIsSample ? state.sceneUrl : null,
+    video: state.videoUrl && !state.videoIsSample ? state.videoUrl : null,
     who: state.label||""
   });
   writeHistory(a);
@@ -4180,6 +6200,14 @@ function restart(){
     if(!x.closest(".lang")) x.setAttribute("aria-pressed","false");
   });
   $("#btnPetNext").disabled=true; $("#btnGen").disabled=true;
+  var pa=document.querySelector(".pet-add"); if(pa){
+    pa.querySelector(".pa").innerHTML=
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+      '<em>タップして選ぶ</em>';
+    pa.querySelector("b").textContent="別の子の写真";
+  }
+  var pf=$("#petFile"); if(pf) pf.value="";
   document.getElementById("worldGrid").classList.remove("has-hover");
   attractIdx=0; setWorldBg(0); setAccent(WORLDS[0].a,WORLDS[0].b);
   show("attract",false);
