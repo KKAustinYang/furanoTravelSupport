@@ -660,6 +660,9 @@ var PRODUCTS = BASE_PRODUCTS.concat(loadOwn());
 /* ───── サンプルモデル（6 枚とも同梱。外部サイトに一切依存させない） ─────
    女性 3 枚は Modellix（seedream-5.0-pro）で生成した全身カット。
    ストックサイトからの直リンクは、展示中に落ちたり bot 遮断されたりするので使わない。 */
+/* 一覧のサムネイルは 178px 表示なのに 200〜330KB の原寸を読んでいた。
+   models/s/ に 400px 版を置き、選択（＝生成の参照）まで原寸は読まない。 */
+var thumbOf = u => u.replace(/^(models|products)\//, '$1/s/');
 var PRESET_MODELS = [
   { name:'女性 — 街角（全身）',   url:'models/female_street.jpg' },
   { name:'女性 — スタジオ（全身）', url:'models/female_studio.jpg' },
@@ -718,7 +721,7 @@ function renderSwitcher(){
     var tile = document.createElement('button');
     tile.className = 'ps-tile'; tile.type = 'button'; tile.dataset.id = p.id;
     tile.innerHTML =
-      '<span class="ps-thumb"><img src="' + esc(p.clothUrl) + '" alt=""></span>' +
+      '<span class="ps-thumb"><img src="' + esc(/^products\//.test(p.clothUrl) ? thumbOf(p.clothUrl) : p.clothUrl) + '" alt="" decoding="async"></span>' +
       '<span class="ps-meta"><span class="ps-b">' + esc(p.brand) + '</span>' +
       '<span class="ps-n">' + esc(p.name) + '</span>' +
       '<span class="ps-p">' + formatPrice(p.price) + '</span></span>' +
@@ -881,7 +884,7 @@ var selectedHuman = null;   // { type:'url'|'file', value:String|File }
   PRESET_MODELS.forEach(function(m){
     var b = document.createElement('button');
     b.className = 'model-thumb'; b.type = 'button'; b.dataset.url = m.url;
-    b.innerHTML = '<img src="' + m.url + '" alt="' + m.name + '"><div class="label">' + m.name + '</div>';
+    b.innerHTML = '<img src="' + thumbOf(m.url) + '" alt="' + m.name + '" width="400" height="533" loading="lazy" decoding="async"><div class="label">' + m.name + '</div>';
     b.addEventListener('click', function(){
       grid.querySelectorAll('.model-thumb').forEach(function(t){ t.classList.remove('selected'); });
       b.classList.add('selected');
