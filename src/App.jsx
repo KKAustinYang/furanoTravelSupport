@@ -27,10 +27,14 @@ export default function App() {
   const [filter, setFilter] = useState('all')
   const [scrolled, setScrolled] = useState(false)
 
+  // 開けるデモと準備中を分けて数える。ヒーローの「{n}つ」は開ける方の数。
+  const LIVE = DEMOS.filter((d) => d.url).length
+  const SOON = DEMOS.length - LIVE
+
   const t = (k) => {
     const v = I18N[lang][k]
     if (v == null) return ''
-    return v.replace('{n}', DEMOS.length)
+    return v.replace('{n}', LIVE).replace('{a}', LIVE).replace('{b}', SOON)
   }
 
   // sticky nav background on scroll
@@ -63,7 +67,11 @@ export default function App() {
     return () => io.disconnect()
   }, [lang, filter])
 
-  const demos = DEMOS.filter((d) => filter === 'all' || d.cat === filter)
+  // 開けるデモを先に並べる。準備中が上に来ると、目的のものに辿り着けない。
+  const demos = DEMOS
+    .filter((d) => filter === 'all' || d.cat === filter)
+    .slice()
+    .sort((a, b) => (a.url ? 0 : 1) - (b.url ? 0 : 1))
 
   return (
     <>
@@ -104,13 +112,15 @@ export default function App() {
         </div>
       </header>
 
+      <div className="grain" aria-hidden="true" />
+
       <main id="top">
         {/* HERO */}
         <section className="hero">
           <div className="hero-glow" />
           <div className="wrap">
             <a className="pill" href="#showcase">
-              <span className="tag">{t('hero_pill_tag')}</span>
+              <span className="pill-dot" aria-hidden="true" />
               <span>{t('hero_pill')}</span>
               <span className="chev">→</span>
             </a>
@@ -120,11 +130,6 @@ export default function App() {
               <a className="btn btn-primary btn-md" href="#showcase">{t('hero_cta1')}</a>
               <a className="btn btn-ghost btn-md" href="#contact">{t('hero_cta2')}</a>
             </div>
-            <a className="hero-new" href="/d/tryon-aurora/index.html">
-              <span className="tag">{t('hero_new_tag')}</span>
-              <span>{t('hero_new')}</span>
-              <span className="chev">→</span>
-            </a>
 
             {/* product frame: analytics console */}
             <div className="frame reveal">
@@ -197,34 +202,32 @@ export default function App() {
               <span className="eyebrow"><span className="n">01</span> <span>{t('show_tag')}</span></span>
               <h2>{t('show_title')}</h2>
               <p>{t('show_sub')}</p>
+              <p className="sec-sub2">{t('show_sub2')}</p>
             </div>
             <div className="filters-wrap reveal">
-              <div className="filters">
-                {Object.keys(CATS).map((k) => (
-                  <button
-                    key={k}
-                    className={'chip' + (k === filter ? ' active' : '')}
-                    onClick={() => setFilter(k)}
-                  >
-                    {CATS[k][lang]}
-                  </button>
-                ))}
+              <div className="filters" role="group" aria-label={t('show_tag')}>
+                {Object.keys(CATS).map((k) => {
+                  const n = k === 'all' ? DEMOS.length : DEMOS.filter((d) => d.cat === k).length
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      className={'chip' + (k === filter ? ' active' : '')}
+                      aria-pressed={k === filter}
+                      onClick={() => setFilter(k)}
+                    >
+                      {CATS[k][lang]}<span className="n">{n}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
             <div className="grid">
               {demos.map((d, i) => {
                 const col = TINT[d.cat] || '#8d9bff'
-                const linkProps = d.url
-                  ? { href: d.url, target: '_blank', rel: 'noopener' }
-                  : { href: '#showcase' }
-                return (
-                  <a
-                    className="card reveal"
-                    style={{ transitionDelay: (i % 3) * 50 + 'ms' }}
-                    key={d.cat + i}
-                    {...linkProps}
-                  >
-                    <div className="ico" style={{ color: col }}>
+                const inner = (
+                  <>
+                    <div className="ico">
                       <Icon name={d.icon} color={col} />
                     </div>
                     <h3>{d[lang].t}</h3>
@@ -232,8 +235,25 @@ export default function App() {
                     <div className="tags">
                       {d.tags.map((x, j) => <span key={j}>{x}</span>)}
                     </div>
+                  </>
+                )
+                const delay = { transitionDelay: (i % 3) * 50 + 'ms' }
+                // 開けないカードをリンクにすると「押せそうなのに何も起きない」ので、
+                // 準備中は要素ごと非リンクにして、状態を札で見せる。
+                return d.url ? (
+                  <a className="card reveal" style={{ ...delay, '--tc': col }} key={d.cat + i}
+                     href={d.url} target="_blank" rel="noopener">
+                    <span className="badge badge-live" style={{ '--bc': col }}>
+                      <i /> {t('show_live')}
+                    </span>
+                    {inner}
                     <span className="card-link">{t('card_open')} <span className="chev">→</span></span>
                   </a>
+                ) : (
+                  <div className="card card-soon reveal" style={{ ...delay, '--tc': col }} key={d.cat + i}>
+                    <span className="badge">{t('card_soon')}</span>
+                    {inner}
+                  </div>
                 )
               })}
             </div>

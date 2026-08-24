@@ -44,7 +44,8 @@ const DEMOS=[
   {cat:'model', icon:'spark', url:'/d/property-video/index.html', ja:{t:'物件写真 → 内見動画 自動生成',d:'物件写真をアップロードするだけで、AIが各部屋を動画化し1本の内見動画として連続再生。撮影・編集なしで内見動画をつくるライブデモ。'},en:{t:'Property Photos → Walkthrough Video',d:'Upload property photos and AI turns each room into video, played back as a single walkthrough. No filming, no editing.'},tags:['Modellix','不動産','Live']},
   {cat:'model', icon:'cpu', ja:{t:'Modellix AI モデルコンソール',d:'主要なマルチモーダルAIモデルを、ひとつのコンソールから呼び出せる MaaS のデモ。'},en:{t:'Modellix AI Model Console',d:'Access leading multimodal AI models from a single MaaS console.'},tags:['Modellix','MaaS','AI']}
 ];
-const CATS={ all:{ja:'すべて',en:'All'}, agent:{ja:'AI エージェント',en:'AI Agents'}, engage:{ja:'エンゲージメント',en:'Engagement'}, model:{ja:'AI モデル',en:'AI Models'} };
+/* カテゴリーは製品名で切る。cat のキーは DEMOS と TINT が参照しているので変えない。 */
+const CATS={ all:{ja:'すべて',en:'All'}, agent:{ja:'GPTBots',en:'GPTBots'}, engage:{ja:'EngageLab',en:'EngageLab'}, model:{ja:'Modellix',en:'Modellix'} };
 const FROWS=[
   {c:'#8d9bff', ch:'GPTBots', mv:'1,472', ja:'観光AIガイド', en:'Tourism AI Guide'},
   {c:'#3fd6bd', ch:'EngageLab', mv:'769', ja:'LiveDesk サポート', en:'LiveDesk Support'},
@@ -52,11 +53,10 @@ const FROWS=[
 ];
 const I18N={
   ja:{nav_demos:'デモ一覧',nav_about:'私たちについて',nav_contact:'お問い合わせ',nav_cta:'お問い合わせ',
-    hero_pill_tag:'NEW',hero_pill:'{n}つのライブデモを公開中',
+    hero_pill_tag:'NEW',hero_pill:'{n}つのデモを実際に動かせます',
     hero_title:'顧客体験の<br><span class="grad-text">すべて</span>を、ひとつに。',
     hero_lead:'GPTBots・EngageLab・Modellix の製品を、実際に動かして体験。AIエージェントから全チャネル配信まで、ひとつのショーケースに。',
     hero_cta1:'デモを見る',hero_cta2:'お問い合わせ →',
-    hero_new_tag:'NEW',hero_new:'AIバーチャル試着を、その場で試す',
     mock_title:'Aurora Console',mock_n1:'概要',mock_n2:'AIエージェント',mock_n3:'キャンペーン',mock_n4:'分析',mock_n5:'設定',
     mock_s1:'アクティブ会話',mock_s2:'AI 返信率',mock_s3:'本日配信',mock_ch:'月間アクティブ推移',
     trust_line:'NASDAQ 上場。GPTBots・EngageLab・Modellix で世界中の顧客体験を支えています。',
@@ -65,13 +65,14 @@ const I18N={
     cta_btn1:'お問い合わせ',cta_btn2:'デモ一覧へ戻る',
     foot_desc:'カスタマーエンゲージメントとデータインテリジェンスのグローバルリーダー。',
     foot_product:'Product',foot_company:'Company',foot_l1:'デモ一覧',foot_l4:'会社概要',foot_l5:'お問い合わせ',foot_l6:'プライバシーポリシー',
-    foot_note:'aurora-mobile.jp — プロダクトデモ ショーケース',card_open:'デモを開く'},
+    foot_note:'aurora-mobile.jp — プロダクトデモ ショーケース',card_open:'デモを開く',
+    card_soon:'準備中',show_live:'公開中',show_soon:'準備中',
+    show_sub2:'{a} 件が実際に動かせます。残り {b} 件は準備中です。'},
   en:{nav_demos:'Demos',nav_about:'About',nav_contact:'Contact',nav_cta:'Contact',
-    hero_pill_tag:'NEW',hero_pill:'{n} live demos now available',
+    hero_pill_tag:'NEW',hero_pill:'{n} demos you can actually run',
     hero_title:'Everything for<br><span class="grad-text">customer experience</span>.',
     hero_lead:'Experience GPTBots, EngageLab and Modellix — from AI agents to omnichannel delivery, all in one showcase.',
     hero_cta1:'View demos',hero_cta2:'Contact us →',
-    hero_new_tag:'NEW',hero_new:'Try the AI virtual try-on, right now',
     mock_title:'Aurora Console',mock_n1:'Overview',mock_n2:'AI Agents',mock_n3:'Campaigns',mock_n4:'Analytics',mock_n5:'Settings',
     mock_s1:'Active chats',mock_s2:'AI reply rate',mock_s3:'Sent today',mock_ch:'Monthly active trend',
     trust_line:'NASDAQ-listed. Powering customer experience worldwide with GPTBots, EngageLab and Modellix.',
@@ -80,7 +81,9 @@ const I18N={
     cta_btn1:'Get in touch',cta_btn2:'Back to demos',
     foot_desc:'A global leader in customer engagement and data intelligence.',
     foot_product:'Product',foot_company:'Company',foot_l1:'Demos',foot_l4:'Company',foot_l5:'Contact',foot_l6:'Privacy Policy',
-    foot_note:'aurora-mobile.jp — Product Demo Showcase',card_open:'Open demo'}
+    foot_note:'aurora-mobile.jp — Product Demo Showcase',card_open:'Open demo',
+    card_soon:'Coming soon',show_live:'Live',show_soon:'Coming soon',
+    show_sub2:'{a} of them run for real. The other {b} are in preparation.'}
 };
 
 export { ICONS, TINT, DEMOS, CATS, FROWS, I18N };
