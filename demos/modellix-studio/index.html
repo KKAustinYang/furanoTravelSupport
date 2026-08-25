@@ -450,7 +450,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ねこといぬを左右に並べる。列数は固定せず、狭い画面では各パネルの中で折り返させる。
    flex-grow を 5:3 にしてあるので、匹数の比とパネルの幅の比がだいたい一致する。 */
 .species{display:flex;align-items:stretch;justify-content:center;
-  gap:clamp(12px,1.4vw,22px);width:100%;max-width:1080px}
+  gap:clamp(12px,1.4vw,22px);width:100%;max-width:1280px}
 .sp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:9px;
   padding:clamp(11px,1.1vw,16px);border:1px solid var(--line);border-radius:var(--r-lg);
   background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.008))}
@@ -462,12 +462,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* 列数はパネルごとに固定して 1 行に収める。折り返すと下に大きな空白ができ、
    その分だけ画面が縦に伸びてスクロールが必要になってしまう。 */
 #s-pet .pets{max-width:none;justify-content:center;gap:8px}
-.sp[data-species=cat] .pets{grid-template-columns:repeat(4,minmax(0,1fr))}
-.sp[data-species=dog] .pets{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sp[data-species=cat] .pets{grid-template-columns:repeat(5,minmax(0,1fr))}
+.sp[data-species=dog] .pets{grid-template-columns:repeat(5,minmax(0,1fr))}
 .sp .pet{padding:9px}
 @media(max-width:1000px){
   .species{flex-direction:column}
-  .sp[data-species=cat] .pets,.sp[data-species=dog] .pets{grid-template-columns:repeat(4,minmax(0,124px))}
+  .sp[data-species=cat] .pets,.sp[data-species=dog] .pets{grid-template-columns:repeat(3,minmax(0,124px))}
 }
 #s-pet .pet b{font-size:12.5px}
 #s-pet .pet span{font-size:9.5px}
@@ -492,7 +492,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .pet span{display:block;font-size:10px;color:var(--muted);margin-top:2px}
 .pet:hover{transform:translateY(-5px);border-color:var(--line-2)}
 .pet[aria-pressed=true]{border-color:var(--a1);box-shadow:0 0 0 1px var(--a1),0 10px 40px color-mix(in srgb,var(--a1) 22%,transparent)}
-/* 別の子をアップロードするタイル */
+/* 持ち込みタイル。ファイルから選ぶ（破線）と、その場で撮る（実線＋アクセント）。
+   同じ働きだが入口が違うので、枠線で見分けられるようにしている。 */
+.pet-cam .pa{border:1px solid color-mix(in srgb,var(--a1) 45%,transparent);
+  background:color-mix(in srgb,var(--a1) 9%,transparent);
+  display:grid;place-items:center;gap:6px;color:var(--a1)}
+.pet-cam:hover .pa{border-color:var(--a1);background:color-mix(in srgb,var(--a1) 16%,transparent)}
+.pet-cam .pa svg{width:26px;height:26px}
+.pet-cam .pa em{font-style:normal;font-size:10.5px;letter-spacing:.04em}
+.pet-cam .pa img{width:100%;height:100%;object-fit:cover;border-radius:12px}
 .pet-add .pa{border:1px dashed var(--line-2);background:rgba(255,255,255,.03);
   display:grid;place-items:center;gap:6px;color:var(--muted)}
 .pet-add:hover .pa{border-color:var(--a1);color:var(--a1)}
@@ -906,7 +914,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     <section class="screen" id="s-capture" aria-label="撮影">
       <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s26">主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
-      <h2 class="h2" data-i18n="s27">枠の中に顔を入れてください</h2>
+      <h2 class="h2" id="capTitle">枠の中に顔を入れてください</h2>
       <div class="cam">
         <video id="cam" autoplay playsinline muted></video>
         <canvas id="shot" hidden></canvas>
@@ -923,7 +931,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         </button>
         <button class="btn btn-g" id="btnSample" data-i18n="s30">サンプルで進む</button>
       </div>
-      <p class="lead" style="font-size:11.5px" data-i18n="s31">撮影した画像はこの端末の中だけで処理され、サーバーには保存されません。</p>
+      <p class="lead" id="capNote" style="font-size:11.5px">撮影した画像はこの端末の中だけで処理され、サーバーには保存されません。</p>
     </section>
 
     <!-- 2b ペット -->
@@ -3916,7 +3924,13 @@ function setSound(on){
 
 /* ───── ペット（ねこ／いぬ） ─────
    工程は人物と同じ。違うのはプロンプトだけなので、タイルの作り方は 1 本にまとめて
-   種別（cat / dog）を渡し分けている。選択はねこ・いぬをまたいで常に 1 匹だけ。 */
+   種別（cat / dog）を渡し分けている。選択はねこ・いぬをまたいで常に 1 匹だけ。
+   持ち込みの口は 2 つ：ファイルを選ぶ（.pet-add）と、その場で撮る（.pet-cam）。
+   後者は「お客様のスマホに表示した写真を、この端末のカメラで撮る」ための入口。 */
+var petRelabel = [];   // 言語切り替え時に文言を貼り直す
+var petReset   = [];   // 最初の画面に戻すときに見た目と選択を戻す
+var adoptPetPhoto = null;   // カメラ画面から撮れた写真を受け取る
+
 (function(){
   var petScreen=$("#s-pet");
 
@@ -3924,7 +3938,12 @@ function setSound(on){
     petScreen.querySelectorAll(".pet").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
   }
 
-  function buildGrid(grid, input, list, species, addTitle){
+  var UP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
+    '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>';
+  var CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
+    '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+
+  function buildGrid(grid, input, list, species, titleKey, titleJa){
     list.forEach(function(p){
       var b=document.createElement("button");
       b.className="pet"; b.type="button"; b.setAttribute("aria-pressed","false");
@@ -3939,16 +3958,42 @@ function setSound(on){
       grid.appendChild(b);
     });
 
-    /* お手持ちの写真を持ち込む口。ねこ・いぬそれぞれに用意する。 */
-    var add=document.createElement("button");
-    add.className="pet pet-add"; add.type="button"; add.setAttribute("aria-pressed","false");
-    add.innerHTML='<span class="pa">'+
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
-      '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
-      '<em>'+T("tapChoose","タップして選ぶ")+'</em></span>'+
-      '<b>'+addTitle+'</b><span>'+T("fileNote","JPG / PNG・10MB まで")+'</span>';
-    add.addEventListener("click",function(){ input.click(); });
-    grid.appendChild(add);
+    /* 持ち込みタイルは 2 つとも同じ見た目・同じ選ばれ方をするので、作り方を共通にする。 */
+    function makeSlot(cls, icon, hintKey, hintJa, tKey, tJa, subKey, subJa, onPick){
+      var el=document.createElement("button");
+      el.className="pet "+cls; el.type="button"; el.setAttribute("aria-pressed","false");
+      function paint(){
+        el.innerHTML='<span class="pa">'+icon+'<em>'+T(hintKey,hintJa)+'</em></span>'+
+          '<b>'+T(tKey,tJa)+'</b><span>'+T(subKey,subJa)+'</span>';
+      }
+      paint();
+      el.addEventListener("click", onPick);
+      grid.appendChild(el);
+      petRelabel.push(function(){ if(el.getAttribute("aria-pressed")!=="true") paint(); });
+      petReset.push(function(){ el.setAttribute("aria-pressed","false"); paint(); });
+      /* 選ばれたら、そのタイル自体が写真のサムネイルになる */
+      return function adopt(data){
+        clearAll(); el.setAttribute("aria-pressed","true");
+        el.innerHTML='<span class="pa"><img src="'+data+'" alt=""></span>'+
+          '<b>'+T("thisPhoto","この写真で進む")+'</b><span>'+T(subKey,subJa)+'</span>';
+        state.subject="pet"; state.species=species;
+        state.shot=null; state.petImg=data; state.label=T("lblMyPet","うちの子");
+        $("#btnPetNext").disabled=false; resetIdle();
+      };
+    }
+
+    var adoptFile = makeSlot("pet-add", UP_ICON, "tapChoose","タップして選ぶ",
+      titleKey, titleJa, "fileNote","JPG / PNG・10MB まで",
+      function(){ input.click(); });
+
+    var adoptCam = makeSlot("pet-cam", CAM_ICON, "tapShoot","タップして撮る",
+      "camTitle","その場で撮る", "camNote","スマホの画面を撮っても OK",
+      function(){
+        state.subject="pet"; state.species=species;
+        state.camFor="pet";
+        adoptPetPhoto = adoptCam;
+        show("capture"); startCam(); resetIdle();
+      });
 
     /* 選ばれた写真は、その場で縮小して data URL にする。端末の外へは出さない。 */
     input.addEventListener("change",function(ev){
@@ -3957,27 +4002,21 @@ function setSound(on){
       if(f.size > 10*1024*1024){ alert(T("aTooBig","ファイルサイズが 10MB を超えています。")); return; }
       var r=new FileReader();
       r.onload=function(){
-        toJpeg(r.result, 1280).then(function(data){
-          clearAll(); add.setAttribute("aria-pressed","true");
-          add.querySelector(".pa").innerHTML='<img src="'+data+'" alt="">';
-          add.querySelector("b").textContent=T("thisPhoto","この写真で進む");
-          state.subject="pet"; state.species=species;
-          state.shot=null; state.petImg=data; state.label=T("lblMyPet","うちの子");
-          $("#btnPetNext").disabled=false; resetIdle();
-        }).catch(function(e){ alert(T("aBadImg","画像を読み込めませんでした。")); });
+        toJpeg(r.result, 1280).then(adoptFile)
+          .catch(function(e){ alert(T("aBadImg","画像を読み込めませんでした。")); });
       };
       r.onerror=function(){ alert(T("aBadFile","ファイルを読み込めませんでした。")); };
       r.readAsDataURL(f);
     });
   }
 
-  buildGrid($("#petGrid"), $("#petFile"), PETS, "cat", T("myCat","うちのねこ"));
-  buildGrid($("#dogGrid"), $("#dogFile"), DOGS, "dog", T("myDog","うちのいぬ"));
+  buildGrid($("#petGrid"), $("#petFile"), PETS, "cat", "myCat", "うちのねこ");
+  buildGrid($("#dogGrid"), $("#dogFile"), DOGS, "dog", "myDog", "うちのいぬ");
 })();
 
 /* ───── 状態と画面遷移 ───── */
 function blankState(){
-  return {subject:null,species:"cat",quality:"pro",shot:null,petImg:null,label:"",world:null,
+  return {subject:null,species:"cat",quality:"pro",camFor:"self",shot:null,petImg:null,label:"",world:null,
           cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false,
           videoUrl:null,videoIsSample:false};
 }
@@ -4002,6 +4041,7 @@ function show(name,push){
   if(name==="attract"){ attractLoop(); } else { clearInterval(attractTimer); }
   if(name==="subject") fillRow("#cardRow");
   if(name==="pet") fillRow("#catRow");
+  if(name==="capture") setCaptureMode();
   cardRowLoop(name==="subject");
   catRowLoop(name==="pet");
   if(name==="world"){ refreshWorldArt(); if(state.world!=null) setWorldBg(state.world); }
@@ -4057,8 +4097,24 @@ $("#btnPetNext").addEventListener("click",function(){ state.shot=petShot(); show
    構えが崩れる／目を閉じる／並びが詰まる、で撮り直しが増えていた。 */
 $("#btnShoot").addEventListener("click",function(){ capture(); });
 
+/* 撮影画面は「自分の顔」と「ペットの持ち込み」で兼用している。
+   構えるものが違うので、見出しと補助ボタンだけ入れ替える。 */
+function setCaptureMode(){
+  var pet = state.camFor === "pet";
+  $("#capTitle").textContent = pet
+    ? T("capPet","ペットの写真を枠に入れてください")
+    : T("s27","枠の中に顔を入れてください");
+  $("#capNote").textContent = pet
+    ? T("capPetNote","お手持ちのスマホに写真を表示して、そのまま撮っていただけます。")
+    : T("s31","撮影した画像はこの端末の中だけで処理され、サーバーには保存されません。");
+  // サンプルで進むのは人物のときだけ。ペットは一覧に見本があるので要らない。
+  $("#btnSample").hidden = pet;
+  var sb = document.querySelector("#s-capture [data-stepback] b");
+  if(sb) sb.textContent = pet ? T("backPet","主役の子を選び直す") : T("s26","主役を選び直す");
+}
+
 function capture(){
-  var v=$("#cam"), c=$("#shot");
+  var v=$("#cam"), c=$("#shot"), shot=null;
   var f=document.createElement("div"); f.className="flash"; document.body.appendChild(f);
   later(function(){f.remove()},520);
   if(stream && v.videoWidth){
@@ -4067,9 +4123,25 @@ function capture(){
     var g=c.getContext("2d");
     var sw=side, sh=side*4/3, sx=(w-sw)/2, sy=Math.max(0,(h-sh)/2);
     g.drawImage(v,sx,sy,sw,Math.min(sh,h),0,0,c.width,c.height); // ミラーのまま＝本人が見慣れた向き
-    state.shot=c.toDataURL("image/jpeg",.9); state.label=T("lblYou","あなた");
-  } else { state.shot=sampleShot(); state.label=T("lblSample","サンプル"); }
+    shot=c.toDataURL("image/jpeg",.9);
+  }
   stopCam();
+
+  /* ペットの持ち込み撮影。お客様のスマホに出した写真をこの端末で撮る用途なので、
+     撮り終えたら世界選択へは進めず、ペット一覧へ戻して選択状態にする。 */
+  if(state.camFor === "pet"){
+    state.camFor = "self";
+    var adopt = adoptPetPhoto;
+    later(function(){
+      hist.pop();               // capture へ来たときに積んだ "pet" を戻す
+      show("pet", false);
+      if(adopt) adopt(shot || sampleShot());
+    }, 420);
+    return;
+  }
+
+  if(shot){ state.shot=shot; state.label=T("lblYou","あなた"); }
+  else { state.shot=sampleShot(); state.label=T("lblSample","サンプル"); }
   later(function(){show("world")},420);
 }
 
@@ -4135,15 +4207,15 @@ LIGHT AND STYLE: intense orange firelight key from the UPPER LEFT, cool violet-b
 9:16 vertical, highly detailed.
 Do NOT: calm, neutral or posed expression; a clean undamaged costume; a helmet covering the face; photorealistic or 3D-render style; flat even lighting; oversized head or narrow shoulders; looking at camera; text or watermark.`,
 
-`Transform the person in the reference image into an Edo-period masterless samurai in a merchant street on an overcast day. Japanese period drama film still.
-IDENTITY: keep the hairstyle, eyewear, earrings, facial structure, skin tone and facial hair exactly as in the reference — instantly recognizable as the same person. Natural skin texture and pores; no slimming or beautifying. Hair gathered back loosely and tied at the nape, full unshaven hairline.
-COSTUME: a deep indigo haori sun-faded at the shoulders over a dark kimono and hakama, the pale under-collar crossed right-over-left, mud flecks along the hem, cuffs frayed.
-WEAPON: both swords stay fully in their scabbards through his obi, the scabbard mouths clearly visible at his waist. His right hand rests flat on the scabbard, his left thumb presses the guard — only two or three centimetres of bare blade show at the mouth. Neither hand touches the grip. There is no sword in his hand.
-PERFORMANCE: breath held low and shallow, jaw muscles tight, lips pressed thin, eyes cold and unblinking, locked off-frame to the LEFT at an opponent. Head turned three-quarters to camera, gaze off-frame left. A bead of sweat at the temple, hair damp at the sideburns, street dust filming the cheekbone, a thin old scar along the jaw.
-POSE: framed from the waist up, shoulders level and square, natural adult male proportions. Slightly right of centre with look room on the left.
-LIGHT AND LENS: flat soft overcast daylight from above, low saturation, plus a faint warm bounce from a charcoal brazier off to the left — the only warm note. Dust and smoke hanging in the air. Long lens compression, shallow depth of field, deep but open blacks, fine film grain, halation only on the brazier coals. 85mm at T2, slightly underexposed.
-9:16 vertical, photorealistic film still, highly detailed.
-Do NOT: a drawn or raised sword; a sword in his hand; a hand on the grip; calm, serene or smiling expression; relaxed jaw; a clean pressed costume; a chonmage topknot or shaved forehead; the collar crossed left-over-right; Chinese or Korean clothing; sunset or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade; looking at camera; text or watermark.`,
+`THE BEAT The instant two blades collide. He has driven his katana up into a descending cut and stopped it dead. This is the half-second of impact — not the wind-up, not the aftermath.
+FRAMING Vertical 9:16. MEDIUM CLOSE-UP, camera LOW and looking UP at him. He occupies the centre and right of frame: head and shoulders large in the upper middle, his forearms and the hilt across the lower two thirds. Both hands grip the tsuka, arms extended UP and to the LEFT. His blade runs from lower-right to upper-left.
+THE CLASH — UPPER LEFT A second blade descends into the upper-left corner and meets his edge at a single point. ONLY THAT BLADE IS SHOWN — plus, at the extreme left edge, a dark blurred sliver of the hand holding it. No body, no face, no shoulder, no torso. At the contact point a white-hot burst throws orange sparks outward and downward in a wide fan, some tumbling through the frame. The burst is the brightest thing in the picture and lights his face from the upper left.
+KEEP FROM THE SUPPLIED PHOTO, UNCHANGED — this IS the person Face shape, jaw and cheekbone structure, eye shape and spacing, nose, mouth, eyebrows, skin tone, apparent age. Do not slim, smooth, beautify or restyle the face.
+EXPRESSION — he is under load, not posing Lips peeled back off BOTH rows of teeth in a full snarl. Masseter and jaw muscles standing out along the jawline. Two deep vertical furrows driven between the brows. Eyes narrowed and looking UP AND TO THE LEFT at the crossing point — NOT at camera. Neck tendons corded. Nostrils flared.
+HAIR Black, soaked through with sweat, swept back off the forehead and gathered into a short tail at the nape. Loose strands stuck to the temples and forehead. A spray of sweat droplets flung off in an arc, catching the light. A small silver hoop in one ear.
+COSTUME Indigo linen kimono, coarse-woven and worn, hanging open at the chest over a cream under-layer. Sleeves and shoulders worked with pale road dust. Dark obi at the waist; a sheathed wakizashi at the left hip with a round brass tsuba. His katana has a black-wrapped tsuka and a round brass tsuba. Soot flecks on his right cheek and jaw.
+CINEMATOGRAPHY Photorealistic, cinematic. Background near-black at the top, lifting to dusty grey at the bottom, completely defocused with no readable objects. Floating dust motes catch the light. Key light from the spark burst at upper left; hard rim light along his cheek, nose and shoulder. Long lens, very shallow depth of field, high shutter speed freezing the sparks.
+Do NOT include: the second swordsman's body, face, shoulder or torso; a fully visible second character; the clash at the centre of frame; a wide shot with the figure small or distant; either blade passing through his hands, arms or body; a blade visible on both sides of the contact point; him looking at camera; a calm, neutral or heroic expression; a closed mouth; dry or voluminous hair; a clean undamaged kimono; a readable or in-focus background; modern clothing; text or watermarks.`,
 
 `Transform the person in the reference image into a stop-motion claymation figure fleeing a clay dinosaur. Frame from a stop-motion comedy.
 IDENTITY: keep the hairstyle silhouette, eyewear, earrings and overall facial proportions so the figure is instantly recognizable as the same person, rendered in clay.
@@ -4212,15 +4284,16 @@ STYLE: clean anime line work, flat cel shading with crisp light and shadow separ
 9:16 vertical, frozen at the peak moment, highly detailed.
 Do NOT: a pasted-on or floating subject; a missing contact shadow; lighting that disagrees with the scene; a different or beautified face; a clean undamaged costume; photorealistic or 3D-render style; him looking at the camera; text or watermark.`,
 
-`Reference image 1 is the character. Reference image 2 is the environment.
-Place the character from image 1 into the merchant street from image 2, standing full body in the middle ground on the packed-earth road, occupying roughly 50% of the frame height, right of centre, feet fully visible, camera at chest height. He faces the camera at three-quarters with his gaze off-frame to the LEFT at the ronin.
-WEAPON: both swords stay fully in their scabbards through his obi, the scabbard mouths visible at his waist. His right hand rests flat on the scabbard and his left thumb presses the guard — only two or three centimetres of bare blade show at the mouth. Neither hand touches the grip. There is no sword in his hand.
-KEEP FROM IMAGE 2, UNCHANGED: the foreground ronin at lower left seen entirely from behind, face never visible, his own katana already drawn and held low; every bystander pressed back against the shopfronts on both sides with faces indistinct; the near-foreground onlookers cropped at the bottom corners; the overcast sky and the whole street. Nobody else stands in the middle of the road.
-IDENTITY: keep his face, hairstyle, eyewear, earrings, indigo haori and every mark of weathering exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
-INTEGRATION: match the flat cool overcast daylight, low saturation, colour temperature, atmosphere and grain of image 2 exactly, plus a faint warm bounce from the charcoal brazier on the left. Ground him with a soft diffuse contact shadow; dust and loose straw swirl around his feet and blow past him down the street.
-CINEMATOGRAPHY: long lens compression stacking the crowd into flattened layers behind him, shallow depth of field so he is sharp while the foreground ronin and side crowds fall soft, dust and brazier smoke hanging in the air, low saturation with the brazier the only warm note, blacks deep but open, fine grain and halation only on the brazier coals.
-Photorealistic Japanese period drama, 9:16 vertical, frozen at the tense moment before the strike, highly detailed.
-Do NOT: his sword drawn or raised; a sword in his hand; a hand on the grip; a pasted-on or floating subject; a missing contact shadow; a different or beautified face or costume; a visible face on the foreground ronin; a second figure or bystander in the middle of the road; sunset or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade; him looking at the camera; text or watermark.`,
+`THE BEAT The same instant, seen wide. Two blades have collided and locked. He is braced low against the weight of the descending cut, in the middle of a crowded Edo merchant street.
+KEEP FROM IMAGE 1, UNCHANGED — this IS the character, do not reinterpret His face and its exact identity. The snarl with both rows of teeth showing and the deep furrows between the brows. The sweat-soaked black hair swept back into a short tail. The indigo kimono hanging open over a cream under-layer, with pale dust worked into the sleeves and shoulders. The dark obi. The sheathed wakizashi at the left hip. The black-wrapped tsuka and round brass tsuba. The two-handed grip with both arms extended UP and to the LEFT.
+FRAMING Vertical 9:16. WIDE, camera LOW near the ground and looking slightly up. FULL BODY. He is SHARP and on the right of frame, filling the lower two thirds. His stance is a DEEP BRACED LUNGE: front knee bent hard, back leg driven out behind him, hips sunk low, both feet dug into the earth. His eyes look UP AND LEFT at the crossing point, never at camera.
+THE OPPONENT — left foreground, never resolved A large DARK OUT-OF-FOCUS MASS fills the left foreground: a woven straw kasa, a dark sleeve, an arm, a hand on a sword hilt, a dark hakama at the bottom edge. He is heavily blurred throughout and his FACE IS NEVER VISIBLE.
+THE CLASH — UPPER LEFT The two blades meet at a single point in the upper left. A large white-hot burst throws sparks in a wide fan with a column of pale grey smoke rising off it.
+KEEP FROM IMAGE 2 The Edo merchant street: two-storey wooden shopfronts with tiled roofs, tall navy banners carrying white kanji, noren, an orange paper lantern glowing at mid-right, a fire basket burning in the left mid-ground. Overcast grey-white sky filling the upper right, bright and nearly blown out. Pale sandy packed earth with loose straw scattered across it.
+THE CROWD Townspeople in muted blues and greys crowd both sides in the mid-ground, mouths open, arms thrown out, recoiling away from the clash. Slightly motion-blurred but clearly readable as people.
+INTEGRATION Dust erupts in clouds around his feet and behind his back leg. The overcast daylight and the spark burst both fall on him consistently with the street around him. His feet are planted in the sand with contact shadows underneath.
+CINEMATOGRAPHY Photorealistic, cinematic. Low wide-angle lens. Shallow depth of field: the foreground opponent heavily blurred, him sharp, the crowd softly out of focus. Dust, smoke and sparks in the air. High shutter speed on the figure, motion blur on the dust.
+Do NOT include: the opponent's face; the opponent sharp or in focus; the opponent placed on the right side; a clear symmetrical duel between two fully visible fighters; the clash at the centre of frame; either blade passing through a body; the figure standing upright instead of braced low; him looking at camera; a night scene or a clear blue sky; an empty street with no crowd; a clean undamaged kimono; a shortened or restyled face; modern objects or signage; text or watermarks.`,
 
 `Reference image 1 is the character. Reference image 2 is the environment.
 Place the clay figure from image 1 into the miniature jungle set from image 2, three-quarter body, occupying roughly 60% of the frame height, one step closer to camera in the lower third, mid-run toward the lens with the head twisted back at the clay T-rex, hat askew.
@@ -6830,12 +6903,27 @@ function videoStepDesc(){
 }
 
 /* 経過秒を数え続けるだけの小さなタイマー */
-function ticker(k){
-  var t0=Date.now(), id=setInterval(function(){
+/* 経過秒のタイマー。
+   以前は setInterval が clearAll() の対象外だったため、生成を途中でやめた回の
+   タイマーが止まらず残り、次の生成の秒数欄に「前の回からの通算」を書き込んでいた。
+   （② に 323 秒などと出ていたのはこれ。② は 4 分で打ち切るので単独では出ない値）
+   世代（runToken）を持たせて自分で止まるようにし、一括停止もできるようにした。 */
+var tickers = [];
+function stopTickers(){ tickers.forEach(clearInterval); tickers = []; }
+function ticker(k, my){
+  var t0=Date.now();
+  var id=setInterval(function(){
+    if(my !== undefined && my !== runToken){ clearInterval(id); return; }
     setNodeTime(k, Math.round((Date.now()-t0)/1000)+" 秒");
   },1000);
+  tickers.push(id);
   setNodeTime(k,"0 秒");
-  return function(){ clearInterval(id); setNodeTime(k, Math.round((Date.now()-t0)/1000)+" 秒"); };
+  return function(){
+    clearInterval(id);
+    var i=tickers.indexOf(id); if(i>=0) tickers.splice(i,1);
+    // 世代が変わっていたら、最後の 1 回も書かない（新しい表示を汚さない）
+    if(my === undefined || my === runToken) setNodeTime(k, Math.round((Date.now()-t0)/1000)+" 秒");
+  };
 }
 
 function genError(msg, what){
@@ -6854,6 +6942,7 @@ function runGen(){
   var my=++runToken;
   var w=WORLDS[state.world];
 
+  stopTickers();          // 前の回の取り残しをここで断つ
   show("gen");
   $("#genErr").hidden=true;
   $("#genTitle").textContent=T("genTitle","「"+w.nm+"」を生成しています",w.nm);
@@ -6874,30 +6963,34 @@ function runGen(){
 
   /* 01 解析（ローカル処理：送れる形へ整える） */
   setNode(0,"run");
-  var stop0=ticker(0);
+  var stop0=ticker(0, my);
   prepImage(state.shot||sampleShot()).then(function(jpeg){
+    stop0();
     if(my!==runToken) return;
-    stop0(); setNode(0,"done");
+    setNode(0,"done");
 
     /* 02 キャラクターカード生成（実 API・② 角色卡） */
     setNode(1,"run"); note(1);
-    var stop1=ticker(1);
+    var stop1=ticker(1, my);
     return submitCard(jpeg, cardPrompts()[w.i])
       .then(function(taskPath){ return pollTask(taskPath); })
       .then(function(url){
+        stop1();
         if(my!==runToken) return;
-        stop1(); setNode(1,"done");
+        setNode(1,"done");
         onCardReady(url);
       })
       .catch(function(err){
+        stop1();
         if(my!==runToken) return;
-        stop1(); setNode(1,"done");
+        setNode(1,"done");
         genError(err.message||String(err));
         onCardReady(sampleCards()[w.i], true);   // 展示を止めない
       });
   }).catch(function(err){
+    stop0();
     if(my!==runToken) return;
-    stop0(); setNode(0,"done");
+    setNode(0,"done");
     genError(err.message||String(err));
     onCardReady(sampleCards()[w.i], true);
   });
@@ -6929,17 +7022,19 @@ function runScene(my, w){
   if(my!==runToken) return;
   setNode(2,"run"); note(2);
   $("#tSweep").classList.add("on");
-  var stop2=ticker(2);
+  var stop2=ticker(2, my);
   submitScene([state.cardUrl, SCN_URL[w.i]], scenePrompts()[w.i])
     .then(function(taskPath){ return pollTask(taskPath); })
     .then(function(url){
+      stop2();
       if(my!==runToken) return;
-      stop2(); setNode(2,"done");
+      setNode(2,"done");
       onSceneReady(url);
     })
     .catch(function(err){
+      stop2();
       if(my!==runToken) return;
-      stop2(); setNode(2,"done");
+      setNode(2,"done");
       genError(err.message||String(err), T("eScene","世界との合成"));
       onSceneReady(sampleScenes()[w.i], true);
     });
@@ -6973,7 +7068,7 @@ function runVideo(my, w){
   if(my!==runToken) return;
   setNode(3,"run");
   $("#tSweep").classList.add("on");
-  var stop3=ticker(3);
+  var stop3=ticker(3, my);
   /* 始まりのコマ。動物はキャラクターカードから完成カットへ。
      人物は「無人の世界の背景」から完成カットへつなぐ（人物の顔が始点に入らない）。 */
   var mdl   = videoModelFor(w.i);
@@ -6981,13 +7076,15 @@ function runVideo(my, w){
   submitVideo(mdl, first, state.sceneUrl, videoPrompts()[w.i])
     .then(function(taskPath){ return pollTask(taskPath, null, VIDEO_TIMEOUT); })
     .then(function(url){
+      stop3();
       if(my!==runToken) return;
-      stop3(); setNode(3,"done");
+      setNode(3,"done");
       onVideoReady(url);
     })
     .catch(function(err){
+      stop3();
       if(my!==runToken) return;
-      stop3(); setNode(3,"done");
+      setNode(3,"done");
       genError(err.message||String(err), T("eVideo","動画の生成"));
       onVideoReady(CAT_VID[w.i], true);   // 展示を止めない
     });
@@ -7299,7 +7396,7 @@ document.querySelectorAll("[data-go]").forEach(function(b){
 });
 function goBack(){
   // 生成中に戻るときは、走っている生成を切り離してから帰る（結果が後から割り込まないように）
-  if(current==="gen"){ runToken++; clearAll(); $("#genErr").hidden=true; }
+  if(current==="gen"){ runToken++; clearAll(); stopTickers(); $("#genErr").hidden=true; }
   if(current==="capture") stopCam();
   if(pvOpen) closePreview();
   var p=hist.pop()||"attract";
@@ -7313,7 +7410,7 @@ document.querySelectorAll("[data-stepback]").forEach(function(b){
 $("#btnRestart").addEventListener("click",restart);
 
 function restart(){
-  clearAll(); stopCam(); closePreview();
+  clearAll(); stopTickers(); stopCam(); closePreview();
   runToken++;
   state=blankState();
   hist=[];
@@ -7325,14 +7422,9 @@ function restart(){
     if(!x.closest(".lang")) x.setAttribute("aria-pressed","false");
   });
   $("#btnPetNext").disabled=true; $("#btnGen").disabled=true;
-  document.querySelectorAll(".pet-add").forEach(function(pa,k){
-    pa.querySelector(".pa").innerHTML=
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
-      '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
-      '<em>'+T("tapChoose","タップして選ぶ")+'</em>';
-    pa.querySelector("b").textContent = k===0 ? T("myCat","うちのねこ") : T("myDog","うちのいぬ");
-  });
+  petReset.forEach(function(f){ f(); });
   ["#petFile","#dogFile"].forEach(function(id){ var f=$(id); if(f) f.value=""; });
+  adoptPetPhoto=null;
   document.getElementById("worldGrid").classList.remove("has-hover");
   attractIdx=0; setWorldBg(0); setAccent(WORLDS[0].a,WORLDS[0].b);
   show("attract",false);
@@ -7456,6 +7548,9 @@ en:{
  stPlay:"Tap to play full screen", stPlayS:"Sample video · tap to play", stNone:"Did not get this far",
  myCat:"My cat", myDog:"My dog", thisPhoto:"Continue with this photo",
  tapChoose:"Tap to choose", fileNote:"JPG / PNG · up to 10 MB",
+ tapShoot:"Tap to shoot", camTitle:"Shoot it here", camNote:"A phone screen works too",
+ capPet:"Fit the pet photo inside the frame",
+ capPetNote:"Show the photo on your phone and shoot it just as it is.",
  backPet:"Change the lead", backShot:"Retake the photo",
  lblYou:"You", lblSample:"Sample", lblMyPet:"My pet",
  aTooBig:"That file is larger than 10 MB.", aBadImg:"Could not read that image.", aBadFile:"Could not read that file.",
@@ -7550,6 +7645,9 @@ zh:{
  stPlay:"点击全屏播放", stPlayS:"示例视频 · 点击播放", stNone:"未进行到此步",
  myCat:"我家的猫", myDog:"我家的狗", thisPhoto:"用这张照片继续",
  tapChoose:"点击选择", fileNote:"JPG / PNG · 最大 10MB",
+ tapShoot:"点击拍摄", camTitle:"现场拍摄", camNote:"拍手机屏幕也可以",
+ capPet:"请把宠物照片放入取景框",
+ capPetNote:"在手机上打开照片，直接拍摄即可。",
  backPet:"重新选择主角", backShot:"重新拍摄",
  lblYou:"你", lblSample:"示例", lblMyPet:"我家的宝贝",
  aTooBig:"文件大小超过 10MB。", aBadImg:"无法读取该图片。", aBadFile:"无法读取该文件。",
@@ -7641,21 +7739,17 @@ function relabel(){
       var n=d.querySelector(".cn"); if(n) n.textContent=WORLDS[k].nm;
     });
   });
-  [["#petGrid",PETS,"myCat","うちのねこ"],["#dogGrid",DOGS,"myDog","うちのいぬ"]].forEach(function(x){
-    var tiles=document.querySelectorAll(x[0]+" .pet");
-    tiles.forEach(function(el,i){
-      if(el.classList.contains("pet-add")){
-        var picked = el.getAttribute("aria-pressed")==="true";
-        el.querySelector("b").textContent = picked ? T("thisPhoto","この写真で進む") : T(x[2],x[3]);
-        el.querySelector("span:not(.pa)").textContent = T("fileNote","JPG / PNG・10MB まで");
-        var em=el.querySelector(".pa em"); if(em) em.textContent=T("tapChoose","タップして選ぶ");
-      } else if(x[1][i]){
-        el.querySelector("b").textContent=x[1][i].n;
-        el.querySelector("b + span").textContent=x[1][i].s;
-        var im=el.querySelector(".pa img"); if(im) im.alt=x[1][i].n;
-      }
+  [["#petGrid",PETS],["#dogGrid",DOGS]].forEach(function(x){
+    document.querySelectorAll(x[0]+" .pet").forEach(function(el,i){
+      if(el.classList.contains("pet-add")||el.classList.contains("pet-cam")) return;
+      if(!x[1][i]) return;
+      el.querySelector("b").textContent=x[1][i].n;
+      el.querySelector("b + span").textContent=x[1][i].s;
+      var im=el.querySelector(".pa img"); if(im) im.alt=x[1][i].n;
     });
   });
+  petRelabel.forEach(function(f){ f(); });
+  if(document.querySelector(".screen.on") && document.querySelector(".screen.on").id==="s-capture") setCaptureMode();
   var sb=document.querySelector("#s-world [data-stepback] b");
   if(sb) sb.textContent = (state.subject==="pet") ? T("backPet","主役の子を選び直す") : T("backShot","撮影をやり直す");
   var on=document.querySelector(".screen.on");
