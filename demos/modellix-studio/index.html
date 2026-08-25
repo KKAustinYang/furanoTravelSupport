@@ -225,6 +225,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .reel figure:nth-child(4n){animation-delay:2.7s}
 @keyframes bob{to{transform:translateY(-13px)}}
 
+/* アトラクト画面の所要時間バッジ */
+.speed{display:inline-flex;align-items:center;gap:9px;margin-top:2px;
+  padding:8px 17px;border-radius:99px;font-size:12.5px;letter-spacing:.03em;color:var(--muted);
+  border:1px solid color-mix(in srgb,var(--a1) 34%,transparent);
+  background:color-mix(in srgb,var(--a1) 9%,transparent)}
+.speed b{color:var(--a1);font-weight:800;font-size:14px;letter-spacing:.01em}
+.speed::before{content:"";width:13px;height:13px;flex:none;
+  background:var(--a1);clip-path:polygon(58% 0,0 62%,42% 62%,34% 100%,100% 38%,54% 38%)}
+@media(max-width:700px){.speed{font-size:11.5px;padding:7px 14px}}
 .hint{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;letter-spacing:.14em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--a1);animation:pulse 1.9s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
@@ -780,7 +789,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <p class="eyebrow">AI Image &amp; Video Generation</p>
       <h1 class="hero-title" data-i18n="s06">あなたが、<span class="flow">物語の主役</span>になる。</h1>
       <p class="lead" data-i18n="s07">その場で撮った 1 枚の写真から、8 つの世界の主役へ。<br class="pc-br">
-        変身から動画まで、目の前で 60 秒。</p>
+        変身から動画まで、目の前で仕上がります。</p>
+      <!-- 待ち時間は列の長さに直結するので、入口で先に伝えておく -->
+      <div class="speed" data-i18n="s78"><b>最短 48 秒</b>で、画像 2 枚と動画 1 本ができあがります</div>
       <div class="acts" style="margin-top:14px">
         <button class="btn btn-p btn-xl" data-go="subject"><span data-i18n="s08">体験をはじめる</span>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -853,7 +864,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
       <div class="acts">
         <button class="btn btn-p btn-xl" id="btnShoot">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>
-          <span data-i18n="s29">3 秒後に撮影</span>
+          <span data-i18n="s29">撮影する</span>
         </button>
         <button class="btn btn-g" id="btnSample" data-i18n="s30">サンプルで進む</button>
       </div>
@@ -3987,13 +3998,9 @@ $("#btnSample").addEventListener("click",function(){
 });
 $("#btnPetNext").addEventListener("click",function(){ state.shot=petShot(); show("world"); });
 
-$("#btnShoot").addEventListener("click",function(){
-  var wrap=document.querySelector(".cam"), n=3, cd=null;
-  function put(v){ if(cd)cd.remove(); cd=document.createElement("div"); cd.className="cd"; cd.textContent=v; wrap.appendChild(cd); }
-  put(n);
-  var tick=function(){ n--; if(n>0){ put(n); later(tick,1000); } else { if(cd)cd.remove(); capture(); } };
-  later(tick,1000);
-});
+/* 押したその場で切る。カウントダウンを挟むと、待っているあいだに
+   構えが崩れる／目を閉じる／並びが詰まる、で撮り直しが増えていた。 */
+$("#btnShoot").addEventListener("click",function(){ capture(); });
 
 function capture(){
   var v=$("#cam"), c=$("#shot");
@@ -6598,7 +6605,7 @@ function submitJob(model, body){
 
 /* ② キャラクターカード（自撮り 1 枚 → 角色卡） */
 function submitCard(image, prompt){
-  if(state.quality === "basic") return submitBasicImage([image], prompt);
+  if(state.quality === "basic") return submitBasicImage([image], prompt, "card");
   return submitJob(MODEL,{
     prompt: prompt,
     image: image,
@@ -6612,7 +6619,7 @@ function submitCard(image, prompt){
 /* ③ 入景（角色卡＋場景図 → 完成カット）。参考画像の順番は入れ替えないこと。
    プロンプト中の image 1 / image 2 は、この配列の並びをそのまま指している。 */
 function submitScene(images, prompt){
-  if(state.quality === "basic") return submitBasicImage(images, prompt);
+  if(state.quality === "basic") return submitBasicImage(images, prompt, "scene");
   return submitJob(MODEL_SCENE,{
     prompt: prompt,
     image: images,
@@ -6622,11 +6629,52 @@ function submitScene(images, prompt){
   });
 }
 
+/* ベーシックのモデルは軽い分だけ顔が動きやすく、素の写真に無い眼鏡やヒゲを
+   足してくることがある。指示文の先頭が最も強く効くので、本文の前に固定文を差し込む。
+   （プレミアムの seedream 用プロンプトは元から IDENTITY 段を持っているので触らない） */
+var LOCK_HEAD = "IDENTITY LOCK — this is the single most important instruction and it overrides everything written below it.\n";
+var LOCK_TAIL = "\nDo not slim, beautify, smooth, de-age, symmetrise or otherwise improve the subject. A different EXPRESSION on the same face is correct and expected. A different FACE is not.\n\n— — —\n";
+
+/* 顔つきは変えてよい。変えてはいけないのは骨格と、素の写真に無い持ち物。
+   ここを分けて書かないと、軽量モデルは「そのまま」を無表情のコピーだと解釈する。 */
+var PERF_PERSON = "WHAT IS FREE — the PERFORMANCE. The expression is NOT fixed and must follow the scene described below. The brow, the eye opening, the pupil size, the direction of the gaze, the mouth — closed, parted, clenched, shouting, breathing hard — and the tension in the neck and shoulders all change to match the moment. Sweat, rain, dust, grime, soot and damage belong to the performance too and should be added as the scene calls for them.\n";
+var PERF_ANIMAL = "WHAT IS FREE — the PERFORMANCE. The expression is NOT fixed and must follow the scene described below. The ear position, the pupil size, the eye opening, the direction of the gaze, the whiskers, the mouth — closed, parted, panting, snarling, howling — the raised hackles and how the tail is CARRIED (curled tight, held straight, tucked) all change to match the moment. Water, dust, grime and damage belong to the performance too and should be added as the scene calls for them.\n";
+
+var ADD_NOTHING_PERSON = "ADD NOTHING PHYSICAL TO THE FACE OR HEAD that is not already in the reference photograph — no glasses, no sunglasses, no goggles, no visor, no eye patch, no mask, no makeup, no beard or moustache, no earrings, no piercings, no headband, no hat and no helmet — UNLESS the prompt below asks for that exact item by name. If the person is not wearing glasses in the reference, they must not be wearing glasses in the result. This is about objects, not about expression.\n";
+var ADD_NOTHING_ANIMAL = "ADD NOTHING PHYSICAL TO THE FACE OR HEAD that is not already in the reference photograph — no glasses, no goggles, no visor, no mask, no collar, no bandana, no bell, no hat and no helmet — UNLESS the prompt below asks for that exact item by name. Never shorten the muzzle, round the skull or enlarge the eyes toward a cartoon or mascot face. This is about objects and bone structure, not about expression.\n";
+
+var LOCK_PERSON_CARD = LOCK_HEAD +
+  "Replace the costume, the lighting and the background, and act out the moment described below. Do NOT rebuild the face.\n" +
+  "WHAT IS FIXED — the IDENTITY. The underlying facial structure and proportions: the shape of the eye sockets, the nose, the lips, the jawline and the skull. The skin tone and its natural texture. The hairstyle, hair colour and hairline. The facial hair. The apparent age and the body build. Someone who knows this person must recognise them instantly.\n" +
+  PERF_PERSON + ADD_NOTHING_PERSON + LOCK_TAIL;
+
+var LOCK_PERSON_SCENE = LOCK_HEAD +
+  "Reference image 1 is the finished character and is the authority on who this is and what they are wearing. Place that character into the environment of reference image 2. Change the pose, the framing, the lighting and the EXPRESSION so that they belong to that moment — but do NOT rebuild the face and do NOT redesign the costume.\n" +
+  "WHAT IS FIXED — the facial structure and proportions, the skin, the hairstyle, and every part of the costume with its exact shapes, colours, wear and damage, all as they appear in reference image 1.\n" +
+  PERF_PERSON + ADD_NOTHING_PERSON +
+  "Remove nothing from the costume either.\n" + LOCK_TAIL;
+
+var LOCK_ANIMAL_CARD = LOCK_HEAD +
+  "Replace the costume, the lighting and the background, and act out the moment described below. Do NOT rebuild the animal's face.\n" +
+  "WHAT IS FIXED — the IDENTITY. The coat colour, length and texture with every marking in exactly the same position. The eye colour. The nose colour. The ear shape and set. The muzzle length and shape. The whisker length and density. The tail's shape and thickness. This must stay recognisable as the same individual animal.\n" +
+  PERF_ANIMAL + ADD_NOTHING_ANIMAL + LOCK_TAIL;
+
+var LOCK_ANIMAL_SCENE = LOCK_HEAD +
+  "Reference image 1 is the finished character and is the authority on which animal this is and what it is wearing. Place that character into the environment of reference image 2. Change the pose, the framing, the lighting and the EXPRESSION so that it belongs to that moment — but do NOT rebuild the face and do NOT redesign the costume.\n" +
+  "WHAT IS FIXED — the coat colour and markings, the eye colour, the ear shape, the muzzle length, the whiskers, the tail's shape, and every part of the costume with its exact shapes, colours, wear and damage, all as they appear in reference image 1.\n" +
+  PERF_ANIMAL + ADD_NOTHING_ANIMAL +
+  "Remove nothing from the costume either.\n" + LOCK_TAIL;
+
+function basicLock(step){
+  if(isPet()) return step === "scene" ? LOCK_ANIMAL_SCENE : LOCK_ANIMAL_CARD;
+  return step === "scene" ? LOCK_PERSON_SCENE : LOCK_PERSON_CARD;
+}
+
 /* ②③ のベーシック版。参考画像は配列で渡す（② は 1 枚、③ は 2 枚）。
    出力は 1K のみ、寸法ではなくアスペクト比で指定する。 */
-function submitBasicImage(images, prompt){
+function submitBasicImage(images, prompt, step){
   return submitJob(MODEL_IMG_BASIC,{
-    prompt: prompt,
+    prompt: basicLock(step) + prompt,
     image: images,
     aspectRatio: "9:16",
     imageSize: "1K"
@@ -7271,7 +7319,8 @@ var I18N = {
 en:{
  s01:"Choose your lead", s02:"Take a photo", s03:"Choose a world", s04:"Generate",
  s06:'You become <span class="flow">the lead</span> of the story.',
- s07:'From a single photo taken right here, into the lead of eight worlds.<br class="pc-br"> Transformation through to video, in 60 seconds.',
+ s07:'From a single photo taken right here, into the lead of eight worlds.<br class="pc-br"> Transformation through to video, finished in front of you.',
+ s78:'<b>48 seconds</b> at the fastest, for two images and one video',
  s08:"Start", s09:"View history", s10:'<span class="dot"></span>Touch the screen to start',
  s11:"Back to start", s12:"What you have made so far",
  s13:"Everything made on this device, newest first. Tap one to enlarge it and take it home with the QR code.",
@@ -7287,7 +7336,7 @@ en:{
  s25:"Sample model: Suika 🍉",
  s26:"Change the lead", s27:"Put your face inside the frame",
  s28:"Could not reach the camera.<br>You can carry on with a sample image.",
- s29:"Shoot in 3 s", s30:"Continue with a sample",
+ s29:"Take the photo", s30:"Continue with a sample",
  s31:"The photo is processed only on this device and is never stored on a server.",
  s32:"Change the lead", s33:"Choose who will star",
  s34:"Cats or dogs — and your own photo works too. The same steps as a person: character card through to video.",
@@ -7361,7 +7410,8 @@ en:{
 zh:{
  s01:"选择主角", s02:"拍照", s03:"选择世界", s04:"生成",
  s06:'你，就是<span class="flow">故事的主角</span>。',
- s07:'用现场拍下的一张照片，成为 8 个世界的主角。<br class="pc-br"> 从变身到视频，60 秒内当场完成。',
+ s07:'用现场拍下的一张照片，成为 8 个世界的主角。<br class="pc-br"> 从变身到视频，当场完成。',
+ s78:'最快 <b>48 秒</b>，产出 2 张图片和 1 段视频',
  s08:"开始体验", s09:"查看生成记录", s10:'<span class="dot"></span>触摸屏幕开始',
  s11:"返回首页", s12:"已生成的作品",
  s13:"本机生成的内容按时间倒序排列。点击可放大，并通过二维码带走。",
@@ -7377,7 +7427,7 @@ zh:{
  s25:"示例模特：西瓜🍉",
  s26:"重新选择主角", s27:"请把脸放进取景框",
  s28:"无法连接相机。<br>可以直接使用示例图片继续。",
- s29:"3 秒后拍摄", s30:"使用示例继续",
+ s29:"拍照", s30:"使用示例继续",
  s31:"拍摄的图像仅在本机处理，不会保存到服务器。",
  s32:"重新选择主角", s33:"请选择主角",
  s34:"猫也好，狗也好，自己的照片也能直接使用。与人物相同的流程，从角色卡一直生成到视频。",

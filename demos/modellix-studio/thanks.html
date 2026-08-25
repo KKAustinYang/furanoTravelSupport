@@ -58,6 +58,29 @@ h1{font-size:clamp(22px,6.4vw,30px)}
 .tag{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:99px;
   border:1px solid var(--line-2);background:rgba(255,255,255,.04);font-size:11px;
   font-weight:700;letter-spacing:.1em;color:var(--muted)}
+/* 成果物。ダウンロードの前に、まず現物を見せる。 */
+.assets{display:flex;flex-direction:column;gap:clamp(14px,3vh,22px);width:100%}
+.asset{display:flex;flex-direction:column;gap:9px;width:100%;text-align:left}
+.ahead{display:flex;align-items:baseline;gap:8px}
+.ahead i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--a1)}
+.ahead b{font-size:12.5px;font-weight:700;letter-spacing:.04em}
+.ahead span{margin-left:auto;font-size:10.5px;color:var(--muted)}
+.amedia{position:relative;width:100%;aspect-ratio:9/16;border-radius:var(--r-md);overflow:hidden;
+  background:#04050a;border:1px solid var(--line-2)}
+.amedia img,.amedia video{width:100%;height:100%;object-fit:cover;display:block}
+.asset--hero .amedia{border-radius:var(--r-lg);
+  box-shadow:0 30px 80px rgba(0,0,0,.7),0 0 60px color-mix(in srgb,var(--brand) 20%,transparent)}
+/* 画像 2 枚は横に並べる。縦長なので 1 枚ずつ積むと画面が長くなりすぎる。 */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.pair .amedia{aspect-ratio:9/16}
+.pair .ahead b{font-size:11.5px}
+.zoom{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(6,8,13,.7);border:1px solid rgba(255,255,255,.22);
+  color:#fff;backdrop-filter:blur(6px)}
+.zoom svg{width:14px;height:14px}
+.dl{padding:11px 14px;font-size:12.5px}
+.dl svg{width:15px;height:15px}
+
 /* ボタン */
 .acts{display:flex;flex-direction:column;gap:10px;width:100%}
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
@@ -95,41 +118,66 @@ h1{font-size:clamp(22px,6.4vw,30px)}
     <h1>ご体験いただき、<br>ありがとうございました。</h1>
   </div>
 
-  <p class="lead">たった 1 枚の写真から、あなたのキャラクターが生まれました。<br>
-    下のボタンから、この端末に保存できます。</p>
+  <p class="lead">たった 1 枚の写真から、3 つの作品が生まれました。<br>
+    そのままご覧いただけます。保存もこのページから。</p>
 
-  <div class="shot">
-    <img id="card" alt="生成されたキャラクターカード" hidden>
-    <div class="ph" id="ph">
-      <span class="tag">NO IMAGE</span>
-      画像の情報が見つかりませんでした。<br>ブースの画面から、もう一度 QR コードを読み取ってください。
-    </div>
-  </div>
   <span class="tag" id="worldTag" hidden></span>
 
+  <div class="shot" id="empty" hidden>
+    <div class="ph">
+      <span class="tag">NO IMAGE</span>
+      作品の情報が見つかりませんでした。<br>ブースの画面から、もう一度 QR コードを読み取ってください。
+    </div>
+  </div>
+
+  <div class="assets">
+    <!-- 動画があるときはこれが主役。無ければ完成カットが主役に繰り上がる。 -->
+    <section class="asset asset--hero" id="aVideo" hidden>
+      <div class="ahead"><i>04</i><b>動画</b><span>タップで再生</span></div>
+      <div class="amedia">
+        <video id="vid" playsinline loop muted controls preload="metadata"></video>
+      </div>
+      <a class="btn btn-p dl" id="dlVideo" href="#" download="modellix-movie.mp4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5.5" width="14" height="13" rx="2.4"/><path d="m17 12 4.5-3v9L17 15z"/></svg>
+        動画を保存
+      </a>
+    </section>
+
+    <div class="pair">
+      <section class="asset" id="aScene" hidden>
+        <div class="ahead"><i>03</i><b>完成カット</b></div>
+        <a class="amedia" id="zoomScene" target="_blank" rel="noopener">
+          <img id="imgScene" alt="完成カット">
+          <span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/></svg></span>
+        </a>
+        <a class="btn btn-g dl" id="dlScene" href="#" download="modellix-scene.png">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+          保存
+        </a>
+      </section>
+
+      <section class="asset" id="aCard" hidden>
+        <div class="ahead"><i>02</i><b>キャラクターカード</b></div>
+        <a class="amedia" id="zoomCard" target="_blank" rel="noopener">
+          <img id="imgCard" alt="キャラクターカード">
+          <span class="zoom" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 15v5h-5M20 9V4h-5M4 15v5h5"/></svg></span>
+        </a>
+        <a class="btn btn-g dl" id="dlCard" href="#" download="modellix-character-card.png">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
+          保存
+        </a>
+      </section>
+    </div>
+  </div>
+
   <div class="acts">
-    <a class="btn btn-p" id="dlCard" href="#" download="modellix-scene.png">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
-      <span id="dlCardTxt">キャラクターカードを保存</span>
-    </a>
-
-    <a class="btn btn-g" id="dlCard2" href="#" download="modellix-character-card.png" hidden>
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg>
-      キャラクターカードを保存
-    </a>
-
-    <a class="btn btn-g" id="dlVideo" href="#" aria-disabled="true" download="modellix-movie.mp4">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5.5" width="14" height="13" rx="2.4"/><path d="m17 12 4.5-3v9L17 15z"/></svg>
-      動画を保存 <small>準備中</small>
-    </a>
-
     <a class="btn btn-g" href="https://www.modellix.ai/ja_JP" target="_blank" rel="noopener">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1.6 1.6 0 0 1-1.6 1.6H5A1.6 1.6 0 0 1 3.4 19V7.6A1.6 1.6 0 0 1 5 6h5"/></svg>
       Modellix を自分で試してみる
     </a>
   </div>
 
-  <p class="note">画像の保存先リンクは 7 日間で失効します。<br>
+  <p class="note">保存先のリンクは 7 日間で失効します。<br>
     お早めにダウンロードしてください。</p>
 
   <p class="foot">Modellix ｜ Aurora Mobile Japan</p>
@@ -159,27 +207,39 @@ h1{font-size:clamp(22px,6.4vw,30px)}
   }
   card = safe(card); card2 = safe(card2); video = safe(video);
 
-  if(card){
-    var img=document.getElementById("card");
-    img.src=card; img.hidden=false;
-    document.getElementById("ph").hidden=true;
-    document.getElementById("dlCard").href=card;
-  } else {
-    document.getElementById("dlCard").setAttribute("aria-disabled","true");
-  }
+  /* c は「主役の 1 枚」で、③ まで進んだ回は完成カット、②止まりの回はキャラクターカード。
+     k は ③ まで進んだ回だけ入る ② のカード。ここで 3 つの枠に割り当て直す。 */
+  var scene = card2 ? card : null;      // ③ 完成カット
+  var chara = card2 || card;            // ② キャラクターカード
 
-  // 完成カットとキャラクターカードの両方があるときは、2 本のボタンに分ける
-  if(card && card2){
-    document.getElementById("dlCardTxt").textContent = "完成カットを保存";
-    var d2 = document.getElementById("dlCard2");
-    d2.href = card2; d2.hidden = false;
-  }
+  function show(id){ document.getElementById(id).hidden = false; }
 
+  if(scene){
+    document.getElementById("imgScene").src = scene;
+    document.getElementById("zoomScene").href = scene;
+    document.getElementById("dlScene").href = scene;
+    show("aScene");
+  }
+  if(chara){
+    document.getElementById("imgCard").src = chara;
+    document.getElementById("zoomCard").href = chara;
+    document.getElementById("dlCard").href = chara;
+    show("aCard");
+  }
   if(video){
-    var v=document.getElementById("dlVideo");
-    v.href=video; v.removeAttribute("aria-disabled");
-    v.querySelector("small").remove();
+    var v = document.getElementById("vid");
+    v.src = video;
+    if(scene || chara) v.poster = scene || chara;
+    document.getElementById("dlVideo").href = video;
+    show("aVideo");
+    // 音は出さずに流しておく。動くものがあると、まず見てもらえる。
+    var pr = v.play(); if(pr && pr.catch) pr.catch(function(){});
+  } else if(scene || chara){
+    // 動画が無い回は、残った画像のうち上の 1 枚を主役に繰り上げる
+    document.getElementById(scene ? "aScene" : "aCard").classList.add("asset--hero");
   }
+
+  if(!scene && !chara && !video) document.getElementById("empty").hidden = false;
 
   if(world){
     var t=document.getElementById("worldTag");
