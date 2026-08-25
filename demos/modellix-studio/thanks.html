@@ -139,8 +139,8 @@ h1{font-size:clamp(22px,6.4vw,30px)}
 (function(){
   "use strict";
   var q = new URLSearchParams(location.search);
-  var card = q.get("c");   // 主役の 1 枚（入景カットがあればそれ、なければキャラクターカード）
-  var card2 = q.get("k");  // 入景まで進んだ回だけ入る、工程 ② のキャラクターカード
+  var card = q.get("c");   // 主役の 1 枚（完成カットがあればそれ、なければキャラクターカード）
+  var card2 = q.get("k");  // 世界との合成まで進んだ回だけ入る、工程 ② のキャラクターカード
   var video = q.get("v");
   var world = q.get("w");
 
@@ -161,9 +161,9 @@ h1{font-size:clamp(22px,6.4vw,30px)}
     document.getElementById("dlCard").setAttribute("aria-disabled","true");
   }
 
-  // 入景カットとキャラクターカードの両方があるときは、2 本のボタンに分ける
+  // 完成カットとキャラクターカードの両方があるときは、2 本のボタンに分ける
   if(card && card2){
-    document.getElementById("dlCardTxt").textContent = "入景カットを保存";
+    document.getElementById("dlCardTxt").textContent = "完成カットを保存";
     var d2 = document.getElementById("dlCard2");
     d2.href = card2; d2.hidden = false;
   }

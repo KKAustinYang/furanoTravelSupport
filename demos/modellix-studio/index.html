@@ -959,8 +959,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           </div>
 
           <div class="qr-row">
-            <canvas class="qr" id="qrCanvas" width="420" height="420" aria-label="Modellix コンソールの QR コード"></canvas>
-            <p data-i18n="s66"><b>スマホで Modellix を試す</b>読み取ると Modellix のコンソールが開きます。いまご覧いただいた 3 工程を、そのままご自身のアカウントでお試しいただけます。</p>
+            <canvas class="qr" id="qrCanvas" width="420" height="420" aria-label="お持ち帰り用 QR コード"></canvas>
+            <p data-i18n="s66"><b>スマホでお持ち帰り</b>読み取ると、いま生成したキャラクターカード・完成カット・動画をダウンロードできるページが開きます。</p>
           </div>
           <div class="acts" style="justify-content:flex-start">
             <button class="btn btn-p" data-go="world" data-i18n="s67">別の世界へ</button>
@@ -3931,9 +3931,6 @@ var MODEL_SCENE = "bytedance/seedream-5.0-pro-multi-reference";      // ③ 入�
 var MODEL_VIDEO = "bytedance/seedance-2.0-fast-i2v";                 // ④ 動画（高速版）
 var MODEL_VIDEO_FL2V = "minimax/minimax-h3-fl2v";                    // ④ 動画（始点＋終点コマ）
 
-/* 結果画面の QR。持ち帰りではなく Modellix のコンソールへ誘導する。
-   （生成物のダウンロードは、履歴画面の QR が担当する） */
-var CONSOLE_URL = "https://www.modellix.ai/console/login?redirect_path=https%253A%252F%252Fwww.modellix.ai%252Fconsole%252Fdashboard";
 
 /* 人物が主役のときの動画モデルの振り分け。
    seedance は実在の人物の顔が写った画像を受け付けないので、実写でない 3 つの世界
@@ -6552,7 +6549,7 @@ function showResult(){
     : T("resSample", w.sub+" ／ "+w.tag+"。今回はサンプル画像を表示しています。", w.sub, w.tag);
 
   fillSteps();
-  drawQR(CONSOLE_URL);
+  drawQR(takeawayUrl());
   saveHistory();
   show("result");
 }
@@ -6837,7 +6834,7 @@ en:{
  s60:"<i>02</i>Character card", s61:"Tap to enlarge",
  s62:"<i>03</i>Final cut", s63:"Tap to enlarge",
  s64:"<i>04</i>Video · 7 s", s65:"Tap to play full screen",
- s66:"<b>Try Modellix on your phone</b>Scan to open the Modellix console. You can run the same three steps on your own account.",
+ s66:"<b>Take it home on your phone</b>Scan to open a page where you can download the character card, the final cut and the video you just made.",
  s67:"Another world", s68:"Start over", s69:"Back",
 
  _w:[["Spotted","Mech Pilot","Neon alley in the rain × cybernetics","Live-action CG"],
@@ -6923,7 +6920,7 @@ zh:{
  s60:"<i>02</i>角色卡", s61:"点击放大",
  s62:"<i>03</i>成片", s63:"点击放大",
  s64:"<i>04</i>视频 · 7 秒", s65:"点击全屏播放",
- s66:"<b>用手机体验 Modellix</b>扫码可打开 Modellix 控制台，用自己的账号运行刚才的 3 个步骤。",
+ s66:"<b>用手机带走</b>扫码可打开下载页面，保存刚才生成的角色卡、成片与视频。",
  s67:"换个世界", s68:"从头开始", s69:"返回上一步",
 
  _w:[["被发现了","机甲驾驶员","雨夜霓虹街 × 半机械化","实拍CG"],
