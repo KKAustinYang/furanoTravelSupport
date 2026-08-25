@@ -145,7 +145,7 @@ h1 em{font-style:normal;color:var(--blue)}
 .tags span.t2{color:#0b6b61;border-color:rgba(15,138,126,.28);background:var(--teal-soft)}
 
 /* ---- handoff callout ---- */
-/* ---- 価格変動トリガー（EngageLab MA のユーザー属性を切り替える） ---- */
+/* ---- 価格変動トリガー（EngageLab MA へイベントを報告する） ---- */
 .chans{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
 .chan{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
   padding:4px 10px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper);color:var(--sub)}
@@ -379,7 +379,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <span class="n">05</span>
         <div>
           <h3>物件の最新状況は、検討中のお客様へ自動で</h3>
-          <p>値下げ・条件変更・成約などで状況が動いたら、<b>その物件を検討していたお客様だけ</b>に配信します。ユーザー属性が切り替わった瞬間にMAのシナリオが起動し、価格の変更内容と内見予約リンクをお届けします。</p>
+          <p>値下げ・条件変更・成約などで状況が動いたら、<b>その物件を検討していたお客様だけ</b>に配信します。イベントがMAに届いた瞬間にシナリオが起動し、価格の変更内容と内見予約リンクをお届けします。</p>
           <div class="chans">
             <span class="chan ml"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m4 7.5 8 5.5 8-5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Email</span>
             <span class="chan pu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.6"/><path d="M10.6 18.6h2.8" stroke-linecap="round"/></svg>アプリプッシュ</span>
@@ -390,7 +390,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
                 <span class="ico">▼</span><span class="lbl">検討中の物件を値下げする</span>
               </button>
               <span class="attr">
-                <code id="attrVal">property_price_drop : false</code>
+                <code id="evtVal">event : property_price_drop</code>
                 <span class="st" id="apiSt"></span>
               </span>
             </div>
@@ -521,16 +521,27 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 
   /* ============================================================
      価格変動トリガー
-     EngageLab MA : POST /v1/user/property でユーザー属性を切り替える。
+     EngageLab MA : POST /v1/event/report でイベントを報告する。
+     ------------------------------------------------------------
+     属性の書き換えではなくイベント送信にしてある。属性は「いまいくらか」
+     しか持てないが、イベントは「いつ・いくらから・いくらへ」が 1 件ずつ
+     残るので、MA 側は値下げの瞬間をトリガーにでき、値下げの履歴も追える。
      リクエストは自分のオリジン（/api/ma/...）へ投げ、api/proxy.js が
      Basic 認証を付けて ma-api.engagelab.com へ中継する。
      APIKey / APISecret はサーバー側の環境変数にしか置かない：
        ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
      ============================================================ */
   var MA = {
-    endpoint : '/api/ma/v1/user/property',
+    endpoint : '/api/ma/v1/event/report',
     euid     : 34775626,               // デモ用ユーザーの EUID（他デモと同じ）
-    attr     : 'property_price_drop'   // 切り替える自定義属性
+    // 値下げと復元で別のイベント。MA 側でそれぞれ別のシナリオを組める。
+    events   : {
+      on : { name:'property_price_drop',
+             properties:{ property_id:'AX-1042', old_price:64800000, new_price:61800000,
+                          currency:'JPY', change_type:'price_drop' } },
+      off: { name:'property_price_restored',
+             properties:{ property_id:'AX-1042', price:64800000, currency:'JPY' } }
+    }
   };
 
   (function(){
@@ -538,10 +549,10 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     if(!btn) return;
     var lbl = btn.querySelector('.lbl');
     var ico = btn.querySelector('.ico');
-    var val = document.getElementById('attrVal');
+    var val = document.getElementById('evtVal');
     var st  = document.getElementById('apiSt');
     var tm  = document.getElementById('pricetime');
-    var on = false, busy = false;
+    var on = false, busy = false, fired = false;
 
     function jst(){
       try{ return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'}).format(new Date()); }
@@ -552,7 +563,9 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       lbl.textContent = on ? '価格を元に戻す' : '検討中の物件を値下げする';
       ico.textContent = on ? '↩' : '▼';
-      val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
+      // まだ一度も押していないうちは、押したときに飛ぶイベント名を出しておく。
+      // 一度でも押したあとは、直前に実際に送ったイベント名に切り替える。
+      val.textContent = 'event : ' + ((fired && !on) ? MA.events.off.name : MA.events.on.name);
       val.classList.toggle('on', on);
       document.body.classList.toggle('pricedrop', on);
       if(on){ tm.textContent = jst() + ' JST'; }
@@ -564,9 +577,21 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       st.className = 'st' + (cls ? ' ' + cls : '');
     }
 
+    /* 同じイベントが二重に届いたとき、MA 側で 1 件にまとめてもらうための識別子。 */
+    function rid(){
+      try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+      return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+    }
+
     function send(next){
-      var body = { euid: MA.euid, type: 'set', properties: {} };
-      body.properties[MA.attr] = next ? 'true' : 'false';
+      var ev = next ? MA.events.on : MA.events.off;
+      var body = { data: [{
+        euid       : MA.euid,
+        event_name : ev.name,
+        itime      : Date.now(),   // 13 桁のミリ秒。仕様で必須
+        random_id  : rid(),
+        properties : ev.properties
+      }]};
 
       status('送信中…','');
       return fetch(MA.endpoint, {
@@ -576,7 +601,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       })
         .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
         .then(function(j){
-          if(j && j.code === 0){ status('MA 更新 ✓','ok'); }
+          if(j && j.code === 0){ status('イベント送信 ✓','ok'); }
           else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
           console.log('[MA]', j);
         })
@@ -589,7 +614,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     btn.addEventListener('click', function(){
       if(busy) return;
       busy = true;
-      on = !on;
+      on = !on; fired = true;
       paint();               // 見た目は即座に切り替える（APIが失敗してもデモは止めない）
       send(on).then(function(){ busy = false; });
     });

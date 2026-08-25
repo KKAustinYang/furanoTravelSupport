@@ -403,14 +403,14 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <span class="n">03</span>
         <div>
           <h3>緊急時は、SMSで自動送信</h3>
-          <p>気象警報などの緊急情報を受け取ると、<span class="kw">対象エリアに滞在中の旅行者だけ</span>にSMSを自動送信します。ユーザー属性が切り替わった瞬間に、MAのシナリオが起動します。</p>
+          <p>気象警報などの緊急情報を受け取ると、<span class="kw">対象エリアに滞在中の旅行者だけ</span>にSMSを自動送信します。イベントがMAに届いた瞬間に、シナリオが起動します。</p>
           <div class="emgbox">
             <div class="emgrow">
               <button class="trigger" id="emgBtn" type="button" aria-pressed="false">
                 <span class="ico">🚨</span><span class="lbl">暴風雪警報を発生させる</span>
               </button>
               <span class="attr">
-                <code id="attrVal">hokkaido_weather_alert : false</code>
+                <code id="evtVal">event : weather_alert_issued</code>
                 <span class="st" id="apiSt"></span>
               </span>
             </div>
@@ -534,8 +534,11 @@ var Weather=(function(){
 })();
 /* ============================================================
    緊急送信トリガー
-   EngageLab MA : POST /v1/user/property でユーザー属性を切り替える。
+   EngageLab MA : POST /v1/event/report でイベントを報告する。
    ------------------------------------------------------------
+   属性の書き換えではなくイベント送信にしてある。属性は「いまどうか」
+   しか持てないが、イベントは「いつ・何が起きたか」が 1 件ずつ残るので、
+   MA 側は発生の瞬間をトリガーにでき、同じ警報が二度出れば二度動く。
    リクエストは自分のオリジン（/api/ma/...）へ投げ、api/proxy.js が
    Basic 認証を付けて ma-api.engagelab.com へ中継する。
    APIKey / APISecret はサーバー側の環境変数にしか置かない：
@@ -543,9 +546,15 @@ var Weather=(function(){
    （ブラウザから直接叩くと CORS で弾かれ、鍵もページに露出する）
    ============================================================ */
 var MA = {
-  endpoint : '/api/ma/v1/user/property',
+  endpoint : '/api/ma/v1/event/report',
   euid     : 34775626,                 // デモ用ユーザーの EUID
-  attr     : 'hokkaido_weather_alert'  // 切り替える自定義属性
+  // 発生と解除で別のイベントにしてある。MA 側でそれぞれ別のシナリオを組める。
+  events   : {
+    on : { name:'weather_alert_issued',
+           properties:{ alert_type:'blizzard', alert_level:'warning', area:'hokkaido', channel:'sms' } },
+    off: { name:'weather_alert_cleared',
+           properties:{ alert_type:'blizzard', area:'hokkaido' } }
+  }
 };
 
 (function(){
@@ -553,10 +562,10 @@ var MA = {
   if(!btn) return;
   var lbl = btn.querySelector('.lbl');
   var ico = btn.querySelector('.ico');
-  var val = document.getElementById('attrVal');
+  var val = document.getElementById('evtVal');
   var st  = document.getElementById('apiSt');
   var tm  = document.getElementById('alerttime');
-  var on  = false, busy = false;
+  var on = false, busy = false, fired = false;
 
   function hhmm(){
     try{ return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'}).format(new Date()); }
@@ -567,7 +576,9 @@ var MA = {
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     lbl.textContent = on ? '警報を解除する' : '暴風雪警報を発生させる';
     ico.textContent = on ? '✅' : '🚨';
-    val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
+    // まだ一度も押していないうちは、押したときに飛ぶイベント名を出しておく。
+    // 一度でも押したあとは、直前に実際に送ったイベント名に切り替える。
+    val.textContent = 'event : ' + ((fired && !on) ? MA.events.off.name : MA.events.on.name);
     val.classList.toggle('on', on);
     document.body.classList.toggle('emg', on);
     if(on){ Weather.lock('snow'); tm.textContent = hhmm() + ' JST'; }
@@ -580,9 +591,21 @@ var MA = {
     st.className = 'st' + (cls ? ' ' + cls : '');
   }
 
+  /* 同じイベントが二重に届いたとき、MA 側で 1 件にまとめてもらうための識別子。 */
+  function rid(){
+    try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+    return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+  }
+
   function send(next){
-    var body = { euid: MA.euid, type: 'set', properties: {} };
-    body.properties[MA.attr] = next ? 'true' : 'false';
+    var ev = next ? MA.events.on : MA.events.off;
+    var body = { data: [{
+      euid       : MA.euid,
+      event_name : ev.name,
+      itime      : Date.now(),   // 13 桁のミリ秒。仕様で必須
+      random_id  : rid(),
+      properties : ev.properties
+    }]};
 
     status('送信中…','');
     return fetch(MA.endpoint, {
@@ -592,7 +615,7 @@ var MA = {
     })
       .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
       .then(function(j){
-        if(j && j.code === 0){ status('MA 更新 ✓','ok'); }
+        if(j && j.code === 0){ status('イベント送信 ✓','ok'); }
         else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
         console.log('[MA]', j);
       })
@@ -605,7 +628,7 @@ var MA = {
   btn.addEventListener('click', function(){
     if(busy) return;
     busy = true;
-    on = !on;
+    on = !on; fired = true;
     paint();                 // 見た目は即座に切り替える（APIが失敗してもデモは止めない）
     send(on).then(function(){ busy = false; });
   });
