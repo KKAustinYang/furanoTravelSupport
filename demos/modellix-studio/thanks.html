@@ -139,10 +139,17 @@ h1{font-size:clamp(22px,6.4vw,30px)}
 (function(){
   "use strict";
   var q = new URLSearchParams(location.search);
-  var card = q.get("c");   // 主役の 1 枚（完成カットがあればそれ、なければキャラクターカード）
-  var card2 = q.get("k");  // 世界との合成まで進んだ回だけ入る、工程 ② のキャラクターカード
-  var video = q.get("v");
-  var world = q.get("w");
+  /* QR を短く保つため、送り側は https:// を ~ に畳み、世界名は番号で渡してくる。
+     旧いリンク（フル URL・w= 付き）もそのまま読めるようにしてある。 */
+  function undo(v){ return v ? String(v).replace(/^~/, "https://") : v; }
+  var WORLD_NM = ["機甲パイロット","異世界の勇者","侍","ミニチュア探検隊",
+                  "恐竜サバイバー","深海の守護者","宇宙飛行士","氷の魔導士"];
+
+  var card = undo(q.get("c"));   // 主役の 1 枚（完成カットがあればそれ、なければキャラクターカード）
+  var card2 = undo(q.get("k"));  // 世界との合成まで進んだ回だけ入る、工程 ② のキャラクターカード
+  var video = undo(q.get("v"));
+  var wi = q.get("wi");
+  var world = q.get("w") || (wi !== null && WORLD_NM[+wi]) || null;
 
   // QR から渡ってくるのは画像の URL だけ。http(s) 以外は読み込まない。
   function safe(u){
