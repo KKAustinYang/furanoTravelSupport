@@ -6733,7 +6733,7 @@ function submitJob(model, body){
 
 /* ② キャラクターカード（自撮り 1 枚 → 角色卡） */
 function submitCard(image, prompt){
-  if(state.quality === "basic") return submitBasicImage([image], prompt, "card");
+  if(state.quality === "basic") return submitBasicImage([image], prompt);
   return submitJob(MODEL,{
     prompt: prompt,
     image: image,
@@ -6747,7 +6747,7 @@ function submitCard(image, prompt){
 /* ③ 入景（角色卡＋場景図 → 完成カット）。参考画像の順番は入れ替えないこと。
    プロンプト中の image 1 / image 2 は、この配列の並びをそのまま指している。 */
 function submitScene(images, prompt){
-  if(state.quality === "basic") return submitBasicImage(images, prompt, "scene");
+  if(state.quality === "basic") return submitBasicImage(images, prompt);
   return submitJob(MODEL_SCENE,{
     prompt: prompt,
     image: images,
@@ -6757,52 +6757,12 @@ function submitScene(images, prompt){
   });
 }
 
-/* ベーシックのモデルは軽い分だけ顔が動きやすく、素の写真に無い眼鏡やヒゲを
-   足してくることがある。指示文の先頭が最も強く効くので、本文の前に固定文を差し込む。
-   （プレミアムの seedream 用プロンプトは元から IDENTITY 段を持っているので触らない） */
-var LOCK_HEAD = "IDENTITY LOCK — this is the single most important instruction and it overrides everything written below it.\n";
-var LOCK_TAIL = "\nDo not slim, beautify, smooth, de-age, symmetrise or otherwise improve the subject. A different EXPRESSION on the same face is correct and expected. A different FACE is not.\n\n— — —\n";
-
-/* 顔つきは変えてよい。変えてはいけないのは骨格と、素の写真に無い持ち物。
-   ここを分けて書かないと、軽量モデルは「そのまま」を無表情のコピーだと解釈する。 */
-var PERF_PERSON = "WHAT IS FREE — the PERFORMANCE. The expression is NOT fixed and must follow the scene described below. The brow, the eye opening, the pupil size, the direction of the gaze, the mouth — closed, parted, clenched, shouting, breathing hard — and the tension in the neck and shoulders all change to match the moment. Sweat, rain, dust, grime, soot and damage belong to the performance too and should be added as the scene calls for them.\n";
-var PERF_ANIMAL = "WHAT IS FREE — the PERFORMANCE. The expression is NOT fixed and must follow the scene described below. The ear position, the pupil size, the eye opening, the direction of the gaze, the whiskers, the mouth — closed, parted, panting, snarling, howling — the raised hackles and how the tail is CARRIED (curled tight, held straight, tucked) all change to match the moment. Water, dust, grime and damage belong to the performance too and should be added as the scene calls for them.\n";
-
-var ADD_NOTHING_PERSON = "ADD NOTHING PHYSICAL TO THE FACE OR HEAD that is not already in the reference photograph — no glasses, no sunglasses, no goggles, no visor, no eye patch, no mask, no makeup, no beard or moustache, no earrings, no piercings, no headband, no hat and no helmet — UNLESS the prompt below asks for that exact item by name. If the person is not wearing glasses in the reference, they must not be wearing glasses in the result. This is about objects, not about expression.\n";
-var ADD_NOTHING_ANIMAL = "ADD NOTHING PHYSICAL TO THE FACE OR HEAD that is not already in the reference photograph — no glasses, no goggles, no visor, no mask, no collar, no bandana, no bell, no hat and no helmet — UNLESS the prompt below asks for that exact item by name. Never shorten the muzzle, round the skull or enlarge the eyes toward a cartoon or mascot face. This is about objects and bone structure, not about expression.\n";
-
-var LOCK_PERSON_CARD = LOCK_HEAD +
-  "Replace the costume, the lighting and the background, and act out the moment described below. Do NOT rebuild the face.\n" +
-  "WHAT IS FIXED — the IDENTITY. The underlying facial structure and proportions: the shape of the eye sockets, the nose, the lips, the jawline and the skull. The skin tone and its natural texture. The hairstyle, hair colour and hairline. The facial hair. The apparent age and the body build. Someone who knows this person must recognise them instantly.\n" +
-  PERF_PERSON + ADD_NOTHING_PERSON + LOCK_TAIL;
-
-var LOCK_PERSON_SCENE = LOCK_HEAD +
-  "Reference image 1 is the finished character and is the authority on who this is and what they are wearing. Place that character into the environment of reference image 2. Change the pose, the framing, the lighting and the EXPRESSION so that they belong to that moment — but do NOT rebuild the face and do NOT redesign the costume.\n" +
-  "WHAT IS FIXED — the facial structure and proportions, the skin, the hairstyle, and every part of the costume with its exact shapes, colours, wear and damage, all as they appear in reference image 1.\n" +
-  PERF_PERSON + ADD_NOTHING_PERSON +
-  "Remove nothing from the costume either.\n" + LOCK_TAIL;
-
-var LOCK_ANIMAL_CARD = LOCK_HEAD +
-  "Replace the costume, the lighting and the background, and act out the moment described below. Do NOT rebuild the animal's face.\n" +
-  "WHAT IS FIXED — the IDENTITY. The coat colour, length and texture with every marking in exactly the same position. The eye colour. The nose colour. The ear shape and set. The muzzle length and shape. The whisker length and density. The tail's shape and thickness. This must stay recognisable as the same individual animal.\n" +
-  PERF_ANIMAL + ADD_NOTHING_ANIMAL + LOCK_TAIL;
-
-var LOCK_ANIMAL_SCENE = LOCK_HEAD +
-  "Reference image 1 is the finished character and is the authority on which animal this is and what it is wearing. Place that character into the environment of reference image 2. Change the pose, the framing, the lighting and the EXPRESSION so that it belongs to that moment — but do NOT rebuild the face and do NOT redesign the costume.\n" +
-  "WHAT IS FIXED — the coat colour and markings, the eye colour, the ear shape, the muzzle length, the whiskers, the tail's shape, and every part of the costume with its exact shapes, colours, wear and damage, all as they appear in reference image 1.\n" +
-  PERF_ANIMAL + ADD_NOTHING_ANIMAL +
-  "Remove nothing from the costume either.\n" + LOCK_TAIL;
-
-function basicLock(step){
-  if(isPet()) return step === "scene" ? LOCK_ANIMAL_SCENE : LOCK_ANIMAL_CARD;
-  return step === "scene" ? LOCK_PERSON_SCENE : LOCK_PERSON_CARD;
-}
-
-/* ②③ のベーシック版。参考画像は配列で渡す（② は 1 枚、③ は 2 枚）。
+/* ②③ のベーシック版。プロンプトはプレミアムと同一のものをそのまま送る。
+   違うのはモデルと出力指定だけ：参考画像は配列で渡し（② は 1 枚、③ は 2 枚）、
    出力は 1K のみ、寸法ではなくアスペクト比で指定する。 */
-function submitBasicImage(images, prompt, step){
+function submitBasicImage(images, prompt){
   return submitJob(MODEL_IMG_BASIC,{
-    prompt: basicLock(step) + prompt,
+    prompt: prompt,
     image: images,
     aspectRatio: "9:16",
     imageSize: "1K"
