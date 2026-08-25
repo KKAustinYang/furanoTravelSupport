@@ -443,7 +443,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
         <span class="n">05</span>
         <div>
           <h3>新作の入荷は、WhatsAppとメールで自動配信</h3>
-          <p>入荷を登録すると、<span class="kw">その商品を探していたお客様だけ</span>に配信します。ユーザー属性が切り替わった瞬間にMAのシナリオが起動し、写真付きの新着案内をWhatsAppで、詳細と在庫リンクをメールでお届けします。</p>
+          <p>入荷を登録すると、<span class="kw">その商品を探していたお客様だけ</span>に配信します。イベントがMAに届いた瞬間にシナリオが起動し、写真付きの新着案内をWhatsAppで、詳細と在庫リンクをメールでお届けします。</p>
           <div class="chans">
             <span class="chan wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a13 13 0 0 1-5.6-4.9c-.4-.6-.9-1.5-.9-2.4 0-.9.5-1.4.7-1.6.2-.2.4-.3.6-.3h.5c.2 0 .4 0 .5.4l.8 1.8c0 .2.1.3 0 .5l-.4.5-.3.3c-.1.1-.2.3 0 .5.2.4.8 1.2 1.6 1.9.9.8 1.7 1.1 2 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.7.8c.2.1.4.2.4.3v.9Z"/></svg>WhatsApp</span>
             <span class="chan ml"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m4 7.5 8 5.5 8-5.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Email</span>
@@ -454,7 +454,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
                 <span class="ico">💍</span><span class="lbl">新作リングの入荷を登録する</span>
               </button>
               <span class="attr">
-                <code id="attrVal">luxury_new_arrival : false</code>
+                <code id="evtVal">event : luxury_new_arrival</code>
                 <span class="st" id="apiSt"></span>
               </span>
             </div>
@@ -612,16 +612,27 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
 
   /* ============================================================
      新着入荷トリガー
-     EngageLab MA : POST /v1/user/property でユーザー属性を切り替える。
+     EngageLab MA : POST /v1/event/report でイベントを報告する。
+     ------------------------------------------------------------
+     属性の書き換えではなくイベント送信にしてある。属性は「いま入荷中か」
+     しか持てないが、イベントは「いつ・何が入荷したか」が 1 件ずつ残るので、
+     MA 側は入荷の瞬間をトリガーにでき、次の入荷でもう一度動く。
      リクエストは自分のオリジン（/api/ma/...）へ投げ、api/proxy.js が
      Basic 認証を付けて ma-api.engagelab.com へ中継する。
      APIKey / APISecret はサーバー側の環境変数にしか置かない：
        ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
      ============================================================ */
   var MA = {
-    endpoint : '/api/ma/v1/user/property',
+    endpoint : '/api/ma/v1/event/report',
     euid     : 34775626,              // デモ用ユーザーの EUID（観光デモと同じ）
-    attr     : 'luxury_new_arrival'   // 切り替える自定義属性
+    // 入荷と取り消しで別のイベント。MA 側でそれぞれ別のシナリオを組める。
+    events   : {
+      on : { name:'luxury_new_arrival',
+             properties:{ product_id:'RG-2210', category:'ring', material:'silver',
+                          collection:'new_arrival', channel:'whatsapp_email' } },
+      off: { name:'luxury_arrival_canceled',
+             properties:{ product_id:'RG-2210', category:'ring' } }
+    }
   };
 
   (function(){
@@ -629,10 +640,10 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     if(!btn) return;
     var lbl = btn.querySelector('.lbl');
     var ico = btn.querySelector('.ico');
-    var val = document.getElementById('attrVal');
+    var val = document.getElementById('evtVal');
     var st  = document.getElementById('apiSt');
     var tm  = document.getElementById('arrivaltime');
-    var on = false, busy = false;
+    var on = false, busy = false, fired = false;
 
     function jst(){
       try{ return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'}).format(new Date()); }
@@ -643,7 +654,9 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       lbl.textContent = on ? '入荷登録を取り消す' : '新作リングの入荷を登録する';
       ico.textContent = on ? '↩' : '💍';
-      val.textContent = MA.attr + ' : ' + (on ? 'true' : 'false');
+      // まだ一度も押していないうちは、押したときに飛ぶイベント名を出しておく。
+      // 一度でも押したあとは、直前に実際に送ったイベント名に切り替える。
+      val.textContent = 'event : ' + ((fired && !on) ? MA.events.off.name : MA.events.on.name);
       val.classList.toggle('on', on);
       document.body.classList.toggle('arrived', on);
       if(on){ tm.textContent = jst() + ' JST'; }
@@ -655,9 +668,21 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       st.className = 'st' + (cls ? ' ' + cls : '');
     }
 
+    /* 同じイベントが二重に届いたとき、MA 側で 1 件にまとめてもらうための識別子。 */
+    function rid(){
+      try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+      return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+    }
+
     function send(next){
-      var body = { euid: MA.euid, type: 'set', properties: {} };
-      body.properties[MA.attr] = next ? 'true' : 'false';
+      var ev = next ? MA.events.on : MA.events.off;
+      var body = { data: [{
+        euid       : MA.euid,
+        event_name : ev.name,
+        itime      : Date.now(),   // 13 桁のミリ秒。仕様で必須
+        random_id  : rid(),
+        properties : ev.properties
+      }]};
 
       status('送信中…','');
       return fetch(MA.endpoint, {
@@ -667,7 +692,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
       })
         .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
         .then(function(j){
-          if(j && j.code === 0){ status('MA 更新 ✓','ok'); }
+          if(j && j.code === 0){ status('イベント送信 ✓','ok'); }
           else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
           console.log('[MA]', j);
         })
@@ -680,7 +705,7 @@ footer{position:relative;z-index:2;flex:0 0 auto;border-top:1px solid var(--line
     btn.addEventListener('click', function(){
       if(busy) return;
       busy = true;
-      on = !on;
+      on = !on; fired = true;
       paint();               // 見た目は即座に切り替える（APIが失敗してもデモは止めない）
       send(on).then(function(){ busy = false; });
     });

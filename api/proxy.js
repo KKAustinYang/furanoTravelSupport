@@ -28,7 +28,7 @@ const UPSTREAM = 'https://api.modellix.ai'
 const GPTBOTS_PREFIX = 'gptbots/'
 
 // EngageLab MA（マーケティングオートメーション）も同じ関数から中継する。
-//   /api/ma/v1/user/property  ->  https://ma-api.engagelab.com/v1/user/property
+//   /api/ma/v1/event/report  ->  https://ma-api.engagelab.com/v1/event/report
 // 認証は Bearer ではなく Basic base64(APIKey:APISecret)。鍵はサーバー側だけに置く。
 //   ENGAGELAB_MA_API_KEY / ENGAGELAB_MA_API_SECRET
 // 既定はシンガポールDC。US Virginia を使う場合だけ ENGAGELAB_MA_BASE_URL を設定する。
