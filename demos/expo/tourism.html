@@ -597,7 +597,7 @@ var MA = {
     return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
   }
 
-  function send(next){
+  function send(next, auto){
     var ev = next ? MA.events.on : MA.events.off;
     var body = { data: [{
       euid       : MA.euid,
@@ -607,7 +607,7 @@ var MA = {
       properties : ev.properties
     }]};
 
-    status('送信中…','');
+    status(auto ? '初期化中…' : '送信中…','');
     return fetch(MA.endpoint, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
@@ -615,7 +615,7 @@ var MA = {
     })
       .then(function(r){ return r.json().catch(function(){ return {code:-1, message:'HTTP ' + r.status}; }); })
       .then(function(j){
-        if(j && j.code === 0){ status('イベント送信 ✓','ok'); }
+        if(j && j.code === 0){ status(auto ? '初期化 ✓' : 'イベント送信 ✓','ok'); }
         else { status('MA エラー: ' + ((j && (j.message || j.code)) || '不明'),'ng'); }
         console.log('[MA]', j);
       })
@@ -633,7 +633,17 @@ var MA = {
     send(on).then(function(){ busy = false; });
   });
 
-  paint();
+  /* 画面を開き直したときは、前の来場者が残した状態を引きずらないよう、
+     解除イベントを 1 本送ってから始める。ブラウザの戻る（bfcache 復帰）でも同じ。
+     表示は「押したら何が飛ぶか」に戻すので fired は立てない。 */
+  function resetState(){
+    if(busy) return;
+    busy = true; on = false; fired = false;
+    paint();
+    send(false, true).then(function(){ busy = false; });
+  }
+  resetState();
+  addEventListener('pageshow', function(e){ if(e.persisted) resetState(); });
 })();
 </script>
 </body>
