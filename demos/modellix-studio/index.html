@@ -258,7 +258,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .rowcap b{color:var(--fg);font-weight:700}
 @media(max-width:900px){.cardrow{grid-template-columns:repeat(4,1fr)}}
 
-.picks{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:100%;max-width:820px}
+.picks{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;width:100%;max-width:960px}
 .pick{position:relative;overflow:hidden;text-align:left;padding:clamp(16px,1.7vw,24px);
   display:flex;align-items:center;gap:clamp(14px,1.4vw,20px);
   border:1px solid var(--line);border-radius:var(--r-lg);
@@ -278,16 +278,25 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   background:linear-gradient(150deg,color-mix(in srgb,var(--a1) 26%,transparent),rgba(255,255,255,.04));
   border:1px solid color-mix(in srgb,var(--a1) 30%,transparent)}
 .pick .art svg{width:56%;height:56%}
-/* 主役タイルに実物の写真を出す。アイコンより「何ができるか」が早く伝わる。 */
-.pick .art-photo{padding:0;overflow:hidden;background:#0d1017}
-.pick .art-photo img{width:100%;height:100%;object-fit:cover;object-position:center 18%}
+/* ペットのタイルだけは丸アイコンをやめ、スイカが実際にカードの上で伏せている見せ方にする。
+   前足がカードの下辺からはみ出すので、このタイルだけ overflow を開ける。 */
+.pick-pet{--catw:clamp(146px,14.5vw,206px);overflow:visible;padding-right:calc(var(--catw) - 4px)}
+.pick-cat{position:absolute;right:-10px;bottom:clamp(-15px,-1vw,-9px);
+  width:var(--catw);height:auto;pointer-events:none;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.6));
+  transition:transform var(--t2) var(--ease)}
+.pick-pet:hover .pick-cat{transform:translateY(-6px) scale(1.04)}
+.pick-pet[aria-pressed=true] .pick-cat{transform:translateY(-4px) scale(1.03)}
+@media(prefers-reduced-motion:reduce){.pick-cat{transition:none}
+  .pick-pet:hover .pick-cat,.pick-pet[aria-pressed=true] .pick-cat{transform:none}}
 .pick-note{display:inline-block;margin-top:7px;font-size:10.5px;letter-spacing:.06em;color:var(--muted);
   border:1px solid var(--line);border-radius:99px;padding:2px 9px}
 .pick[aria-pressed=true] .pick-note{border-color:color-mix(in srgb,var(--a1) 42%,transparent);color:var(--a1)}
 .pick .txt{position:relative;flex:1;min-width:0}
 .pick h3{font-size:clamp(15px,1.25vw,19px);position:relative}
-.pick p{font-size:clamp(11.5px,.9vw,13px);color:var(--muted);line-height:1.7;margin-top:4px;position:relative}
-@media(max-width:700px){.picks{grid-template-columns:1fr}}
+.pick p{font-size:clamp(11.5px,.9vw,13px);color:var(--muted);line-height:1.7;margin-top:4px;position:relative;word-break:auto-phrase}
+@media(max-width:700px){.picks{grid-template-columns:1fr}
+  .pick-pet{--catw:186px}}
 
 /* ══════════════ 8. 世界選択（ポータル） ══════════════ */
 #s-world{gap:clamp(10px,1.8vh,22px)}
@@ -388,8 +397,28 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 #s-pet{gap:clamp(6px,1.1vh,14px);overflow-y:auto;overscroll-behavior:contain;
   padding-top:clamp(8px,1.6vh,20px);padding-bottom:clamp(8px,1.6vh,20px)}
 /* 5 匹＋アップロードの 6 枚が 1 段に収まる幅にする。折り返すと縦に伸びて下が切れる。 */
-#s-pet .pets{grid-template-columns:repeat(6,minmax(0,124px));max-width:880px;justify-content:center}
-@media(max-width:900px){ #s-pet .pets{grid-template-columns:repeat(3,minmax(0,124px))} }
+/* ねこといぬを左右に並べる。列数は固定せず、狭い画面では各パネルの中で折り返させる。
+   flex-grow を 5:3 にしてあるので、匹数の比とパネルの幅の比がだいたい一致する。 */
+.species{display:flex;align-items:stretch;justify-content:center;
+  gap:clamp(12px,1.4vw,22px);width:100%;max-width:1240px}
+.sp{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:9px;
+  padding:clamp(11px,1.1vw,16px);border:1px solid var(--line);border-radius:var(--r-lg);
+  background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.008))}
+.sp[data-species=cat]{flex-grow:5}
+.sp[data-species=dog]{flex-grow:3}
+.sp-h{display:flex;align-items:baseline;gap:7px;font-size:13px;letter-spacing:.05em}
+.sp-h .sp-e{font-size:15px;line-height:1}
+.sp-h em{font-style:normal;font-weight:400;font-size:10px;letter-spacing:.06em;color:var(--muted)}
+/* 列数はパネルごとに固定して 1 行に収める。折り返すと下に大きな空白ができ、
+   その分だけ画面が縦に伸びてスクロールが必要になってしまう。 */
+#s-pet .pets{max-width:none;justify-content:center;gap:8px}
+.sp[data-species=cat] .pets{grid-template-columns:repeat(6,minmax(0,1fr))}
+.sp[data-species=dog] .pets{grid-template-columns:repeat(4,minmax(0,1fr))}
+.sp .pet{padding:9px}
+@media(max-width:1000px){
+  .species{flex-direction:column}
+  .sp[data-species=cat] .pets,.sp[data-species=dog] .pets{grid-template-columns:repeat(4,minmax(0,124px))}
+}
 #s-pet .pet b{font-size:12.5px}
 #s-pet .pet span{font-size:9.5px}
 #s-pet .cardrow{max-width:820px}
@@ -476,16 +505,18 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   box-shadow:0 0 26px 6px color-mix(in srgb,var(--a1) 50%,transparent);
   animation:sweep 2.6s var(--ease) infinite}
 @keyframes sweep{0%{top:-2%}100%{top:102%}}
+.tlcol{display:flex;flex-direction:column;gap:clamp(10px,1.4vh,18px);min-width:0;flex:1 1 auto}
 .gen-note{font-size:13px;color:var(--muted);line-height:1.85;max-width:620px;text-align:left}
 .gen-err{margin-top:10px;font-size:12px;line-height:1.7;color:#ffb3a7;
   border:1px solid rgba(255,120,100,.4);background:rgba(150,40,32,.18);
   border-radius:var(--r-md);padding:10px 12px;max-width:620px;text-align:left}
+#s-gen,#s-result{overflow-y:auto;overscroll-behavior:contain}
 @media(max-width:1100px){.tl{flex-direction:column-reverse;gap:20px}
   .tstage{height:min(38vh,400px)}.tline{max-width:640px}}
 
 /* ══════════════ 11. 結果 ══════════════ */
 .res{display:flex;align-items:center;gap:clamp(24px,4vw,68px);width:100%;max-width:1500px;justify-content:center}
-.player{position:relative;height:min(60vh,680px);aspect-ratio:9/16;border-radius:var(--r-xl);
+.player{position:relative;height:min(58vh,660px);aspect-ratio:9/16;border-radius:var(--r-xl);
   overflow:hidden;background:#04050a;border:1px solid var(--line-2);flex:none;
   box-shadow:0 40px 110px rgba(0,0,0,.75),0 0 90px color-mix(in srgb,var(--a1) 20%,transparent)}
 .player img{width:100%;height:100%;object-fit:cover;animation:kb 12s ease-in-out infinite alternate}
@@ -509,13 +540,40 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   padding:6px 12px;border-radius:99px;background:rgba(4,5,10,.62);backdrop-filter:blur(10px);
   border:1px solid var(--line-2);font-size:10px;letter-spacing:.18em;font-weight:700}
 
-.res-side{flex:1;max-width:420px;text-align:left;display:flex;flex-direction:column;gap:22px}
-.res-side h2{font-size:clamp(20px,2.2vw,32px)}
+.res-side{flex:1;max-width:440px;text-align:left;display:flex;flex-direction:column;gap:clamp(8px,1.7vh,22px)}
+.res-side h2{font-size:clamp(19px,2.1vw,32px);line-height:1.25}
 .res-side .kicker{font-size:11px;letter-spacing:.32em;color:var(--a1);font-weight:700;text-transform:uppercase}
-.qr-row{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--r-lg);
+/* 結果画面：② ③ ④ の成果物を横に 3 つ並べる。
+   ヘッダーの進捗表示が .steps / .step を使っているので、ここは別名にする。 */
+.rsteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,.7vw,12px);width:100%}
+.rstep{display:flex;flex-direction:column;gap:7px;text-align:left;padding:9px;
+  border:1px solid var(--line);border-radius:var(--r-md);cursor:zoom-in;
+  background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.01));
+  transition:transform var(--t2) var(--ease),border-color var(--t2) var(--ease)}
+.rstep:hover{transform:translateY(-4px);border-color:var(--line-2)}
+.rstep .sh{display:flex;align-items:baseline;gap:6px;font-size:11px;font-weight:700;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rstep .sh i{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.1em;color:var(--a1)}
+/* 縦横比で決めると英語のように行数が増える言語で縦が足りなくなる。
+   画面の高さに追従させて、中身は cover で切り抜く。 */
+.rstep .sm{position:relative;display:block;width:100%;height:clamp(72px,14.5vh,196px);border-radius:9px;
+  overflow:hidden;background:#0c0f16;border:1px solid var(--line)}
+.rstep .sm img,.rstep .sm video{width:100%;height:100%;object-fit:cover;display:block}
+.rstep .sp-play{position:absolute;inset:0;margin:auto;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(8,10,15,.62);border:1px solid rgba(255,255,255,.28);
+  color:#fff;backdrop-filter:blur(4px)}
+.rstep .sp-play svg{width:16px;height:16px;margin-left:1px}
+.rstep .ss{font-size:10px;line-height:1.5;color:var(--muted)}
+.rstep[data-state=sample] .sm{opacity:.62}
+.rstep[data-state=none]{cursor:default;opacity:.5}
+.rstep[data-state=none]:hover{transform:none;border-color:var(--line)}
+.rstep[data-state=none] .sm{display:grid;place-items:center}
+.rstep[data-state=none] .sp-play{display:none}
+
+.qr-row{display:flex;align-items:center;gap:clamp(12px,1.2vw,18px);padding:clamp(11px,1.5vh,18px);border-radius:var(--r-lg);
   border:1px solid var(--line);background:rgba(255,255,255,.03);backdrop-filter:blur(12px)}
-.qr{width:96px;height:96px;border-radius:8px;background:#fff;padding:7px;flex:none}
-.qr-row p{font-size:12.5px;color:var(--muted);line-height:1.7}
+.qr{width:clamp(86px,12.2vh,152px);height:auto;aspect-ratio:1;border-radius:10px;background:#fff;padding:7px;flex:none}
+.qr-row p{font-size:clamp(11px,1.15vh,12.5px);color:var(--muted);line-height:1.65}
 .qr-row p b{color:var(--fg);display:block;font-size:13.5px;margin-bottom:3px}
 @media(max-width:1100px){.res{flex-direction:column;gap:20px}.player{height:min(44vh,440px)}
   .res-side{max-width:640px;text-align:center;align-items:center}}
@@ -668,10 +726,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     </div>
 
     <nav class="steps" id="steps" aria-label="体験の進行状況">
-      <div class="step" data-n="1"><i>1</i><b>主役を選ぶ</b></div><span class="bar"></span>
-      <div class="step" data-n="2"><i>2</i><b>撮影する</b></div><span class="bar"></span>
-      <div class="step" data-n="3"><i>3</i><b>世界を選ぶ</b></div><span class="bar"></span>
-      <div class="step" data-n="4"><i>4</i><b>生成する</b></div>
+      <div class="step" data-n="1"><i>1</i><b data-i18n="s01">主役を選ぶ</b></div><span class="bar"></span>
+      <div class="step" data-n="2"><i>2</i><b data-i18n="s02">撮影する</b></div><span class="bar"></span>
+      <div class="step" data-n="3"><i>3</i><b data-i18n="s03">世界を選ぶ</b></div><span class="bar"></span>
+      <div class="step" data-n="4"><i>4</i><b data-i18n="s04">生成する</b></div>
     </nav>
 
     <div class="lang" role="group" aria-label="言語">
@@ -685,161 +743,175 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
     <section class="screen on" id="s-attract" aria-label="スタート">
       <div class="hplate" aria-hidden="true"></div>
       <p class="eyebrow">AI Image &amp; Video Generation</p>
-      <h1 class="hero-title">あなたが、<span class="flow">物語の主役</span>になる。</h1>
-      <p class="lead">その場で撮った 1 枚の写真から、8 つの世界の主役へ。<br class="pc-br">
+      <h1 class="hero-title" data-i18n="s06">あなたが、<span class="flow">物語の主役</span>になる。</h1>
+      <p class="lead" data-i18n="s07">その場で撮った 1 枚の写真から、8 つの世界の主役へ。<br class="pc-br">
         変身から動画まで、目の前で 60 秒。</p>
       <div class="acts" style="margin-top:14px">
-        <button class="btn btn-p btn-xl" data-go="subject">体験をはじめる
+        <button class="btn btn-p btn-xl" data-go="subject"><span data-i18n="s08">体験をはじめる</span>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
         <button class="btn btn-g" id="btnHistory" data-go="history">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg>
-          生成履歴を見る<span class="num" id="histCount" style="margin-left:6px;opacity:.7"></span>
+          <span data-i18n="s09">生成履歴を見る</span><span class="num" id="histCount" style="margin-left:6px;opacity:.7"></span>
         </button>
       </div>
-      <div class="hint"><span class="dot"></span>画面にタッチしてスタート</div>
+      <div class="hint" data-i18n="s10"><span class="dot"></span>画面にタッチしてスタート</div>
     </section>
 
     <!-- 0b 生成履歴 -->
     <section class="screen" id="s-history" aria-label="生成履歴">
-      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>最初の画面へ戻る</b></button>
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s11">最初の画面へ戻る</b></button>
       <p class="eyebrow">History</p>
-      <h2 class="h2">これまでに生成した作品</h2>
-      <p class="lead" style="font-size:13px">この端末で生成したものが新しい順に並びます。選ぶと大きく表示され、QR コードからお持ち帰りいただけます。</p>
+      <h2 class="h2" data-i18n="s12">これまでに生成した作品</h2>
+      <p class="lead" style="font-size:13px" data-i18n="s13">この端末で生成したものが新しい順に並びます。選ぶと大きく表示され、QR コードからお持ち帰りいただけます。</p>
       <div class="hist" id="histGrid"></div>
-      <p class="hempty" id="histEmpty" hidden>まだ作品がありません。<br>「体験をはじめる」から、最初の 1 枚をつくってみてください。</p>
+      <p class="hempty" id="histEmpty" hidden data-i18n="s14">まだ作品がありません。<br>「体験をはじめる」から、最初の 1 枚をつくってみてください。</p>
       <div class="acts">
-        <button class="btn btn-p" data-go="subject">新しく生成する</button>
-        <button class="btn btn-g btn-sm" id="btnHistClear">履歴を消す</button>
+        <button class="btn btn-p" data-go="subject" data-i18n="s15">新しく生成する</button>
+        <button class="btn btn-g btn-sm" id="btnHistClear" data-i18n="s16">履歴を消す</button>
       </div>
     </section>
 
     <!-- 1 主役 -->
     <section class="screen" id="s-subject" aria-label="主役を選ぶ">
-      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>最初の画面へ戻る</b></button>
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s17">最初の画面へ戻る</b></button>
       <p class="eyebrow">Step 1</p>
-      <h2 class="h2">1 枚の写真が、この 8 スタイルになります</h2>
-      <p class="lead" style="font-size:13px">下はすべて、1 枚の写真からつくった例です。ペットの写真でも品質は変わりません。</p>
+      <h2 class="h2" data-i18n="s18">1 枚の写真が、この 8 スタイルになります</h2>
+      <p class="lead" style="font-size:13px" data-i18n="s19">下はすべて、1 枚の写真からつくった例です。ペットの写真でも品質は変わりません。</p>
       <div class="cardrow" id="cardRow" aria-hidden="true"></div>
-      <p class="rowcap">ここでは<b>主役だけ</b>お決めください。どの世界に入るかは、撮影のあとで選びます。</p>
+      <p class="rowcap" data-i18n="s20">ここでは<b>主役だけ</b>お決めください。どの世界に入るかは、撮影のあとで選びます。</p>
       <div class="picks">
         <button class="pick" data-subject="self">
           <span class="art"><svg viewBox="0 0 24 24" fill="none" stroke="var(--a1)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
           </svg></span>
           <span class="txt">
-            <h3>自分の顔で</h3>
-            <p>その場のカメラで撮影。データは体験終了後に自動で削除されます。</p>
+            <h3 data-i18n="s21">自分の顔で</h3>
+            <p data-i18n="s22">その場のカメラで撮影。データは体験終了後に自動で削除されます。</p>
           </span>
         </button>
-        <button class="pick" data-subject="pet">
-          <span class="art art-photo">
-            <img src="img/t/suika.jpg" alt="モデルのねこ スイカ" width="300" height="300" loading="lazy" decoding="async">
-          </span>
+        <button class="pick pick-pet" data-subject="pet">
           <span class="txt">
-            <h3>ペットを主役に</h3>
-            <p>ねこ 5 匹から選ぶか、お手持ちの写真から。撮影は不要です。</p>
-            <span class="pick-note">見本はモデルの スイカ🍉</span>
+            <h3 data-i18n="s23">ペットを主役に</h3>
+            <p data-i18n="s24">ねこ 5 匹・いぬ 3 匹から選ぶか、お手持ちの写真から。撮影は不要です。</p>
+            <span class="pick-note" data-i18n="s25">見本はモデルの スイカ🍉</span>
           </span>
+          <img class="pick-cat" src="img/suika-lying.webp" alt="" width="560" height="306" loading="lazy" decoding="async">
         </button>
       </div>
     </section>
 
     <!-- 2a 撮影 -->
     <section class="screen" id="s-capture" aria-label="撮影">
-      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>主役を選び直す</b></button>
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s26">主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
-      <h2 class="h2">枠の中に顔を入れてください</h2>
+      <h2 class="h2" data-i18n="s27">枠の中に顔を入れてください</h2>
       <div class="cam">
         <video id="cam" autoplay playsinline muted></video>
         <canvas id="shot" hidden></canvas>
         <div class="cam-fb" id="camFb" hidden>
           <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#8e9ab0" stroke-width="1.4" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <p class="lead" style="font-size:13px">カメラに接続できませんでした。<br>サンプル画像でそのまま体験できます。</p>
+          <p class="lead" style="font-size:13px" data-i18n="s28">カメラに接続できませんでした。<br>サンプル画像でそのまま体験できます。</p>
         </div>
         <div class="frm" aria-hidden="true"><i></i><i></i><i></i><i></i><div class="scan"></div></div>
       </div>
       <div class="acts">
         <button class="btn btn-p btn-xl" id="btnShoot">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>
-          3 秒後に撮影
+          <span data-i18n="s29">3 秒後に撮影</span>
         </button>
-        <button class="btn btn-g" id="btnSample">サンプルで進む</button>
+        <button class="btn btn-g" id="btnSample" data-i18n="s30">サンプルで進む</button>
       </div>
-      <p class="lead" style="font-size:11.5px">撮影した画像はこの端末の中だけで処理され、サーバーには保存されません。</p>
+      <p class="lead" style="font-size:11.5px" data-i18n="s31">撮影した画像はこの端末の中だけで処理され、サーバーには保存されません。</p>
     </section>
 
     <!-- 2b ペット -->
     <section class="screen" id="s-pet" aria-label="ペットを選ぶ">
-      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>主役を選び直す</b></button>
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s32">主役を選び直す</b></button>
       <p class="eyebrow">Step 2</p>
-      <h2 class="h2">主役になる子を選んでください</h2>
-      <p class="lead" style="font-size:13px">お好きなねこを選ぶか、お手持ちの写真をお使いください。人物と同じ工程で、キャラクターカードから動画までを生成します。</p>
-      <div class="pets" id="petGrid"></div>
+      <h2 class="h2" data-i18n="s33">主役になる子を選んでください</h2>
+      <p class="lead" style="font-size:13px" data-i18n="s34">ねこでも、いぬでも。お手持ちの写真もそのまま使えます。人物と同じ工程で、キャラクターカードから動画までを生成します。</p>
+      <div class="species">
+        <section class="sp" data-species="cat">
+          <h3 class="sp-h" data-i18n="s35"><span class="sp-e" aria-hidden="true">🐈</span>ねこ<em>5 匹＋お手持ちの写真</em></h3>
+          <div class="pets" id="petGrid"></div>
+        </section>
+        <section class="sp" data-species="dog">
+          <h3 class="sp-h" data-i18n="s36"><span class="sp-e" aria-hidden="true">🐕</span>いぬ<em>3 匹＋お手持ちの写真</em></h3>
+          <div class="pets" id="dogGrid"></div>
+        </section>
+      </div>
       <input type="file" id="petFile" accept="image/*" hidden>
-      <p class="rowcap" style="margin-top:2px">できあがりの例：<b>スイカ🍉</b> で生成した 8 つの世界の動画</p>
+      <input type="file" id="dogFile" accept="image/*" hidden>
+      <p class="rowcap" style="margin-top:2px" data-i18n="s37">できあがりの例：<b>スイカ🍉</b> で生成した 8 つの世界の動画</p>
       <div class="cardrow" id="catRow" aria-hidden="true"></div>
-      <div class="acts"><button class="btn btn-p" id="btnPetNext" disabled>この子で進む</button></div>
+      <div class="acts"><button class="btn btn-p" id="btnPetNext" disabled data-i18n="s38">この子で進む</button></div>
     </section>
 
     <!-- 3 世界 -->
     <section class="screen" id="s-world" aria-label="世界を選ぶ">
-      <button class="stepback" id="backWorld" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>撮影をやり直す</b></button>
+      <button class="stepback" id="backWorld" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s39">撮影をやり直す</b></button>
       <p class="eyebrow">Step 3</p>
-      <h2 class="h2">どの世界の扉を開きますか？</h2>
-      <p class="lead" style="font-size:13px">入りたい世界を 1 つ選んでください。選んだ世界の主役として生成されます。</p>
+      <h2 class="h2" data-i18n="s40">どの世界の扉を開きますか？</h2>
+      <p class="lead" style="font-size:13px" data-i18n="s41">入りたい世界を 1 つ選んでください。選んだ世界の主役として生成されます。</p>
       <div class="worlds" id="worldGrid"></div>
       <div class="acts">
-        <button class="btn btn-p btn-xl" id="btnGen" disabled>この世界へ入る</button>
-        <button class="btn btn-g" id="btnRandom">おまかせ</button>
+        <button class="btn btn-p btn-xl" id="btnGen" disabled data-i18n="s42">この世界へ入る</button>
+        <button class="btn btn-g" id="btnRandom" data-i18n="s43">おまかせ</button>
       </div>
     </section>
 
     <!-- 4 生成中（タイムライン） -->
     <section class="screen" id="s-gen" aria-label="生成中">
-      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b>生成を中止して世界を選び直す</b></button>
+      <button class="stepback" type="button" data-stepback><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><b data-i18n="s44">生成を中止して世界を選び直す</b></button>
       <p class="eyebrow">Step 4 ／ Generating</p>
-      <h2 class="h2" id="genTitle">キャラクターを生成しています</h2>
+      <h2 class="h2" id="genTitle" data-i18n="s45">キャラクターを生成しています</h2>
       <div class="tl">
+        <div class="tlcol">
         <ol class="tline" id="tline">
           <li class="tn" data-k="0" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>写真を解析</b><span>顔の構造と特徴を抽出しています</span></div>
+            <div class="tx"><b data-i18n="s46">写真を解析</b><span data-i18n="s47">顔の構造と特徴を抽出しています</span></div>
             <em class="tt"></em>
           </li>
           <li class="tn" data-k="1" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>キャラクターカードを生成</b>
-              <span>顔立ちはそのままに、衣装・光・質感だけを入れ替えます</span>
+            <div class="tx"><b data-i18n="s48">キャラクターカードを生成</b>
+              <span data-i18n="s49">顔立ちはそのままに、衣装・光・質感だけを入れ替えます</span>
               <button class="tthumb" id="cardThumb" type="button" hidden>
                 <img id="cardThumbImg" alt="生成されたキャラクターカード">
-                <i><b>カードができました</b>タップすると大きく表示します</i>
+                <i data-i18n="s50"><b>カードができました</b>タップすると大きく表示します</i>
               </button>
             </div>
             <em class="tt"></em>
           </li>
           <li class="tn" data-k="2" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>世界と合成</b>
-              <span>キャラクターカードと世界の背景から、光の向き・空気感・粒状感を揃えた 1 枚を組み立てます</span>
+            <div class="tx"><b data-i18n="s51">世界と合成</b>
+              <span data-i18n="s52">キャラクターカードと世界の背景から、光の向き・空気感・粒状感を揃えた 1 枚を組み立てます</span>
               <button class="tthumb" id="sceneThumb" type="button" hidden>
                 <img id="sceneThumbImg" alt="生成された完成カット">
-                <i><b>完成カットができました</b>タップすると大きく表示します</i>
+                <i data-i18n="s53"><b>完成カットができました</b>タップすると大きく表示します</i>
               </button></div>
             <em class="tt"></em>
           </li>
           <li class="tn" data-k="3" data-s="wait">
             <span class="td"></span>
-            <div class="tx"><b>動画をレンダリング</b>
-              <span>キャラクターカードと完成カットを、始まりと終わりのコマにして 7 秒の縦型映像へ</span>
-              <span class="soon" id="vidSoon" hidden>準備中</span>
+            <div class="tx"><b data-i18n="s54">動画をレンダリング</b>
+              <span id="vidStepDesc" data-i18n="s55">キャラクターカードと完成カットを、始まりと終わりのコマにして 7 秒の縦型映像へ</span>
+              <span class="soon" id="vidSoon" hidden data-i18n="s56">準備中</span>
               <button class="tthumb" id="vidThumb" type="button" hidden>
                 <video id="vidThumbV" muted playsinline preload="metadata"></video>
-                <i><b>動画ができました</b>タップすると全画面で再生します</i>
+                <i data-i18n="s57"><b>動画ができました</b>タップすると全画面で再生します</i>
               </button></div>
             <em class="tt"></em>
           </li>
         </ol>
+        <!-- 工程の解説はタイムラインの下に置く。画面の一番下に置くと、
+             縦の余白が足りない端末でフッターと重なってしまうため。 -->
+        <p class="gen-note" id="genNote" data-i18n="s58">1 枚の写真から顔の構造を推定しています。「元の顔だと分かる」まま別人にならないよう保つのが、ここでいちばん難しいところです。</p>
+        <p class="gen-err" id="genErr" hidden></p>
+        </div>
         <div class="tstage">
           <img id="tShot" alt="">
           <img id="tCard" alt="">
@@ -847,8 +919,6 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           <div class="sweep" id="tSweep" aria-hidden="true"></div>
         </div>
       </div>
-      <p class="gen-note" id="genNote">1 枚の写真から顔の構造を推定しています。「元の顔だと分かる」まま別人にならないよう保つのが、ここでいちばん難しいところです。</p>
-      <p class="gen-err" id="genErr" hidden></p>
     </section>
 
     <!-- 5 結果 -->
@@ -864,27 +934,37 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
         <div class="res-side">
           <div>
             <p class="kicker">Complete</p>
-            <h2 id="resTitle" style="margin-top:8px">完成しました</h2>
+            <h2 id="resTitle" style="margin-top:8px" data-i18n="s59">完成しました</h2>
           </div>
           <p class="lead" id="resSub" style="text-align:inherit;margin:0;font-size:13.5px"></p>
 
-          <button class="tthumb" id="resCardThumb" type="button" hidden style="align-self:flex-start">
-            <img id="resCardImg" alt="キャラクターカード">
-            <i><b>キャラクターカード（工程 ②）</b>タップすると大きく表示します</i>
-          </button>
-
-          <div class="vslot">
-            <span class="vi"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="14" height="13" rx="2.4"/><path d="m17 12 4.5-3v9L17 15z"/></svg></span>
-            <p id="vslotTxt"><b>生成の内訳</b>この枠に、どこまで生成できたかを表示します。</p>
+          <!-- 3 工程の成果物をそのまま並べる。どれもタップで大きく見られる。 -->
+          <div class="rsteps" id="resSteps">
+            <button class="rstep" type="button" id="stepCard" data-kind="card">
+              <span class="sh" data-i18n="s60"><i>02</i>キャラクターカード</span>
+              <span class="sm"><img id="resCardImg" alt="キャラクターカード"></span>
+              <span class="ss" id="stepCardS" data-i18n="s61">タップで拡大</span>
+            </button>
+            <button class="rstep" type="button" id="stepScene" data-kind="scene">
+              <span class="sh" data-i18n="s62"><i>03</i>完成カット</span>
+              <span class="sm"><img id="resSceneImg" alt="完成カット"></span>
+              <span class="ss" id="stepSceneS" data-i18n="s63">タップで拡大</span>
+            </button>
+            <button class="rstep" type="button" id="stepVid" data-kind="video">
+              <span class="sh" data-i18n="s64"><i>04</i>動画・7 秒</span>
+              <span class="sm"><video id="resVidThumb" muted playsinline preload="metadata"></video>
+                <em class="sp-play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></em></span>
+              <span class="ss" id="stepVidS" data-i18n="s65">タップで全画面再生</span>
+            </button>
           </div>
 
           <div class="qr-row">
-            <canvas class="qr" id="qrCanvas" width="240" height="240" aria-label="お持ち帰り用 QR コード"></canvas>
-            <p><b>スマホでお持ち帰り</b>読み取ると、いま生成したものをダウンロードできるページが開きます。</p>
+            <canvas class="qr" id="qrCanvas" width="420" height="420" aria-label="Modellix コンソールの QR コード"></canvas>
+            <p data-i18n="s66"><b>スマホで Modellix を試す</b>読み取ると Modellix のコンソールが開きます。いまご覧いただいた 3 工程を、そのままご自身のアカウントでお試しいただけます。</p>
           </div>
           <div class="acts" style="justify-content:flex-start">
-            <button class="btn btn-p" data-go="world">別の世界へ</button>
-            <button class="btn btn-g btn-sm" id="btnRestart">最初から</button>
+            <button class="btn btn-p" data-go="world" data-i18n="s67">別の世界へ</button>
+            <button class="btn btn-g btn-sm" id="btnRestart" data-i18n="s68">最初から</button>
           </div>
         </div>
       </div>
@@ -895,7 +975,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   <footer class="foot">
     <button class="back" id="btnBack" hidden>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-      ひとつ前に戻る
+      <span data-i18n="s69">ひとつ前に戻る</span>
     </button>
     <span>Modellix ｜ Aurora Mobile Japan</span>
     <span class="num" id="idle"></span>
@@ -3336,7 +3416,18 @@ var CAT_VID = [   // ④ 動画
   VID_B+'%E2%91%A7%20%E6%B0%B7mp4neko.mp4'
 ];
 /* いま主役がスイカかどうか。素材とプロンプトの切り替えはすべてこれで判定する。 */
-function isCat(){ return state.subject === "pet"; }
+/* 主役は「人物 / ねこ / いぬ」の 3 系統。工程は同じでもプロンプトが別物なので分けている。 */
+function isPet(){ return state.subject === "pet"; }
+function isCat(){ return isPet() && state.species !== "dog"; }
+function isDog(){ return isPet() && state.species === "dog"; }
+
+function cardPrompts(){  return isDog()?dogCardPrompts()  : isCat()?CAT_PROMPTS       : PROMPTS; }
+function scenePrompts(){ return isDog()?dogScenePrompts() : isCat()?CAT_SCENE_PROMPTS : SCENE_PROMPTS; }
+function videoPrompts(){ return isDog()?dogVideoPrompts() : isCat()?CAT_VIDEO_PROMPTS : VIDEO_PROMPTS; }
+/* 生成が通らなかったときに出す見本。いぬ専用の見本画像は用意していないので、
+   動物のときは共通でねこの見本を使う（世界の見え方は主役が誰でも変わらない）。 */
+function sampleCards(){  return isPet()?CAT_CRD:CRD; }
+function sampleScenes(){ return isPet()?CAT_SCN:WLD; }
 
 var WORLDS = [
  {id:"mech", ttl:"見つかった", nm:"機甲パイロット", sub:"雨のネオン街 × 半機械化", tag:"実写CG",
@@ -3367,6 +3458,17 @@ var PETS=[
  {id:"mitarashi",  n:"みたらし",   s:"三毛",           img:"img/neko/mitarashi.jpg",  thumb:"img/neko/t/mitarashi.jpg"},
  {id:"mocha",      n:"モカ",       s:"シャム",         img:"img/neko/mocha.jpg",      thumb:"img/neko/t/mocha.jpg"},
  {id:"hana",       n:"はな",       s:"キジトラ白",     img:"img/neko/hana.jpg",       thumb:"img/neko/t/hana.jpg"}
+];
+
+/* 主役に選べる 3 匹のいぬ。プロンプトは猫の流用ではなく犬用に書き直したものを使う。
+   （犬は掴めない・後ろ足で立たない・表情は眉と口に出る、という差が大きすぎるため） */
+var DOGS=[
+ {id:"azuki", n:"あずき", s:"柴犬", img:"img/dog/azuki.jpg", thumb:"img/dog/t/azuki.jpg",
+  ov:"BREED NOTE — this individual is a Shiba Inu and the reference image is the only authority on its anatomy: erect triangular ears, a wedge muzzle, a thick ringed tail carried curled over the back, and a harsh short double coat standing off the body. The woven straw hat in the reference photograph is NOT part of this character — remove it entirely and leave the head bare unless this image specifies its own headwear."},
+ {id:"dora", n:"どら", s:"フレンチブル", img:"img/dog/dora.jpg", thumb:"img/dog/t/dora.jpg",
+  ov:"BREED OVERRIDE — this individual is a French Bulldog and the reference image is the only authority on its anatomy. Wherever any instruction assumes erect triangular ears, a long wedge muzzle, a thick ringed tail curled over the back, or a harsh standing double coat, IGNORE that assumption and keep exactly what the reference shows: large rounded upright bat ears, a very short flat brachycephalic muzzle with its wrinkles and undershot jaw, a short low-set straight tail that never curls over the back, and a short smooth single coat lying flat against the body. The tail cannot signal on this breed, so never describe it as curled, tightened or clamped — THE BROW, THE EYES AND THE MOUTH CARRY THE ENTIRE EXPRESSION and the furrow above the eyes must be deep and unmistakable."},
+ {id:"purin", n:"ぷりん", s:"トイプードル", img:"img/dog/purin.jpg", thumb:"img/dog/t/purin.jpg",
+  ov:"BREED OVERRIDE — this individual is a Toy Poodle and the reference image is the only authority on its anatomy. Wherever any instruction assumes erect triangular ears, a harsh short double coat, guard hairs, a neck ruff, or a thick ringed tail curled over the back, IGNORE that assumption and keep exactly what the reference shows: long soft DROP ears hanging flat against the cheeks, a dense curly single-layer apricot coat over the whole body, and a short high-set tail with a rounded pompon that never curls over the back. A drop ear can only be pulled slightly BACK AND UP AT THE BASE so it lifts a fraction off the cheek — that small movement must be visible, and it is the only ear signal available. Because the ears and the tail cannot signal, THE BROW AND THE MOUTH CARRY THE ENTIRE EXPRESSION and the furrow above the eyes must be deep, hard and unmistakable."}
 ];
 
 var NOTES=[
@@ -3572,7 +3674,7 @@ function attractLoop(){
 /* 世界カードとぼかし背景の絵を主役に合わせる。
    猫を選んだのに人物の完成カットが並ぶと、何が出来上がるのか伝わらない。 */
 function refreshWorldArt(){
-  var pics = isCat() ? CAT_SCN : WLD;
+  var pics = isPet() ? CAT_SCN : WLD;
   document.querySelectorAll("#worldGrid .world .wimg").forEach(function(im,k){
     var src = pics[WORLDS[k].i];
     if(im.getAttribute("src")!==src) im.src=src;
@@ -3599,7 +3701,7 @@ var pvOpen=false;
 function openPreview(k){
   var w=WORLDS[k], lay=$("#pvLay"), v=$("#pvVideo"), soon=$("#pvSoon");
   // 主役がスイカなら、見本も猫版に差し替える（人の映像を見せてから猫が出てくると齟齬になる）
-  var cat=isCat(), still=cat?CAT_SCN[w.i]:WLD[w.i];
+  var cat=isPet(), still=cat?CAT_SCN[w.i]:WLD[w.i];
   $("#pvBg").src=still;
   $("#pvPoster").src=still;
   $("#pvTag").textContent=w.cap;
@@ -3651,58 +3753,70 @@ function setSound(on){
   document.addEventListener("keydown",function(e){ if(e.key==="Escape" && pvOpen) closePreview(); });
 })();
 
-/* ───── ペット ───── */
+/* ───── ペット（ねこ／いぬ） ─────
+   工程は人物と同じ。違うのはプロンプトだけなので、タイルの作り方は 1 本にまとめて
+   種別（cat / dog）を渡し分けている。選択はねこ・いぬをまたいで常に 1 匹だけ。 */
 (function(){
-  var g=$("#petGrid");
-  PETS.forEach(function(p){
-    var b=document.createElement("button");
-    b.className="pet"; b.type="button"; b.setAttribute("aria-pressed","false");
-    b.innerHTML='<span class="pa"><img src="'+(p.thumb||p.img)+'" alt="'+p.n+'"></span>'+
-                '<b>'+p.n+'</b><span>'+p.s+'</span>';
-    b.addEventListener("click",function(){
-      g.querySelectorAll(".pet").forEach(function(x){x.setAttribute("aria-pressed","false")});
-      b.setAttribute("aria-pressed","true");
-      state.shot=null; state.petImg=p.img; state.label=p.n;
-      $("#btnPetNext").disabled=false; resetIdle();
-    });
-    g.appendChild(b);
-  });
+  var petScreen=$("#s-pet");
 
-  /* 別の子の写真を持ち込む口。スイカ🍉 以外でも同じ工程を流せる。 */
-  var add=document.createElement("button");
-  add.className="pet pet-add"; add.type="button"; add.setAttribute("aria-pressed","false");
-  add.innerHTML='<span class="pa">'+
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
-    '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
-    '<em>タップして選ぶ</em></span>'+
-    '<b>別の子の写真</b><span>JPG / PNG・10MB まで</span>';
-  add.addEventListener("click",function(){ $("#petFile").click(); });
-  g.appendChild(add);
+  function clearAll(){
+    petScreen.querySelectorAll(".pet").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+  }
 
-  /* 選ばれた写真は、その場で縮小して data URL にする。端末の外へは出さない。 */
-  $("#petFile").addEventListener("change",function(ev){
-    var f=ev.target.files && ev.target.files[0];
-    if(!f) return;
-    if(f.size > 10*1024*1024){ alert("ファイルサイズが 10MB を超えています。"); return; }
-    var r=new FileReader();
-    r.onload=function(){
-      toJpeg(r.result, 1280).then(function(data){
-        g.querySelectorAll(".pet").forEach(function(x){x.setAttribute("aria-pressed","false")});
-        add.setAttribute("aria-pressed","true");
-        add.querySelector(".pa").innerHTML='<img src="'+data+'" alt="">';
-        add.querySelector("b").textContent="この写真で進む";
-        state.shot=null; state.petImg=data; state.label="うちの子";
+  function buildGrid(grid, input, list, species, addTitle){
+    list.forEach(function(p){
+      var b=document.createElement("button");
+      b.className="pet"; b.type="button"; b.setAttribute("aria-pressed","false");
+      b.innerHTML='<span class="pa"><img src="'+(p.thumb||p.img)+'" alt="'+p.n+'"></span>'+
+                  '<b>'+p.n+'</b><span>'+p.s+'</span>';
+      b.addEventListener("click",function(){
+        clearAll(); b.setAttribute("aria-pressed","true");
+        state.subject="pet"; state.species=species;
+        state.shot=null; state.petImg=p.img; state.label=p.n;
         $("#btnPetNext").disabled=false; resetIdle();
-      }).catch(function(e){ alert("画像を読み込めませんでした。"); });
-    };
-    r.onerror=function(){ alert("ファイルを読み込めませんでした。"); };
-    r.readAsDataURL(f);
-  });
+      });
+      grid.appendChild(b);
+    });
+
+    /* お手持ちの写真を持ち込む口。ねこ・いぬそれぞれに用意する。 */
+    var add=document.createElement("button");
+    add.className="pet pet-add"; add.type="button"; add.setAttribute("aria-pressed","false");
+    add.innerHTML='<span class="pa">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+      '<em>'+T("tapChoose","タップして選ぶ")+'</em></span>'+
+      '<b>'+addTitle+'</b><span>'+T("fileNote","JPG / PNG・10MB まで")+'</span>';
+    add.addEventListener("click",function(){ input.click(); });
+    grid.appendChild(add);
+
+    /* 選ばれた写真は、その場で縮小して data URL にする。端末の外へは出さない。 */
+    input.addEventListener("change",function(ev){
+      var f=ev.target.files && ev.target.files[0];
+      if(!f) return;
+      if(f.size > 10*1024*1024){ alert(T("aTooBig","ファイルサイズが 10MB を超えています。")); return; }
+      var r=new FileReader();
+      r.onload=function(){
+        toJpeg(r.result, 1280).then(function(data){
+          clearAll(); add.setAttribute("aria-pressed","true");
+          add.querySelector(".pa").innerHTML='<img src="'+data+'" alt="">';
+          add.querySelector("b").textContent=T("thisPhoto","この写真で進む");
+          state.subject="pet"; state.species=species;
+          state.shot=null; state.petImg=data; state.label=T("lblMyPet","うちの子");
+          $("#btnPetNext").disabled=false; resetIdle();
+        }).catch(function(e){ alert(T("aBadImg","画像を読み込めませんでした。")); });
+      };
+      r.onerror=function(){ alert(T("aBadFile","ファイルを読み込めませんでした。")); };
+      r.readAsDataURL(f);
+    });
+  }
+
+  buildGrid($("#petGrid"), $("#petFile"), PETS, "cat", T("myCat","うちのねこ"));
+  buildGrid($("#dogGrid"), $("#dogFile"), DOGS, "dog", T("myDog","うちのいぬ"));
 })();
 
 /* ───── 状態と画面遷移 ───── */
 function blankState(){
-  return {subject:null,shot:null,petImg:null,label:"",world:null,
+  return {subject:null,species:"cat",shot:null,petImg:null,label:"",world:null,
           cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false,
           videoUrl:null,videoIsSample:false};
 }
@@ -3734,7 +3848,7 @@ function show(name,push){
   // 世界選択の戻り先は、人物なら撮影・ペットなら選び直しと、実際の来た道に合わせる
   if(name==="world"){
     $("#backWorld").querySelector("b").textContent =
-      (state.subject==="pet") ? "主役の子を選び直す" : "撮影をやり直す";
+      (state.subject==="pet") ? T("backPet","主役の子を選び直す") : T("backShot","撮影をやり直す");
   }
   resetIdle();
 }
@@ -3768,12 +3882,13 @@ function sampleShot(){
   return "data:image/svg+xml;base64,"+btoa(unescape(encodeURIComponent(s)));
 }
 function petShot(){
-  // スイカ🍉 は公開 URL、アップロードは data URL。どちらもそのまま参考画像にできる。
-  return state.petImg || (PETS[0] && PETS[0].img) || sampleShot();
+  // 同梱の見本は公開できるローカル URL、アップロードは data URL。どちらもそのまま参考画像にできる。
+  var first = isDog() ? DOGS[0] : PETS[0];
+  return state.petImg || (first && first.img) || sampleShot();
 }
 
 $("#btnSample").addEventListener("click",function(){
-  state.shot=sampleShot(); state.label="サンプル"; stopCam(); show("world");
+  state.shot=sampleShot(); state.label=T("lblSample","サンプル"); stopCam(); show("world");
 });
 $("#btnPetNext").addEventListener("click",function(){ state.shot=petShot(); show("world"); });
 
@@ -3795,8 +3910,8 @@ function capture(){
     var g=c.getContext("2d");
     var sw=side, sh=side*4/3, sx=(w-sw)/2, sy=Math.max(0,(h-sh)/2);
     g.drawImage(v,sx,sy,sw,Math.min(sh,h),0,0,c.width,c.height); // ミラーのまま＝本人が見慣れた向き
-    state.shot=c.toDataURL("image/jpeg",.9); state.label="あなた";
-  } else { state.shot=sampleShot(); state.label="サンプル"; }
+    state.shot=c.toDataURL("image/jpeg",.9); state.label=T("lblYou","あなた");
+  } else { state.shot=sampleShot(); state.label=T("lblSample","サンプル"); }
   stopCam();
   later(function(){show("world")},420);
 }
@@ -3814,11 +3929,27 @@ var API   = "/api/v1";
 var MODEL = "bytedance/seedream-5.0-pro-edit";                       // ② 角色卡
 var MODEL_SCENE = "bytedance/seedream-5.0-pro-multi-reference";      // ③ 入景
 var MODEL_VIDEO = "bytedance/seedance-2.0-fast-i2v";                 // ④ 動画（高速版）
+var MODEL_VIDEO_FL2V = "minimax/minimax-h3-fl2v";                    // ④ 動画（始点＋終点コマ）
+
+/* 結果画面の QR。持ち帰りではなく Modellix のコンソールへ誘導する。
+   （生成物のダウンロードは、履歴画面の QR が担当する） */
+var CONSOLE_URL = "https://www.modellix.ai/console/login?redirect_path=https%253A%252F%252Fwww.modellix.ai%252Fconsole%252Fdashboard";
+
+/* 人物が主役のときの動画モデルの振り分け。
+   seedance は実在の人物の顔が写った画像を受け付けないので、実写でない 3 つの世界
+   （② 異世界の勇者・④ ミニチュア探検隊・⑧ 氷の魔導士）だけ seedance を使い、
+   残りの実写系 5 世界は MiniMax H3 FL2V に流す。動物は 8 世界とも seedance。 */
+var FAST_WORLDS = [1, 3, 7];
+function videoModelFor(i){
+  if(isPet()) return MODEL_VIDEO;
+  return FAST_WORLDS.indexOf(i) >= 0 ? MODEL_VIDEO : MODEL_VIDEO_FL2V;
+}
 var VIDEO_TIMEOUT = 10 * 60 * 1000;   // 動画は静止画より長い。10 分で打ち切る。
 /* 高速版は解像度が 480p / 720p のみ。下の resolution はその範囲に収めてある。
    seedance 2.0 系は実在の人物の顔を含む画像を受け付けない（API 側の制約）。
    なので動画まで走らせるのは猫のときだけ。人物は ③ で止める。 */
-function canVideo(){ return isCat(); }
+/* 動画は 4 工程目として全員に走らせる。人物のときだけモデルが世界ごとに分かれる。 */
+function canVideo(){ return true; }
 var CARD_SIZE = "1440x2560";          // 9:16。1K〜2K の範囲内
 var CARD_TIMEOUT = 4 * 60 * 1000;     // 実測 80〜120 秒。余裕を持って 4 分で打ち切る
 
@@ -5759,6 +5890,277 @@ var CAT_VIDEO_PROMPTS = CAT_VIDEO_PROMPTS_RAW.map(function(t,i){
           .replace(/\n{3,}/g, '\n\n');
 });
 
+/* ══════════════ 犬（日本犬）用のプロンプト ══════════════
+   猫の流用ではなく、犬のために書き直したもの。要点だけ:
+   ・犬は「掴めない」。武器は口にくわえる。後ろ足で立たせない（立つと二足歩行に読める）。
+   ・表情は 眉・口・耳・尾 で出る（猫は 耳・瞳孔・髭）。
+   ・「うれしそうに口を開けた笑顔」は最頻出の失敗。全カットで禁止している。
+   ・尾の意味は猫と逆。巻き尾を締める＝警戒、解いて股に入れる＝恐怖。
+   IDENTITY 段はどのカットでも一字一句同じものを差し込む。差し替えはここ 1 か所で済む。 */
+
+var DOG_IDENTITY = `IDENTITY: keep the coat colour and the exact position of every marking, the iris colour, the nose leather colour, the EAR shape, size and set, the MUZZLE LENGTH and shape, every pale cream or white marking on the cheeks, muzzle sides, underjaw, throat, chest, belly and inner legs with their softly blended boundaries, every small irregular marking including any eyebrow spots or muzzle flecks with their exact asymmetry, and the tail's exact shape, thickness and carriage, exactly as in the reference — instantly recognizable as the same individual dog. The MUZZLE LENGTH and skull shape are the single strongest identity anchor and must never be shortened, rounded, widened or generified toward a cute cartoon dog face. The eye's OPENING and the pupil size are NOT fixed traits — they are set by the PERFORMANCE section of each image and change from image to image. Markings stay ASYMMETRIC; never tidy, balance or simplify them. COAT: exactly the coat type, length and texture shown in the reference — never lengthened, never shortened, never smoothed and never restyled. True adult dog anatomy — correct limb length and body depth, digitigrade, four legs; not puppy-proportioned, not oversized-headed, not humanoid, no human hands, no bipedal body.\n@BREED@`;
+
+
+/* ② キャラクターカード。【IDENTITY】は下で DOG_IDENTITY に置き換える。 */
+var DOG_PROMPTS_RAW = [
+`Transform the dog in the reference image into a cybernetic mech-armoured canine operative in a rain-soaked neon alley. Big-budget action film still.
+【IDENTITY】
+TRANSFORMATION: a matte-black cybernetic half-mask on the RIGHT side of the head, from the crown below the ear down over the temple and cheek, ending BEFORE the muzzle begins — the full length of the muzzle stays completely bare and unarmoured. A large circular lens bezel over the right eye ringed by a bright cyan band; the dark brown eye fully visible inside it. A cyan light-line runs back along the cheek plate. A small circular port with a dark red indicator at the rear of the mask. BOTH erect ears stay entirely free of the mask, upright and unobstructed. Body: a matte-black segmented chest plate and a heavy DOMED SHOULDER GUARD on the LEFT shoulder, scuffed through to bare metal, plus cuffs on all four legs. All armour matte, never glossy. NO shield deployed.
+WEATHERING (high): water beading on the outer guard hairs and rolling off, the chest fur darkened and stuck into wet spikes, mud spatter across the cream urajiro of the throat, a thread of drool at one corner of the mouth, a small old nick in the left ear rim, the cyan seams flickering dead along one short section.
+PERFORMANCE — caught in a searchlight, resolute, squinting hard against the glare: the light is blinding and that is the physical reason the eyes are narrow. THE BROW RIDGES ARE DRAWN DOWN AND TOGETHER, the fur above the eyes bunched into a hard furrow — this is a dog and the brow carries the expression. The upper lids come down so the eyes narrow to slots; a crescent of white shows at the inner corner. The MOUTH IS CLOSED HARD, the lips pressed into a flat line and the jaw muscle bulging below the ear — no tongue, no pant, no smile. The chin is TUCKED DOWN toward the chest; he looks up from UNDER the lowered brow. This is defiance, not wonder. Both erect ears rotated hard FORWARD and slightly down at the base. The neck compressed, the shoulders raised. The curled tail pulled TIGHT and high against the back. Head turned three-quarters to camera, eyes locked off-frame UPPER RIGHT.
+POSE: framed from the tops of the forelegs up, shoulders level and square, all four legs down, nothing reaching toward the lens. Natural adult dog proportions. Slightly left of centre with look room on the right.
+LIGHT AND LENS: hard white searchlight from high right raking the wet plating and every guard hair; magenta rim from behind left and cyan bounce from the front — the two colours clash, the white searchlight dominates. Rain streaks and steam through the beams with motion blur. Deep smoky darkness behind, not flat black, a faint out-of-focus neon glow far back. Anamorphic, oval bokeh, subtle horizontal blue flare. High contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at T2, shallow depth of field, slightly underexposed.
+9:16 vertical, photorealistic film still, highly detailed.
+Do NOT: a happy open-mouthed smile; a lolling or visible tongue; a relaxed panting mouth; a soft or pleading expression; raised inner eyebrows; a smooth unfurrowed brow; wide round open eyes; a lifted chin; an upward gaze of wonder or curiosity; the neutral expression of a posed studio pet portrait; ears back or flat; a loose or dropped tail; plating over the muzzle, the nose or the eyes; a deployed shield or projected energy panel; a clean or dry costume; a shortened, widened or rounded muzzle; puppy proportions or an oversized head; tidied or symmetrical markings; a humanoid or bipedal body; human hands; rearing on the hind legs; a long-haired or sleek flat coat; any street, signage, drone, building or ground; a flat studio background; a video-game-render look; looking at camera; text or watermark.`,
+
+`Redraw the dog in the reference image as a heroic canine knight facing a diving dragon, as a frame of high-end Japanese theatrical animation.
+【IDENTITY】 Translated to cel animation while keeping the exact pattern: the urajiro cream markings become flat hard-edged colour shapes in the same positions, still asymmetric with the right eyebrow spot larger; the double coat is drawn as clustered pointed tufts along the neck ruff and the backline, never individual hairs; the erect triangular ears keep their exact shape and set; the muzzle keeps its full drawn LENGTH and wedge shape; the eyes stay unmistakably DARK BROWN with a warm amber catchlight and one large hard-edged highlight; the nose stays a solid black wedge; the tail stays a thick drawn ring curled to the LEFT.
+TRANSFORMATION: fitted silver-and-blue plate barding with a raised central boss, one articulated pauldron on the LEFT shoulder, greave cuffs on all four legs, and a deep crimson cloak clasped at the throat with a gold fitting, worn open so the cream chest markings stay visible. A short straight sword SHEATHED in a scabbard mounted along the LEFT flank on a harness — never on the back, never in the mouth here. No helmet, head bare, muzzle fully visible. Drawn in cel: flat metal colour with hard-edged highlight shapes and one bright rim stroke along each lit edge; bold confident fold lines on the cloak.
+WEATHERING (medium): the breastplate dented and scorched black along one edge, the cloak hem torn and singed, ash flecks caught in the neck ruff, the fur tips along one flank drawn singed and darkened.
+PERFORMANCE — fear and resolve at once: the BROW RIDGES driven down and together with a deep drawn furrow between them; the eye nearer the fire narrowed to a slit against the heat, the far eye wide; the mouth OPEN but hard — the jaw dropped, the lips drawn back flat, the tongue held BACK and not lolling, the teeth just visible at the corners. Both ears driven forward with the tips tilted back a fraction against the blast — the conflict is visible. The neck extended, the shoulders bunched, the neck ruff blown backward. The curled tail pulled tight. Head turned three-quarters to camera, eyes locked off-frame UPPER RIGHT at the dragon.
+POSE: framed from the tops of the forelegs up, shoulders level and square, natural adult dog proportions, nothing reaching toward the lens. Slightly right of centre.
+LIGHT AND STYLE: intense orange firelight key from the UPPER LEFT, cool violet-blue sky rim from behind right — the two clash, the fire dominates. His coat takes orange below and violet above as two distinct flat tones, never a blend. Drawn embers and ash drift through the frame, bloom on the fire core. Clean anime line work, flat cel shading with crisp light/shadow separation, hand-painted background darkness. DRAWN, not shot — no film grain, no photographic lens flare, no bokeh discs.
+9:16 vertical, theatrical anime key visual, highly detailed.
+Do NOT: a happy open-mouthed smile; a lolling tongue; a dog-girl, kemonomimi, or any humanoid or anthropomorphic character; a chibi, super-deformed, mascot or Q-version design; a human face or human hands; a calm, neutral or posed expression; both eyes the same shape; a smooth unfurrowed brow; a clean undamaged costume; a helmet covering the muzzle; the sword drawn or in the mouth; photorealistic or 3D-rendered shading; soft airbrushed gradients on the character; film grain or lens flare; a shortened or rounded muzzle; eyes that are not dark brown; tidied or symmetrical markings; rearing on the hind legs; flat even lighting; looking at camera; text or watermark.`,
+
+`Transform the dog in the reference image into an Edo-period masterless canine samurai on a merchant street on an overcast day. Japanese period drama film still.
+【IDENTITY】
+COSTUME: a deep indigo haori draped over the shoulders and back, worn open so the cream chest markings stay fully visible. A narrow woven obi around the barrel with a small crest. A single braided cord at the throat. No headgear, no mask — the head entirely bare and the muzzle completely unobstructed by any garment.
+THE WEAPON IS CARRIED IN THE MOUTH: a katana in a black lacquer scabbard is slung along the LEFT flank on a leather harness, and it is SHEATHED here — he is not yet drawing. His jaws are CLOSED and empty. The mouth stays free; nothing crosses the muzzle in this image.
+WEATHERING (high): fine street dust filming the red coat and dulling the cream urajiro, a burr caught in the neck ruff, dried mud packed between the pads of all four paws and crusted on one front claw, sand in the inner surface of the left ear, a thin old nick in the right ear rim, grass seed tangled in the curled tail.
+PERFORMANCE — breath held: the BROW RIDGES drawn slightly down and level, the fur above the eyes settled into a hard flat line — controlled, not angry. The eyes narrowed a fraction and completely UNBLINKING, the pupils small. The MOUTH CLOSED, lips sealed, the jaw muscle set — no tongue, no pant, no drool. Both erect ears locked hard forward and absolutely motionless. The neck low and lengthened, the shoulder blades raised. The curled tail held TIGHT and still against the back. Nothing on his body is moving — not one hair. Head turned three-quarters to camera, eyes locked off-frame to the LEFT at an opponent.
+POSE: framed from the tops of the forelegs up, body low and coiled, all four legs down, weight already back. Natural adult dog proportions. Slightly right of centre with look room on the left.
+LIGHT AND LENS: flat soft overcast daylight from above, low saturation, plus a faint warm bounce from a charcoal brazier off to the left — the only warm note. Dust and smoke in the air. Long lens compression, shallow depth of field, deep but open blacks, fine film grain, halation only on the brazier coals. 85mm at T2, slightly underexposed.
+9:16 vertical, photorealistic film still, highly detailed.
+Do NOT: a happy open-mouthed smile; a lolling or visible tongue; an open or panting mouth; drool; a sword in the mouth, the paws or drawn in this image; a calm, curious or sleepy expression; the neutral expression of a posed studio pet portrait; blinking or soft eyes; ears back, flat or in different positions; a loose or dropped tail; a clean pressed costume; the haori covering the chest markings; a shortened or rounded muzzle; a humanoid or bipedal body; rearing on the hind legs; Chinese or Korean clothing; sunset or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade; any street, building, noren or ronin; looking at camera; text or watermark.`,
+
+`Transform the dog in the reference image into a stop-motion claymation puppet startled by a clay dinosaur. Frame from a stop-motion comedy.
+【IDENTITY】 Translated to clay, felt and wool while keeping the exact pattern and placement: every marking in the same position and still asymmetric, including the two cream eyebrow spots with the right one larger; the coat is FELT FIBRE and combed wool, visibly fibrous and individually placed, never smooth clay; the face, paws and nose are clay with visible thumbprints and sculpting-tool marks; the erect triangular ears keep their exact shape; the MUZZLE keeps its full length and wedge shape; the eyes are warm dark-brown glass beads with a painted highlight; the nose is a black clay wedge; the tail is a thick felt ring curled to the LEFT.
+TRANSFORMATION: a small knitted mustard-yellow bobble hat sitting between the ears and a short red felt scarf at the neck, tucked so the cream chest markings stay visible below it. The hat knocked askew and popped clear of the head.
+WEATHERING (low): NO dirt, NO drool, NO wounds. Only honest handmade texture — fingerprints, tool marks, a loose wool fibre or two. Bright, clean and toy-like.
+PERFORMANCE — comic alarm, not real fear: the eyes blown wide and completely round, the lids fully retracted so the whole circle of each eye shows, a full ring of white around each iris. BOTH EYEBROW SPOTS SHOT UP HIGH and the brow fur bunched upward — a dog's brow is the comedy engine, use it. Ears snapped bolt upright and rotated wide apart. Mouth open in a big round "o", tongue tucked back out of sight. Every fibre of fur standing straight out, the body puffed, the curled tail sprung loose and bolt upright. Broad, readable and funny — never actually afraid, never distressed. Body turned toward camera, head twisted to look BACK over the shoulder at something off-frame behind.
+POSE: framed from the tops of the forelegs up, natural clay-puppet dog proportions, nothing stretched or contorted. Slightly right of centre.
+LIGHT AND LENS: warm tungsten key from the upper left with a soft fill, photographed on a real tabletop set, tilt-shift miniature look, shallow tabletop depth of field, saturated toy-like colours, deep charcoal backdrop.
+9:16 vertical, photorealistic stop-motion still, highly detailed.
+Do NOT: looking at camera; a calm, composed or curious expression; a happy smile; a lolling tongue; flat unpuffed fur; ears flattened back; a genuinely frightened, cowering or suffering expression; dirt, mud, drool, blood, wounds or grim realism; smooth glossy clay fur instead of felt fibre; a CG, 3D-render or photorealistic-dog look; a stretched or contorted body; the hat leaving frame; the scarf covering the chest markings; a shortened or rounded muzzle; a humanoid or bipedal body; any dinosaur, fern or jungle set; text or watermark.`,
+
+`Transform the dog in the reference image into a field-expedition dog that has just escaped death. Big-budget action film still.
+【IDENTITY】
+COSTUME: a worn tan canvas expedition harness across the chest and behind the forelegs with two small brass buckles, a scuffed leather satchel on the LEFT flank, and a small brass compass on the chest strap. The harness sits BELOW the throat so the cream markings stay visible above it. Nothing on the head.
+WEATHERING (maximum) — as important as the framing: thick dried dust caked unevenly through the coat, grey and dulling the red, clumped hardest at the shoulders and along the spine; sweat and water cutting clean wet streaks down through it; the cream urajiro no longer cream — grey-brown and stuck into damp spikes; torn leaf fragments and grass seed caught deep in the neck ruff and tangled in the curled tail; mud packed solid between the pads of all four paws with one front claw chipped; a shallow fresh scratch across the bridge of the muzzle with dried blood at its edge; SLOBBER — long threads of drool trailing from both corners of the open mouth and blown back along the jaw. Nothing about the coat or the harness is clean, even or lofted.
+PERFORMANCE — real, undisguised terror: this is the ONE image where the EARS GO BACK — both ear leathers rotated back and folded down flat against the skull, the classic canine fear signal. The INNER ENDS OF THE EYEBROWS ARE DRIVEN UP into a steep worried peak and the forehead creased — the single most legible fear signal a dog has. Eyes stretched wide and round with a clear crescent of white showing at the inner corner of each. The MOUTH WIDE OPEN, panting hard, the TONGUE OUT and lolling to one side, drool flying. The neck fully extended, the throat tendons standing out, the chest heaving. The curled tail UNCURLED and clamped down between the hind legs. Shoulders level and square to the lens; only the HEAD is twisted to look off-frame to the LEFT at something behind.
+POSE: framed from the tops of the forelegs up, both shoulders inside the frame, natural adult dog proportions. Nothing reaching toward the lens. Slightly right of centre with look room on the left.
+LIGHT AND LENS: one hard orange backlight low and behind camera-left, catching only the edge of the jaw, one shoulder, the drool threads and the loose flying guard hairs — the rest falls into darkness; a soft cold teal fill from the front right just holding detail on the shadow side. Heavy haze, embers and dust through the beams with motion blur. Deep smoky darkness behind with a faint distant fire glow, not flat black. Anamorphic, oval bokeh, subtle horizontal flare. Teal-and-orange grade, high contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at T2, shallow depth of field, slightly underexposed.
+9:16 vertical, photorealistic film still, highly detailed.
+Do NOT: a happy open-mouthed smile; a relaxed cheerful pant; a calm, neutral, curious or posed expression; the neutral expression of a posed studio pet portrait; ears forward or upright; a closed mouth; a tucked-away tongue; a tightly curled tail; a smooth brow; a clean coat, clean cream markings or clean undamaged gear; lofted fluffy fur; a humanoid or bipedal body; human hands; puppy proportions or an oversized head; a shortened muzzle; tidied or symmetrical markings; a twisted torso; a paw reaching toward the camera; an evenly glowing outline; a flat studio background; single-colour lighting; any jungle, fern or dinosaur; a video-game-render look; looking at camera; text or watermark.`,
+
+`Transform the dog in the reference image into a guardian of the deep, underwater. Big-budget fantasy film still.
+【IDENTITY】
+TRANSFORMATION: faintly luminous turquoise bioluminescent lines tracing the brow ridges, the cheeks, the shoulders and the forelegs like living markings, lighting up in sequence. The glow is IN the fur, coming from within, and never obscures the eyes, the nose, the muzzle or the eyebrow spots. A slim dark blue-black harness of woven kelp-fibre and worn bronze fittings across the chest, sitting BELOW the throat. A translucent fin-like mantle behind the shoulders drifting in the current. No helmet and no breathing apparatus — he belongs to this water.
+WEATHERING (medium): small barnacles crusted along one edge of the bronze fittings, the mantle edge torn ragged, fine pale sediment settled into the coat along the back and slowly lifting off it, the kelp harness frayed at one strap.
+THE DOUBLE COAT IN WATER: the harsh outer coat stands off the body and the guard hairs along the neck ruff, the shoulders and the curled tail lift and drift in the current — a short double coat does not fan out like long fur, but every guard hair separates and moves. Slow weightless motion throughout.
+PERFORMANCE — awe, not fear: BOTH EYEBROW SPOTS LIFTED and the brow fur raised, the forehead faintly creased with wonder — not the steep worried peak of fear, but an open upward lift. Eyes wide and round with the lids pulled fully BACK — wide because they are straining to see. Both erect ears rotated forward and carried HIGH, held rigid and completely still. The MOUTH VERY SLIGHTLY OPEN, breathing shallow, the tongue held back and not lolling. The NECK FULLY EXTENDED, the head thrown back, THE THROAT EXPOSED AND TAUT and its cream markings stretched and clearly visible. The curled tail held loose and drifting. Head turned three-quarters to camera, eyes locked straight UPWARD off-frame.
+POSE: framed from the tops of the forelegs up, forelegs drifting loose and slightly away from the body — weightless in water, never standing, never bearing weight. Natural adult dog proportions. Slightly right of centre.
+LIGHT AND LENS: turquoise key from directly above through the water, a warm amber glow from a distant temple fire far behind on the right — the two clash, the turquoise dominates. His own bioluminescence throws cyan-green up into the cream throat markings and across the underside of the muzzle. The dark amber eyes are the only other warm note. Sediment and bubbles through the beams. Deep blue-black water behind, not flat black. Anamorphic, oval bokeh, underwater scattering and god rays. High contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at T2, shallow depth of field, slightly underexposed.
+9:16 vertical, photorealistic film still, highly detailed.
+Do NOT: a happy open-mouthed smile; a lolling tongue; a calm, blank, curious or sleepy expression; the neutral expression of a posed studio pet portrait; loose relaxed ears; a lowered or level chin; a slack throat; a smooth unlifted brow; the steep worried inner-brow peak of fear; glow covering the eyes, the nose, the muzzle or the eyebrow spots; bioluminescence painted on the surface instead of glowing from within the fur; a diving helmet, mask or breathing gear; the coat lying flat and lifeless; a rigid standing or grounded pose; a swimming or paddling pose; a clean undamaged costume; a monochrome all-blue light scheme; a shortened muzzle; a humanoid or bipedal body; a flat studio background; any leviathan, jellyfish, column or ruin; looking at camera; text or watermark.`,
+
+`Transform the dog in the reference image into an astronaut dog during a hull-breach alarm. Big-budget space-feature film still.
+【IDENTITY】
+SUIT: a fitted multi-layer off-white EVA suit sized to a dog's body, rigid hard-shell torso, padded limbs with ring joints, a chest control module with soft green readouts, blue patches and a red shoulder stripe. All four legs suited, paws in padded grey boots.
+THE HELMET: a LARGE clear spherical glass bubble, deliberately oversized — big enough that BOTH ERECT EARS STAND FULLY UPRIGHT INSIDE IT at their natural height without touching, bending or folding against the glass, and the whole muzzle sits well clear of the front. The glass is optically clear and non-reflective across the face: the full muzzle, the nose, both eyes and both eyebrow spots all completely visible through it. A thin white sealing collar at the base.
+THE GLOVES — both forepaws are ENCLOSED in sealed pressure gauntlets and both are INTACT: each is a MITTEN shaped to a dog's paw — one rounded compartment for all the toes, no separate fingers, no thumb, no finger seams, with a rigid metal sealing ring at the wrist. NO CLAWS ANYWHERE — the claws are inside the sealed gloves and never visible, never protruding; there are no claw holes and no tears, because an EVA glove is airtight and a puncture would be fatal. NO BARE FUR below either wrist ring.
+WEATHERING (medium): dust ground into the white suit fabric and grey along the forearms, scuffs across the hard-shell torso, a hairline crack across one corner of the helmet ring, the red shoulder stripe worn through in a patch.
+ZERO-G FUR: the harsh outer coat lifts and separates inside the helmet and above the suit collar, individual guard hairs standing out weightless along the neck ruff. Nothing hangs down.
+PERFORMANCE — mid-emergency, not stargazing: the EYES ARE MOVING — scanning along the breach rather than fixed on one point, the pupils caught mid-contraction, one slightly wider than the other. The BROW RIDGES drawn down and slightly together, the forehead creased in concentration — not the worried inner-brow peak of fear, but the flat hard furrow of a working dog reading a problem. The ears are working INDEPENDENTLY: the LEFT ear forward, the RIGHT rotated out to the side, tracking sound. The MOUTH OPEN, breathing fast and shallow, the tongue held BACK and not lolling. Neck tendons taut under the collar. The condensation inside the glass pulsing visibly with each breath. Head tilted back, turned three-quarters to camera, eyes UPWARD off-frame but sweeping, never settled.
+POSE: floating in zero gravity at a ten-degree tilt, hind legs out of frame below. One mitten glove PRESSES FLAT DOWN ON a handrail at the left edge, the whole rounded glove laid over the bar and the forearm braced against it — a dog's blunt claws cannot hook, so he holds himself by pressing, never by gripping or curling toes. The other foreleg drifts loose. Natural adult dog proportions inside the suit. Framed from the mid-body up, slightly right of centre.
+LIGHT AND LENS: hard cold blue-white key from a window high on the left; a red emergency strobe from low right at about a quarter of its strength, catching only the right edge of the helmet and shoulder. Debris and torn insulation drift weightless through the beams with motion blur. Smoky dark corridor behind, not flat black. Anamorphic, oval bokeh, subtle horizontal blue flare. Cold steel-blue grade, high contrast, crushed blacks, Kodak Vision3 500T grain and halation. 85mm anamorphic at T2, shallow depth of field, slightly underexposed.
+9:16 vertical, photorealistic film still, highly detailed.
+Do NOT: ears bent, folded, squashed or pressed against the helmet glass; a helmet too small for the erect ears or the muzzle; a bare, ungloved or exposed paw; fur visible below the wrist ring; claws visible or protruding through a glove; a torn, split or holed glove; a five-fingered human-shaped glove; separate fingers or a thumb on a glove; only one glove; a paw gripping or curling around the rail; a happy open-mouthed smile; a lolling tongue; a calm, serene, dreamy or awestruck expression; the neutral expression of a posed studio pet portrait; a fixed unmoving stare; both ears in the same position; a closed mouth; the steep worried inner-brow peak of fear; an opaque, tinted, mirrored or closed visor; reflections across the face; the coat lying flat instead of lifting; a grounded standing pose; a shortened muzzle; a humanoid or bipedal body; human hands; a slim unpadded suit; equal-strength blue and red lighting; a flat studio background; looking at camera; text or watermark.`,
+
+`Transform the dog in the reference image into a stylized 3D animated canine ice mage, in the style of a modern CG family feature.
+【IDENTITY】 Rebuilt as a fully groomed CG character while keeping the exact pattern and placement: every marking in the same position with its softly blended boundary, still asymmetric with the right eyebrow spot larger; the coat is a full CG groom — a harsh outer layer of directional strand clumps standing off the body over a soft plush undercoat, with visible flyaways along the neck ruff and the curled tail; the erect triangular ears keep their exact shape and set, with light passing through the leather; the eyes stay unmistakably DARK BROWN with a refractive cornea, a bright caustic inside the iris and a crisp specular highlight; the nose is black with visible subsurface scattering at the edges. Stylised for appeal and readability — but the MUZZLE LENGTH, muzzle width and skull shape stay exactly as in the reference, never shortened, never rounded, never enlarged toward a baby-faced mascot.
+TRANSFORMATION: a hooded ice-blue cloak with soft white fur trim that blends into his own coat and frost-crystal shoulder ornaments, worn open so the cream chest markings stay visible. The hood pushed back off the head onto the shoulders — the head bare, both erect ears free and unobstructed. A pale-wood staff topped with a glowing pale-blue crystal stands PLANTED UPRIGHT IN THE SNOW beside him, supporting its own weight; ONE FOREPAW RESTS FLAT ON THE SNOW AT ITS BASE, pads down, toes closed — he does not hold it, does not lean on it and never wraps a paw around it. All four legs stay on the ground.
+WEATHERING (low): NO dirt, NO drool, NO wounds. Only snowflakes caught in the fur trim, powder snow dusting one shoulder, and the cloak hem lifted by the wind.
+PERFORMANCE — the howl: HE IS MID-HOWL. The head is thrown FULLY BACK, the muzzle pointed straight up at the sky, the neck stretched long and the cream throat markings pulled taut and clearly visible. The MOUTH IS OPEN IN A ROUNDED O with the lips pushed forward into a soft funnel — this is a howl, not a bark and not a snarl; no teeth are bared and the tongue stays back and low. The eyes are HALF CLOSED, the lids soft, the brow smooth and lifted — the surrendered look of an animal singing, not straining. Both ears folded back and out to the sides in the relaxed way a dog's ears go when it howls. A long visible plume of breath rises from the open muzzle. The curled tail is loose and low. All four paws planted wide and still.
+POSE: framed from the tops of the forelegs up, head thrown fully back, natural stylised adult dog proportions, all four legs down. Slightly right of centre.
+LIGHT AND STYLE: green-violet aurora key from directly above, warm gold rune glow from behind — the two clash, the aurora dominates. The upward-thrown muzzle and throat catch the aurora key directly. Light passes visibly through the ear leather as subsurface scattering. His coat takes teal on top and violet on the flanks; the cream throat glows. Snow crystals drift through the light. Polished stylised 3D render, soft global illumination, rich subsurface scattering in fur and ice, ambient occlusion in every fold, subtle bloom on the staff, deep blue-black background.
+9:16 vertical, theatrical CG animation hero render, highly detailed.
+Do NOT: a bark, a snarl or bared teeth; a lolling tongue; a closed mouth; a level or lowered head; ears pricked forward; wide staring eyes; a tense or aggressive face; a paw gripping, holding or wrapping around the staff; the staff held, carried or leaning on him; rearing on the hind legs; a chibi, super-deformed or mascot design; enlarged cartoon-baby eyes; a shortened muzzle or a rounded skull; puppy proportions; a plush-toy or vinyl-figure finish; the fur rendered as a smooth solid surface instead of a groom; dirt, mud, drool, wounds or grim realism; the hood covering the face or the ears; a photorealistic live-action look; film grain or lens flare; flat cel shading or visible line art; a humanoid or bipedal body; human hands; tidied or symmetrical markings; any snowfield, spire, rune stone or aurora dragon; looking at camera; text or watermark.`
+];
+
+/* 元のプロンプトは日本犬（立ち耳・巻き尾・ダブルコート）を前提に書かれている。
+   フレンチブルドッグやプードルではその前提が丸ごと崩れるので、個体ごとの打ち消し文を
+   IDENTITY 段の末尾に差し込む。prompt.md の「垂れ耳犬に差し替える」と同じ考え方。 */
+function dogIdentity(){
+  var d = currentDog();
+  return DOG_IDENTITY.replace('@BREED@', (d && d.ov) ? d.ov : '');
+}
+function currentDog(){
+  for(var i=0;i<DOGS.length;i++) if(DOGS[i].n === state.label) return DOGS[i];
+  return null;   // アップロードされた写真。犬種が分からないので打ち消し文は入れない
+}
+/* ② は 【IDENTITY】 を差し替えるだけ。③ は IDENTITY 段が本文に溶けているので、
+   最後の Do NOT の直前に打ち消し文を足す（後に書いた指示のほうが効く）。 */
+function dogCardPrompts(){
+  var id = dogIdentity();
+  return DOG_PROMPTS_RAW.map(function(t){ return t.replace('【IDENTITY】', id); });
+}
+function dogScenePrompts(){ return withBreed(DOG_SCENE_PROMPTS); }
+function dogVideoPrompts(){ return withBreed(DOG_VIDEO_PROMPTS); }
+function withBreed(list){
+  var d = currentDog(), ov = (d && d.ov) ? d.ov : '';
+  if(!ov) return list;
+  return list.map(function(t){
+    var k = t.lastIndexOf('\nDo NOT:');
+    return k < 0 ? t + '\n' + ov : t.slice(0,k) + '\n' + ov + '\n' + t.slice(k);
+  });
+}
+
+
+/* ③ 世界と合成。参考画像は [キャラクターカード, 世界の背景] の順。 */
+var DOG_SCENE_PROMPTS = [
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the dog from image 1 into the neon alley from image 2, braced LOW on all four paws on the wet asphalt in the lower third, occupying roughly 45% of the frame height, slightly left of centre, all four paws fully visible, camera at his own eye level. He is TURNED SIDE-ON to the searchlight and driving his LEFT SHOULDER up and into the beam, head turned back and up over that shoulder — chin TUCKED toward the chest, looking up at the light from UNDER a lowered brow.
+THE SHIELD IS NOT HELD — a dog cannot grip: The shield is a rigid panel that UNFOLDS FROM THE DOMED ARMOUR ON HIS LEFT SHOULDER. Its base is bolted into the shoulder guard and it swings outward and upward from the shoulder itself, like a pauldron opening into a buckler. There is no handle, no grip, no stem, and nothing in any paw. All four paws stay flat on the ground, toes closed, doing nothing but bracing.
+FORCE: the searchlight beam is interposed by the shield — the beam STRIKES the shield face square and scatters outward across it, brightest at the point of impact, light spilling around its edges, raindrops igniting white where the beam breaks against it. His head, neck and shoulder sit PARTLY IN THE SHIELD'S SHADE — a hard-edged band of shadow cast by the shield falls across his upper body, and a second falls on the wet ground behind him. He is not evenly lit. The forelegs are braced wide and the hindquarters are set LOW and back — he is holding a load through his whole frame, not balancing.
+IDENTITY: keep his coat colour and every marking in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose, the erect ear shape, the full muzzle length, the cream urajiro, the curled tail, the half-mask with its cyan lens ring and red rear port, the chest plate and left shoulder guard, and every mark of weathering exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or the costume.
+STATE — resolute under load, squinting into the glare: the BROW RIDGES drawn DOWN AND TOGETHER with a hard furrow between them; the upper lids down so the eyes narrow to slots with a crescent of white at the inner corner; the MOUTH CLOSED HARD with the lips pressed flat and the jaw muscle bulging — no tongue, no pant, no smile; the CHIN TUCKED so he looks up from under the brow — defiance, not wonder; both erect ears rotated forward and slightly down at the base; the neck compressed, the shoulders raised; the curled tail pulled TIGHT and high against the back. Never wide round eyes, never a lifted chin, never the neutral expression of a posed pet portrait.
+SCALE: he is a medium-dog-sized figure in a human-sized alley — the camera is at his eye level near the ground, which makes him monumental against an alley that towers and recedes above him. Signage, kerb height, puddles and drone size all read at correct scale against a real dog. Exactly three drones above, the nearest lowest and largest, its searchlight visibly emitting the beam that strikes the shield.
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering style of image 2 exactly. Light him with the same hard white searchlight from the upper right plus the magenta and cyan neon. Ground him with a contact shadow and his reflection in the wet asphalt; rain splashes at all four paws.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the alley walls fall soft, heavy rain and steam, high contrast with crushed but open blacks, fine grain and halation on the neon and the searchlight.
+Photorealistic cinematic CG, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: rearing or standing on the hind legs; any paw raised, reaching or holding anything; a shield with a handle, grip or stem; the shield detached from the shoulder guard; a happy open-mouthed smile; a lolling tongue; wide round open eyes; a lifted chin; a smooth unfurrowed brow; an upward gaze of wonder or curiosity; a lengthened curious neck; a loose or dropped tail; the beam passing beside the shield; an evenly lit body with no shield shadow across it; more or fewer than three drones; a searchlight beam with no drone attached; more than four limbs; a shortened muzzle; a pasted-on or floating subject; a missing contact shadow or reflection; a different or beautified face or costume; a clean dry costume; a giant dog or a miniature alley; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Redraw the character from image 1 into the floating-island scene from image 2 as a frame of high-end Japanese theatrical animation. Captured MID-LEAP in a hard SIDEWAYS bound in the lower half, occupying roughly 55% of the frame height, all four paws off the ground, body stretched flat and low on a rising diagonal, crimson cloak and curled tail streaming.
+DIRECTION OF THE LEAP: he bounds ALONG the platform and slightly TOWARD camera, with more solid stone visible ahead of him in the direction of travel. He is clearing the strike and has somewhere to land — never leaping out over open sky.
+FORCE: a dragon fills the upper third seen from below, HEAD lowest and nearest, jaws wide open with the fire pouring out of them, wings flared across the top of frame. The fire is one continuous unbroken column running from the open jaws down to the point of impact — never fire without a visible source. It slams into the platform exactly where he was standing. Drawn in cel: the fire is layered hard-edged shapes — white-hot core, orange mid-tone, deep red outer edge, crisp outlines between them, never a soft gradient. The stone cracks open into hard-edged radiating shards. He is edged by a single hard orange rim stroke along his back. The fire NEVER touches his body.
+IDENTITY: keep his drawn coat colour and every marking shape in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose wedge, the erect ear shape, the full muzzle length, the cream urajiro shapes, the ringed curled tail, the silver-and-blue breastplate, the LEFT pauldron, the crimson cloak with its gold clasp and burnt corner, the SHEATHED flank sword, and every mark of damage exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify.
+STATE: the BROW RIDGES driven down and together with a deep drawn furrow; the near eye narrowed to a slit against the heat, the far eye wide; the mouth OPEN but hard, jaw dropped and lips drawn back flat, the tongue held BACK and not lolling; both ears forward with the tips tilted back against the blast; the curled tail pulled tight. Never a calm, neutral or smiling face.
+INTEGRATION: match the cel-shading, line work, colour palette and painted background art of image 2 exactly. Light him with the intense orange firelight from the UPPER LEFT where the fire strikes the platform, with a cool violet-blue sky rim from behind right — two distinct flat tones, never a blend. Ground him with a drawn contact shadow on the stone; embers, ash and falling rubble scatter around him.
+STYLE: clean anime line work, flat cel shading with crisp light and shadow separation, subtle bloom on the fire core, high-end Japanese animation film quality. DRAWN, not shot — no film grain, no photographic lens flare, no bokeh discs.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a dog-girl, kemonomimi or any humanoid character; a chibi or Q-version design; human hands; rearing on the hind legs; a happy open-mouthed smile; a lolling tongue; no dragon in frame; a fire column with no visible source; the dragon's head cropped or occluded; the fire touching or engulfing him; a paw touching the platform; leaping out over open sky with nowhere to land; the leap reading as a fall; the flank sword drawn or in his mouth; a shortened muzzle; more than four limbs; a pasted-on or floating subject; a missing contact shadow; a different or beautified face; a clean undamaged costume; photorealistic or 3D-render style; film grain or lens flare; a photographic background; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the dog from image 1 into the merchant street from image 2, braced on the packed-earth road, camera LOW at his own eye level looking slightly up.
+COMPOSITION — a wide diagonal action frame, never a centred portrait: The clash happens in the UPPER LEFT THIRD of the frame, never at the centre. The two blades cross there in a hard X — the ronin's blade driving down from the upper left, the dog's own blade angled up and across from lower right to meet it. The whole image runs on that diagonal. The RONIN is a large, dark, OUT-OF-FOCUS mass in the LEFT FOREGROUND, seen from behind and cropped by the left edge — the back of his shoulder, his sleeve and his gripping hands, never his face. He is close to camera and soft. The DOG is sharp, in the middle ground on the RIGHT, his whole body in frame including both hind legs. Camera pulled BACK and LOW, wide lens, taking in the street, the shopfronts and the full arc of the crowd.
+THE BLADE IS CARRIED IN HIS MOUTH — this is how a dog fights: He grips the katana ACROSS HIS JAWS by the scabbard-less blade's ricasso wrapped in cloth, the blade running horizontally out to both sides of his head, angled up and to the left to meet the descending strike. His jaws are CLAMPED HARD on the wrap, the lips drawn back off the teeth around it, the jaw muscles bulging visibly below both ears, the neck driving up and forward to take the load through his whole spine. THE MUZZLE STAYS FULLY READABLE: the blade is thin and crosses the muzzle without hiding it — the full LENGTH and wedge shape of the muzzle, the black nose at its tip, and both eyes and eyebrow spots above it are all clearly visible. Nothing in any paw. All four paws are on the ground.
+HE IS DRIVING UP, not standing: hind legs braced wide and pushing, spine compressed and loaded, shoulders bunched, forepaws planted and gripping the earth, the whole body committed upward into the clash. He is never seated, never passive, never simply holding still.
+NO CLIPPING — the single most important instruction in this image. The two blades are SOLID objects and cannot occupy the same space:
+- The contact is EDGE ON EDGE at one single point in the upper left.
+- His blade is IN FRONT of the ronin's blade from the camera's point of view. Where his blade covers the ronin's, the ronin's is HIDDEN — it never shows through, and it never appears on both sides of his blade.
+- The ronin's blade has STOPPED at the contact. BELOW the contact point there is NO ronin's blade — no tip, no continuation, nothing reaching past the crossing or toward the ground or toward the dog's head. The ronin's blade is one unbroken line from his grip DOWN TO the crossing and NO FURTHER.
+- Both blades bend very slightly under the load.
+FORCE AND DEBRIS: At the contact a violent white-hot burst of sparks fans outward across the upper left — dozens of bright orange particles trailing thin light streaks, with a COLUMN OF PALE SMOKE rising off the point of impact. This is the brightest thing in the frame. Sparks originate at that contact and nowhere else. Beneath him a hard BURST OF DUST is driven off the packed earth by his braced hind legs — a low expanding cloud with grit, straw and dry stalks thrown up through it. Dust and smoke hang in the air throughout.
+THE CROWD REACTS: bystanders on both sides recoiling with mouths open, arms up, bodies twisting away — a full arc of alarmed motion, heavily out of focus.
+KEEP FROM IMAGE 2, UNCHANGED: every bystander pressed back against the shopfronts on both sides with faces indistinct and heavily out of focus; the near-foreground onlookers cropped at the bottom corners; the overcast sky, the shopfronts, the banners and the whole street. The crowd stays at the EDGES and in the background only — nobody else stands in the middle of the road. The centre vertical band of the frame belongs to the ronin, the two blades and the dog, and to nothing else.
+IDENTITY: keep his coat colour and every marking in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose, the erect ear shape and the nick in the right ear, the FULL MUZZLE LENGTH, the dust-filmed cream urajiro with its burr, the mud between his pads, the indigo haori, the obi and the empty flank harness exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify the face or costume.
+STATE — a snarling roar around the blade: the lips are DRAWN HARD BACK off the teeth around the wrap, the upper canines and front teeth clearly visible on both sides — this is the ONE image where the teeth show. The BROW RIDGES driven DOWN AND TOGETHER into a deep hard furrow. The eyes NARROWED to slits under it, a crescent of white at the inner corner — focused and precise, never wild, never rabid. The ears rotated BACK AND DOWN AT THE BASE but still standing — combat aggression, not fear. Threads of drool flung from the corners of the clamped mouth. Every neck and shoulder tendon standing out. The curled tail pulled tight and high. Never a calm, curious or neutral face.
+SCALE: he is a medium-dog-sized figure on a full-sized street; the low camera makes him monumental against a street that towers and recedes above him. He is NOT giant; the street is NOT miniature.
+INTEGRATION: match the flat cool overcast daylight, low saturation, colour temperature, atmosphere and grain of image 2 exactly, plus a faint warm bounce from the charcoal brazier on the left. Ground him with a soft diffuse contact shadow; dust and loose straw swirl around his paws.
+CINEMATOGRAPHY: long lens compression stacking the crowd into flattened layers behind him, shallow depth of field so he is sharp while the side crowds fall soft, dust and brazier smoke in the air, low saturation with the brazier the only warm note, blacks deep but open, fine grain and halation only on the brazier coals.
+Photorealistic Japanese period drama, 9:16 vertical, frozen at the moment of impact, highly detailed.
+Do NOT: a blade held in the paws; a paw raised or reaching; the blade hiding, covering or cropping the muzzle; the muzzle shortened, obscured or unreadable; the ronin's blade passing through, across or behind his blade, his head or his muzzle; any part of the ronin's blade visible BELOW the contact point; the ronin's blade reaching toward his head or the ground; either blade visible on both sides of the other; sparks anywhere except the blade-to-blade contact; the ronin's face visible; the ronin sharp or in focus; the ronin reduced to disembodied hands; a left-to-right confrontation; the dog seated, standing passively or holding still; rearing on the hind legs; a happy open-mouthed smile; a lolling tongue; a closed mouth; a smooth brow; a calm or neutral face; more than four limbs; a third figure in the middle of the road; a pasted-on or floating subject; a missing contact shadow; a different or beautified face or costume; a clean coat; sunset or golden-hour light; cherry blossoms; anamorphic lens flare; a glossy blockbuster grade; a giant dog; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the clay puppet from image 1 into the miniature jungle set from image 2, launched straight UP in the lower half, occupying roughly 55% of the frame height, one step closer to camera, all four paws off the ground and splayed, body puffed, the curled tail sprung loose and bolt upright, the bobble hat popped clear and hanging in the air above it, head twisted back at the clay T-rex.
+FORCE: a clay tyrannosaur's HEAD smashes through a wall of felt ferns and fills the upper frame directly behind and above — the head is the nearest, largest and lowest part of it, jaws open in a comedic rubbery grin, both eyes visible and unobscured by debris. The fern wall bursts apart AT the point where the head comes through; shredded felt leaves and crumbs of clay blast outward from that exact point. The dinosaur NEVER touches him — there is always clear air between them.
+IDENTITY: keep the puppet's clay-and-felt coat colour and every marking in position, the asymmetric eyebrow spots, the dark-brown glass-bead eyes, the black clay nose, the erect felt ear shape, the FULL MUZZLE LENGTH, the cream urajiro, the ringed felt tail, the bobble hat and the red scarf, and the visible fingerprints and tool marks exactly as in image 1 — instantly recognizable. Do not restyle or smooth the clay.
+STATE: eyes blown wide and completely round with the lids retracted and a full ring of white around each iris; BOTH EYEBROW SPOTS SHOT UP HIGH with the brow fur bunched upward; ears bolt upright and rotated wide apart; mouth open in a big round "o" with the tongue tucked back out of sight. Funny, never distressed.
+INTEGRATION: match the tungsten studio lighting from the upper left, the handmade clay and felt textures, the saturated toy-like colours and the tabletop depth of field of image 2 exactly. Ground the puppet with a hard tabletop contact shadow directly below it; small clay dust puffs kick up where it launched.
+STYLE: stop-motion claymation photographed on a real set, visible fingerprints and tool marks, uneven handmade texture, tilt-shift miniature look, slight deliberate frame judder.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a pasted-on or floating figure; a missing contact shadow; smooth glossy clay fur instead of felt fibre; a smoothed, CG or photorealistic-dog look; a happy smile; a lolling tongue; dirt, mud, drool, blood or grim realism; anything genuinely frightening or dark in tone; the dinosaur touching or biting him; the dinosaur's head cropped or hidden behind debris; the hat leaving frame; a shortened muzzle; a real jungle instead of a handmade set; a different or restyled face; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the dog from image 1 into the prehistoric valley from image 2 at FULL FOUR-LEGGED GALLOP coming straight AT camera in the lower half, occupying roughly 60% of the frame height, body stretched to maximum extension, forelegs reaching far forward, hind legs driving back, spine flexed, all four paws off the ground at full stride. Head twisted to look back over the shoulder. The satchel and compass fly out sideways. Camera LOW at ground level, retreating ahead of him, unstable and handheld.
+FORCE: the tyrannosaur fills the upper third directly behind him, running in the classic horizontal posture — body held LEVEL, tail extended straight back and raised as a counterweight, and the HEAD CARRIED LOW AND FORWARD, thrust down toward him. The entire head is visible and unobstructed: full skull, open jaws, teeth, nostrils and one eye all readable. The head is the CLOSEST, LARGEST and LOWEST part of the creature — it leads, everything else trails behind and above. Seen from slightly below and in front, never from above or behind. Behind and below the head one foot craters the mud, throwing a wall of mud and water outward to the SIDES — the spray stays clear of the head. Dust rolls up BEHIND the creature, never in front of its head. It is closing and NEVER touches him.
+IDENTITY: keep his coat colour and every marking in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose, the erect ear shape, the FULL MUZZLE LENGTH, the expedition harness with its satchel and compass, and every mark of caked dust, matting, torn leaf fragments, packed mud, the scratch across the muzzle bridge and the drool threads exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify.
+STATE: BOTH ears rotated back and folded flat down against the skull — genuine terror, the one clip where this is correct. The INNER ENDS OF THE EYEBROWS DRIVEN UP into a steep worried peak with the forehead creased. Eyes stretched wide and round with a clear crescent of white at the inner corner. The MOUTH WIDE OPEN, panting hard, the TONGUE OUT and lolling to one side, drool threads flying back along the jaw. Throat tendons standing out. The curled tail UNCURLED and clamped down between the hind legs.
+SCALE: he is a medium-dog-sized animal in a full-sized valley; the low camera makes him monumental. He is NOT giant; the valley is NOT miniature.
+INTEGRATION: match the lighting, colour temperature, haze, grain and rendering style of image 2 exactly. Light him with the same hot orange backlight low on the horizon behind, with a cool teal fill from the front right. Ground him with a contact shadow beneath his airborne body; dust surges around him and torn fronds fall past.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field so the ferns fall slightly soft, heavy dust and haze, teal-and-orange grade, high contrast, crushed but open blacks, fine grain and halation on the backlight, motion blur on the background with the dog sharp.
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: the tyrannosaur's head cropped, occluded, out of frame or missing; a headless creature; only a foot, leg, tail or torso visible; the head carried level with or above the hips; the creature seen from above or behind; a rearing, stumbling or face-planting posture; the head hidden behind mud spray or foliage; the creature catching, biting or touching him; the creature overtaking him in frame; the dog running or standing on its hind legs; any paw touching the ground; the dog stopping or sitting; ears forward or upright; a closed mouth; a tucked-away tongue; a tightly curled tail; a smooth brow; a happy open-mouthed smile; a calm or curious expression; a clean coat; a shortened muzzle; more than four limbs; a pasted-on subject; a different or beautified face; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the dog from image 1 into the sunken temple corridor from image 2, suspended neutrally buoyant just above the seabed in the lower third, occupying roughly 45% of the frame height, all four legs drifting free and bearing no weight, camera below him looking up. He looks straight up at the leviathan passing overhead, the guard hairs of his coat lifted and separated in the current, the mantle drifting, the glowing lines on his coat lighting up in SEQUENCE from the paws upward, never all at once.
+FORCE — the creature is NEVER shown: an enormous SHADOW crosses the top of the frame and blots out the single pale shaft of light from far above. No body, no head, no eye, no outline of a face — only the shadow and the sense of its scale. What it is stays unknown. Its passing displaces the water: a slow pressure wave pushes his lifted guard hairs, the suspended sediment and a scatter of jellyfish outward and away from it — the direction of every drifting thing in frame points away from the shadow. Darkness falls across the shot and his own bioluminescence becomes the only light on him. A stone column topples slowly behind.
+IDENTITY: keep his coat colour and every marking in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose, the erect ear shape, the FULL MUZZLE LENGTH, the cream urajiro, the curled tail, the kelp harness with its barnacles and frayed strap, the torn mantle edge, and the bioluminescent line placement exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify.
+STATE: BOTH EYEBROW SPOTS LIFTED and the brow fur raised into an open upward lift — wonder, never the steep worried peak of fear. Both erect ears rotated forward and carried HIGH, rigid and still. Eyes wide and round with the lids pulled fully back. The MOUTH VERY SLIGHTLY OPEN, tongue held back and not lolling. The NECK FULLY EXTENDED, head thrown back, THE THROAT EXPOSED AND TAUT with its cream markings stretched and clearly visible. Awe with tension — never a calm or blank face.
+SCALE: he is a medium-dog-sized figure in a full-sized sunken temple; the low upward camera makes him monumental against columns that tower and recede above him.
+INTEGRATION: match the lighting, colour temperature, underwater scattering, grain and rendering style of image 2 exactly. Light him with the turquoise glow from directly above and the scattering jellyfish, with a warm amber accent from a distant temple fire behind on the right. NO contact shadow — he floats; instead wrap the ambient turquoise light around him and let sediment swirl beneath and past him at his own depth.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, visible god rays and suspended particles, high contrast, crushed but open blacks, fine grain and halation on the brightest shaft.
+Photorealistic cinematic fantasy, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: a contact shadow or a grounded standing pose; showing the creature's body, head, face or outline; the coat lying flat and lifeless; the lines igniting all at once; bioluminescence painted on the surface instead of glowing from within; a diving helmet or breathing gear; a swimming or paddling pose; a happy open-mouthed smile; a lolling tongue; a lowered or level chin; a slack throat; a smooth unlifted brow; a monochrome all-blue look; warm colour anywhere except the eyes, the glow and the distant fire; a shortened muzzle; more than four limbs; a pasted-on subject; a different or beautified face; a calm or blank expression; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Place the dog from image 1 into the space station corridor from image 2, floating at a ten-degree tilt in the lower half, occupying roughly 50% of the frame height, slightly right of centre, hind legs out of frame below. One mitten glove PRESSES FLAT DOWN ON a handrail at the left edge, the whole rounded glove laid over the bar and the forearm braced against it — a dog's blunt claws cannot hook, so he holds himself by pressing, never by gripping or curling toes. The other foreleg drifts loose.
+THE GLOVES — both forepaws are ENCLOSED in sealed pressure gauntlets and both are INTACT: each is a MITTEN shaped to a dog's paw — one rounded compartment for all the toes, no separate fingers, no thumb, no finger seams, with a rigid metal sealing ring at the wrist. NO CLAWS ANYWHERE — the claws are inside the sealed gloves and are never visible or protruding; there are no claw holes and no tears, because an EVA glove is airtight and a puncture would be fatal. NO BARE FUR below either wrist ring.
+THE HELMET: BOTH ERECT EARS STAND FULLY UPRIGHT INSIDE the oversized clear bubble at their natural height without touching, bending or folding against the glass, and the whole muzzle sits well clear of the front glass.
+He looks up at the breach, the guard hairs of his coat lifted and separated weightless inside the helmet and above the suit collar.
+FORCE: the torn viewport and the ruptured solar array fill the upper frame — the breach is the nearest and largest element, its torn edges clearly readable, the array tearing apart visibly BEYOND it. A stress crack runs across the remaining glass. Every piece of debris in frame visibly originates from that breach. The interior lighting has cut to a slow pulsing red. Loose objects lift off every surface and drift upward toward the breach. Nothing rests still; nothing falls downward.
+IDENTITY: keep his coat colour and every marking in position, the asymmetric eyebrow spots, the dark brown eyes, the black nose, the erect ear shape, the FULL MUZZLE LENGTH, the cream urajiro, the EVA suit with its blue patches, red shoulder stripe, chest module and every scuff and dust mark, and the oversized clear helmet exactly as in image 1 — instantly recognizable. Do not restyle, clean up or beautify. The visor glass stays perfectly transparent across the face.
+STATE: the eyes are MOVING — scanning along the breach, not fixed, the pupils caught mid-contraction and one slightly wider than the other. The BROW RIDGES drawn down and slightly together with the forehead creased in concentration — the flat hard furrow of a working dog reading a problem, never the steep worried peak of fear. The LEFT ear forward, the RIGHT rotated out to the side. The MOUTH OPEN, breathing fast, the tongue held back and not lolling. The condensation inside the glass pulsing. Never a fixed serene stare.
+SCALE: he is a medium-dog-sized figure in a human-sized module; the corridor towers and recedes above him.
+INTEGRATION: match the lighting, colour temperature, atmosphere, grain and rendering style of image 2 exactly. Light him with the cold blue window light from the upper left and the pulsing red alarm strobe at about a quarter of its strength on his right edge. NO contact shadow — zero gravity; instead let debris and torn insulation drift past at the same depth as his body.
+CINEMATOGRAPHY: anamorphic lens, oval bokeh, shallow depth of field, weightless debris with motion blur, cold steel-blue grade with red accents, high contrast, crushed but open blacks, fine grain and halation on the window and the strobe.
+Photorealistic cinematic film still, 9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: ears bent, folded, squashed or pressed against the helmet glass; a helmet too small for the erect ears or the muzzle; a bare, ungloved or exposed paw; fur visible below the wrist ring; claws visible or protruding through a glove; a torn, split or holed glove; a five-fingered human-shaped glove; separate fingers or a thumb on a glove; only one glove; a paw gripping or curling around the rail; a contact shadow or a grounded standing pose; a closed, tinted or mirrored visor; reflections across the face; the coat lying flat instead of lifting; objects resting still or falling downward; debris with no visible breach to have come from; a fixed unmoving stare; both ears in the same position; a closed mouth; a happy open-mouthed smile; a lolling tongue; the steep worried inner-brow peak of fear; a calm, dreamy or smiling expression; equal-strength blue and red lighting; a shortened muzzle; more than four limbs; a pasted-on subject; a different or beautified face; looking at camera; text or watermark.`,
+
+`Reference image 1 is the character. Reference image 2 is the environment.
+Rebuild the character from image 1 into the aurora snowfield from image 2 as a hero frame from a theatrical CG animated feature. Standing SQUARE ON ALL FOUR PAWS in the untouched snow of the lower third, occupying roughly 50% of the frame height, all four paws planted wide and sinking into the snow and fully visible, camera low in the snow at his own eye level. The crystal staff stands planted upright in the snow beside him, supporting its own weight; one forepaw rests flat on the snow at its base. He never holds it and never rears.
+HE IS MID-HOWL, and the howl is what summons this: The head is thrown FULLY BACK, the muzzle pointed straight up at the sky, the neck stretched long and the cream throat markings pulled taut and clearly visible. The MOUTH IS OPEN IN A ROUNDED O with the lips pushed forward into a soft funnel — a howl, never a bark and never a snarl; no teeth bared, the tongue back and low. The eyes are HALF CLOSED, the lids soft, the brow smooth and lifted — the surrendered look of an animal singing, not straining. Both ears folded back and out to the sides in the relaxed way a dog's ears go when it howls. A long visible plume of breath rises straight up from the open muzzle. The whole ribcage is visibly expanded. All four paws planted and still.
+FORCE — HE CAUSES THIS, he does not watch it happen: Concentric rings of visible sound-pressure ripple UPWARD and OUTWARD from his open muzzle into the sky. Where they reach it, the aurora rotates and draws inward on itself, coiling tighter, and condenses into a dragon of FLOWING VOLUMETRIC LIGHT — translucent, with visible internal density, never solid scaled flesh. Fully formed, it turns its head DOWN toward him, its head lowest and nearest, filling the upper frame. The runes carved into the ice spires ignite one after another in a running chain OUTWARD FROM HIM toward the horizon — never toward him, he is the source. Loose powder snow lifts off the ground in a rising ring all around his paws and the cloak hem lifts with it. The staff crystal answers with a brightening pulse. Every light in frame originates above, from the dragon.
+IDENTITY: keep his groomed coat colour and every marking in position with its soft blended boundary, the asymmetric eyebrow spots, the dark brown eyes with their caustic and specular, the black nose with its subsurface scattering, the erect ear shape with light passing through the leather, the FULL MUZZLE LENGTH and skull shape, the cream urajiro, the curled tail, the ice-blue cloak with its fur trim and frost-crystal ornaments, the pushed-back hood and the crystal staff exactly as in image 1 — instantly recognizable. The muzzle length and skull shape never shorten or round. Do not restyle or change the stylised proportions.
+SCALE: he is a medium-dog-sized figure beneath a vast sky; the low camera makes him monumental against spires that tower above him.
+INTEGRATION: match the stylised 3D rendering, soft rounded shapes, subsurface scattering, colour palette and lighting of image 2 exactly. Light him with the green-violet aurora from directly above, rendered volumetrically with real depth through the falling snow, and the warm gold rune glow from the spires behind. The upward-thrown muzzle and taut throat catch the aurora key directly. Light passes visibly through the ear leather. Ground him with a soft blue contact shadow and paw prints; powder snow swirls around all four paws.
+STYLE: polished stylised 3D render in the manner of a modern CG family feature, soft global illumination, cloth simulation on the cloak, full character groom with strand clumps and flyaways, volumetric aurora with real depth, ambient occlusion in every fold.
+9:16 vertical, frozen at the peak moment, highly detailed.
+Do NOT: the dog standing passively and watching the aurora gather without causing it; the rune chain running INWARD toward him instead of outward from him; no sound rings rising from the muzzle; a bark, a snarl or bared teeth; a lolling tongue; a closed mouth; a level or lowered head; ears pricked forward; wide staring eyes; a tense or aggressive face; a paw gripping, holding or wrapping around the staff; the staff held, carried or leaning on him; rearing on the hind legs; more than four limbs; a solid or scaled dragon; a dragon that reads as an abstract smear rather than a formed head; the runes lighting all at once; a chibi or mascot design; enlarged cartoon-baby eyes; a shortened muzzle or rounded skull; a plush-toy or vinyl finish; the fur as a smooth solid surface instead of a groom; dirt, mud, drool or wounds; a photorealistic live-action look; film grain or lens flare; flat cel shading or line art; the hood up; warm light sources beyond the runes; a pasted-on or floating subject; a missing contact shadow; a different or restyled face; looking at camera; text or watermark.`
+];
+
+/* ④ 動画（人物）。始まりのコマ＝世界の背景、終わりのコマ＝完成カット。
+   つまり「無人の世界に主役が現れるまでの 7 秒」を書いている。 */
+var VIDEO_PROMPTS = [
+`A 7-second vertical cinematic shot. The first frame is the empty rain-soaked neon alley; the last frame is the same alley with the mech pilot braced in it. Open on the empty alley, rain falling through the magenta and cyan neon, steam rolling off the wet asphalt. A drone searchlight sweeps in from the upper right and rakes across the frame. The camera pushes in slowly and drops toward eye level as the pilot walks in from the left and stops hard in the beam, shoulders squaring, water running off the black plating. Settle on the final composition and hold. Rain, steam and light streaks carry the motion; the pilot's own movement is heavy and controlled. Anamorphic, shallow depth of field, high contrast, film grain. Do NOT: change the face, the armour or the alley; add text, captions or watermarks; cut to another shot; speed ramp; a second person in frame.`,
+
+`A 7-second vertical anime shot. The first frame is the empty floating-island platform under a violet sky; the last frame is the same platform with the knight mid-leap as the dragon's fire strikes. Open on the quiet platform, dust drifting, the sky churning. The dragon banks down from the upper left and its fire pours out in one unbroken column into the stone, which cracks and throws hard-edged shards outward. The knight bounds in sideways across the lower frame, cloak streaming, and freezes at the peak of the leap on the final composition. Drawn cel animation throughout: flat hard-edged colour, crisp light and shadow separation, drawn embers and ash, bloom only on the fire core. DRAWN, not shot — no film grain, no lens flare, no bokeh discs. Do NOT: change the character design, the armour or the background art; photorealistic or 3D rendering; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical period-drama shot. The first frame is the empty overcast merchant street; the last frame is the same street at the instant two blades cross. Open on the street, dust and brazier smoke hanging in the flat grey light, banners barely moving. The camera drifts low and back. The ronin's dark shape enters the left foreground out of focus; the samurai comes in low from the right and drives upward into the strike. The blades meet in the upper left and a white-hot burst of sparks fans out with a column of pale smoke. Freeze on the final composition. Long-lens compression, shallow depth of field, low saturation, fine grain, halation only on the brazier coals. Do NOT: change the face, the haori or the street; sunset or golden-hour light; cherry blossoms; anamorphic flare; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical stop-motion claymation shot. The first frame is the empty miniature jungle set; the last frame is the same set with the clay puppet launched into the air and the clay dinosaur's head burst through the ferns. Open on the still handmade set under warm tungsten light, one felt frond twitching. The puppet walks in from the right; the dinosaur head smashes through the fern wall behind it, blasting shredded felt leaves and crumbs of clay outward; the puppet springs straight up, fur puffed, hat popping clear. Freeze on the final composition. Deliberate frame judder throughout, real tabletop set, visible fingerprints and tool marks, tilt-shift miniature look, saturated toy-like colours. Do NOT: smooth CG or photorealistic rendering; the dinosaur touching the puppet; anything genuinely frightening; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical action shot. The first frame is the empty prehistoric valley; the last frame is the same valley with the runner at full sprint and the tyrannosaur closing behind. Open low at ground level on the empty valley, heat haze and dust hanging in the hot orange backlight. The ground begins to shake and fronds whip. The runner bursts into frame from the back and comes straight at the retreating camera; the tyrannosaur enters behind, head carried low and forward, one foot cratering the mud and throwing a wall of spray out to the sides. Freeze on the final composition. Handheld and unstable, motion blur on the background, teal-and-orange grade, anamorphic, heavy dust. Do NOT: change the face or the gear; the creature touching or biting the runner; the creature's head cropped or hidden; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical underwater shot. The first frame is the empty sunken temple corridor; the last frame is the same corridor with the guardian suspended in it, looking up. Open on the still corridor, a single pale shaft falling from far above, sediment drifting, jellyfish scattered across the frame. The guardian drifts in from below, weightless, and slows to neutral buoyancy. An enormous shadow crosses the top of the frame and blots out the shaft; the pressure wave pushes the sediment and the jellyfish outward and away from it; a stone column topples slowly behind. Settle on the final composition. Everything moves slowly and with weight; nothing snaps. Turquoise key from above, god rays, suspended particles, anamorphic, crushed but open blacks. Do NOT: show the creature's body, head or outline; change the face or the costume; a swimming or paddling motion; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical space-feature shot. The first frame is the intact station corridor; the last frame is the same corridor with the astronaut floating in it during the breach. Open on the quiet corridor in cold blue window light, everything at rest. The viewport tears open in the upper frame, the solar array beyond it comes apart, and the interior lighting cuts to a slow pulsing red. Loose objects and torn insulation lift off every surface and drift upward toward the breach. The astronaut drifts in from below at a ten-degree tilt and presses one mitten glove flat down on the handrail at the left edge to stop. Settle on the final composition. Weightless motion throughout — nothing falls downward. Cold steel-blue grade with red accents, anamorphic, motion blur on the debris. Do NOT: change the face, the suit or the helmet; a paw or hand gripping the rail; objects falling downward; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical stylized 3D animation shot. The first frame is the empty aurora snowfield; the last frame is the same snowfield with the ice mage mid-howl and the aurora condensed into a dragon of light. Open on the untouched snow under a slow green-violet aurora, powder drifting. The mage walks in from the right and plants, then throws the head fully back into the howl; concentric rings of visible sound-pressure ripple up into the sky; the aurora rotates, coils inward and condenses into a translucent dragon of flowing volumetric light that turns its head down; the runes on the ice spires ignite one after another in a running chain outward toward the horizon. Freeze on the final composition. Polished stylised CG feature rendering, soft global illumination, subsurface scattering in fur and ice, volumetric aurora with real depth. Do NOT: a bark, a snarl or bared teeth; the runes lighting all at once; the rune chain running inward; a solid scaled dragon; photorealistic live-action look; film grain or lens flare; text, captions or watermarks; cutting to another shot.`
+];
+
+/* ④ 動画（犬）。始まりのコマ＝キャラクターカード、終わりのコマ＝完成カット。 */
+var DOG_VIDEO_PROMPTS = [
+`A 7-second vertical cinematic shot of the same dog. It opens on the character card and ends on the alley composition. The searchlight swings across and the shield unfolds out of the left shoulder guard to meet it; the beam breaks against the shield face and scatters, raindrops igniting white along its edge. The dog drops lower on all four paws and drives the shoulder up into the load, the brow furrowing harder, the chin tucking. Rain runs off the plating, steam rolls past, the cyan seams flicker. Settle on the final composition. Sound: rain on metal, the low hum of a drone, one short deep growl. Do NOT: rearing or standing on the hind legs; a paw raised or holding anything; a happy open-mouthed smile; a lolling tongue; a lifted chin; a loose or dropped tail; changing the face, the markings or the armour; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical anime shot of the same dog. It opens on the character card and ends on the floating-island composition. The dragon banks down and its fire pours out in one unbroken column into the stone; the dog bounds sideways along the platform, all four paws leaving the ground, the crimson cloak and the ringed tail streaming, ears driven forward with the tips tilted back against the blast. Freeze at the peak of the leap. Drawn cel animation throughout — flat hard-edged colour, drawn embers and ash, bloom only on the fire core. Sound: wingbeat, roaring fire, one clipped bark. Do NOT: a happy open-mouthed smile; a lolling tongue; rearing on the hind legs; the sword drawn or in the mouth; the fire touching the dog; photorealistic or 3D rendering; changing the character design; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical period-drama shot of the same dog. It opens on the character card and ends on the merchant street composition. The dog clamps the cloth-wrapped blade across its jaws, drives up off braced hind legs and meets the ronin's descending strike; the blades cross once in the upper left and a white-hot burst of sparks fans out with a column of pale smoke. Dust bursts off the packed earth beneath the hind legs. The lips draw hard back off the teeth, the brow furrows deep, the ears rotate back and down at the base but stay standing. Freeze at the moment of impact. Sound: dust and cloth, the ring of steel, one snarling roar around the blade. Do NOT: a blade held in the paws; the blade covering the muzzle; a happy open-mouthed smile; a lolling tongue; rearing on the hind legs; a calm or neutral face; changing the face or the haori; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical stop-motion claymation shot of the same puppet. It opens on the character card and ends on the jungle-set composition. The clay dinosaur's head smashes through the felt fern wall behind, blasting shredded leaves and crumbs of clay outward; the puppet springs straight up, every fibre of fur standing out, the tail sprung loose and bolt upright, the bobble hat popping clear and hanging above it, the head twisted back over the shoulder. Freeze at the top of the jump. Deliberate frame judder throughout, visible fingerprints and tool marks, tilt-shift miniature look. Sound: a felt rustle, a comic wooden thud, one surprised yelp. Do NOT: the dinosaur touching the puppet; a happy smile; a lolling tongue; dirt, mud, drool or wounds; smooth CG rendering; anything genuinely frightening; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical action shot of the same dog. It opens on the character card and ends on the prehistoric-valley composition. The dog breaks into a full four-legged gallop straight at the retreating camera, body stretching to maximum extension, satchel and compass flying out sideways; behind it the tyrannosaur closes, head carried low and forward, one foot cratering the mud and throwing spray out to the sides. Both ears fold back flat against the skull, the inner eyebrows drive up into a steep worried peak, the tail uncurls and clamps down between the hind legs, drool threads blowing back along the jaw. Freeze at full stride. Handheld and unstable, heavy dust, teal-and-orange grade. Sound: pounding paws, tearing fronds, heavy panting, one distant roar. Do NOT: running or standing on the hind legs; the creature touching or biting the dog; the creature's head cropped or hidden; a happy open-mouthed smile; a calm expression; ears forward; a tightly curled tail; changing the face or the gear; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical underwater shot of the same dog. It opens on the character card and ends on the sunken-temple composition. The dog drifts up to neutral buoyancy, all four legs hanging free and bearing no weight, guard hairs lifting and separating in the current. The bioluminescent lines light up in sequence from the paws upward. An enormous shadow crosses the top of the frame and blots out the shaft of light; the pressure wave pushes the drifting hairs, the sediment and the jellyfish outward and away from it; the head throws back, the throat stretches taut, the ears rise high and rigid. Settle on the final composition. Everything moves slowly and with weight. Sound: muffled water, a low distant groan, one small bubbling exhale. Do NOT: showing the creature's body, head or outline; a swimming or paddling motion; a grounded standing pose; a happy open-mouthed smile; a lolling tongue; the lines igniting all at once; changing the face or the harness; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical space-feature shot of the same dog. It opens on the character card and ends on the station-corridor composition. The viewport tears open in the upper frame, the interior lighting cuts to a slow pulsing red, and loose objects and torn insulation lift off every surface and drift upward toward the breach. The dog floats at a ten-degree tilt and presses one mitten glove flat down on the handrail to stop itself; the eyes sweep along the breach without settling, the left ear turns forward while the right rotates out to the side, the condensation inside the helmet pulses with each breath. Settle on the final composition. Weightless motion throughout — nothing falls downward. Sound: a muffled alarm, escaping air, fast shallow breathing inside the helmet. Do NOT: a glove gripping or curling around the rail; ears bent or pressed against the glass; objects falling downward; a happy open-mouthed smile; a lolling tongue; a fixed unmoving stare; changing the face, the suit or the helmet; text, captions or watermarks; cutting to another shot.`,
+
+`A 7-second vertical stylized 3D animation shot of the same dog. It opens on the character card and ends on the aurora-snowfield composition. The dog throws its head fully back into a howl, the muzzle pointing straight up, the mouth opening into a rounded O with the lips pushed forward, the eyes half closing, both ears folding back and out to the sides, a long plume of breath rising straight up. Concentric rings of visible sound-pressure ripple up into the sky; the aurora rotates, coils inward and condenses into a translucent dragon of flowing volumetric light that turns its head down; the runes on the ice spires ignite one after another in a running chain outward toward the horizon; powder snow lifts in a ring around the paws. Freeze on the final composition. Sound: wind over snow, a rising crystalline chime, one long clean howl. Do NOT: a bark, a snarl or bared teeth; a level or lowered head; ears pricked forward; a paw gripping the staff; rearing on the hind legs; the runes lighting all at once; a solid scaled dragon; photorealistic live-action look; changing the face or the cloak; text, captions or watermarks; cutting to another shot.`
+];
+
 function sleepMs(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 
 /* 撮影データを API が受け付ける形（JPEG）へ正規化する。
@@ -5776,7 +6178,7 @@ function toJpeg(src, maxSide){
       g.drawImage(im,0,0,c.width,c.height);
       try{ resolve(c.toDataURL("image/jpeg",.9)); }catch(e){ reject(e); }
     };
-    im.onerror=function(){ reject(new Error("画像を読み込めませんでした")); };
+    im.onerror=function(){ reject(new Error(T("eLoad","画像を読み込めませんでした"))); };
     im.src=src;
   });
 }
@@ -5787,8 +6189,8 @@ function submitJob(model, body){
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(body)
   }).then(function(r){ return r.text(); }).then(function(t){
-    var j; try{ j=JSON.parse(t); }catch(e){ throw new Error("応答を解釈できませんでした: "+t.slice(0,90)); }
-    if(!j.data || !j.data.task_id) throw new Error(j.message || "生成を開始できませんでした");
+    var j; try{ j=JSON.parse(t); }catch(e){ throw new Error(T("eParse","応答を解釈できませんでした: ")+t.slice(0,90)); }
+    if(!j.data || !j.data.task_id) throw new Error(j.message || T("eStart","生成を開始できませんでした"));
     var u=(j.data.get_result && j.data.get_result.url) || (API+"/tasks/"+j.data.task_id);
     try{ var x=new URL(u); return x.pathname+x.search; }catch(e){ return u; }
   });
@@ -5821,8 +6223,19 @@ function submitScene(images, prompt){
 /* 参考画像として送れる形に整える。公開 URL はそのまま、
    撮影データやサンプルの SVG は JPEG の data URL に変換する。 */
 /* ④ 動画（角色卡＝始まりのコマ、入景＝終わりのコマ） */
-function submitVideo(first, last, prompt){
-  return submitJob(MODEL_VIDEO,{
+function submitVideo(model, first, last, prompt){
+  if(model === MODEL_VIDEO_FL2V){
+    // MiniMax H3 FL2V。受け付けるのは prompt / duration / resolution / 前後のコマだけで、
+    // ratio や音声生成の指定は無い（送るとエラーになる）。出力比は渡したコマに従う。
+    return submitJob(model,{
+      prompt: prompt,
+      first_frame_image: first,
+      last_frame_image: last,
+      duration: 7,
+      resolution: "768P"
+    });
+  }
+  return submitJob(model,{
     prompt: prompt,
     first_frame_image: first,
     last_frame_image: last,
@@ -5843,12 +6256,12 @@ function prepImage(src){
 function pollTask(path, onTick, timeout){
   var deadline=Date.now()+(timeout||CARD_TIMEOUT);
   function step(){
-    if(Date.now()>deadline) throw new Error("時間内に完了しませんでした");
+    if(Date.now()>deadline) throw new Error(T("eTimeout","時間内に完了しませんでした"));
     return sleepMs(3000).then(function(){
       onTick && onTick();
       return fetch(path).then(function(r){ return r.text(); });
     }).then(function(t){
-      var j; try{ j=JSON.parse(t); }catch(e){ throw new Error("結果を取得できませんでした"); }
+      var j; try{ j=JSON.parse(t); }catch(e){ throw new Error(T("eResult","結果を取得できませんでした")); }
       var d=j.data||{};
       if(d.status==="success"){
         var u=d.result && d.result.resources && d.result.resources[0] && d.result.resources[0].url;
@@ -5867,7 +6280,22 @@ var runToken=0;
 function tnode(k){ return document.querySelector('.tn[data-k="'+k+'"]'); }
 function setNode(k,st){ var n=tnode(k); if(n) n.dataset.s=st; }
 function setNodeTime(k,txt){ var n=tnode(k); if(n) n.querySelector(".tt").textContent=txt; }
-function note(i){ $("#genNote").textContent=NOTES[i]; }
+function note(i){ $("#genNote").textContent = (i===3 ? videoNote() : NOTES[i]); }
+
+/* ④ の説明。動物はキャラクターカードから、人物は世界の背景から動き出す。
+   音を一緒に作れるのは seedance のときだけ（MiniMax は無音）。 */
+function videoNote(){
+  var withSound = state.world==null || videoModelFor(WORLDS[state.world].i) !== MODEL_VIDEO_FL2V;
+  return (isPet()
+    ? T("vnPet","キャラクターカードと完成カットを、始まりと終わりのコマにして 7 秒の縦型動画に仕上げています。")
+    : T("vnSelf","世界の背景と完成カットを、始まりと終わりのコマにして 7 秒の縦型動画に仕上げています。主役がその世界に現れるまでを描きます。"))
+    + (withSound ? T("vnSound","音も一緒に生成します。") : "");
+}
+function videoStepDesc(){
+  return isPet()
+    ? T("vdPet","キャラクターカードと完成カットを、始まりと終わりのコマにして 7 秒の縦型映像へ")
+    : T("vdSelf","世界の背景と完成カットを、始まりと終わりのコマにして 7 秒の縦型映像へ");
+}
 
 /* 経過秒を数え続けるだけの小さなタイマー */
 function ticker(k){
@@ -5880,7 +6308,7 @@ function ticker(k){
 
 function genError(msg, what){
   var e=$("#genErr"); e.hidden=false;
-  e.innerHTML = (what||"生成")+"に失敗しました（"+msg+"）。<br>展示を止めないよう、サンプル画像で先に進みます。";
+  e.innerHTML = T("eFail", (what||"生成")+"に失敗しました（"+msg+"）。<br>展示を止めないよう、サンプル画像で先に進みます。", (what||"生成"), msg);
 }
 
 $("#btnRandom").addEventListener("click",function(){
@@ -5896,7 +6324,8 @@ function runGen(){
 
   show("gen");
   $("#genErr").hidden=true;
-  $("#genTitle").textContent="「"+w.nm+"」を生成しています";
+  $("#genTitle").textContent=T("genTitle","「"+w.nm+"」を生成しています",w.nm);
+  $("#vidStepDesc").textContent=videoStepDesc();
   note(0);
   [0,1,2,3].forEach(function(k){ setNode(k,"wait"); setNodeTime(k,""); });
   $("#cardThumb").hidden=true;
@@ -5909,7 +6338,6 @@ function runGen(){
   stageScene.classList.remove("on"); stageScene.removeAttribute("src");
   $("#sceneThumb").hidden=true;
   $("#vidThumb").hidden=true; $("#vidSoon").hidden=true;
-  $("#resCardThumb").hidden=true;
   state.videoUrl=null; state.videoIsSample=false;
 
   /* 01 解析（ローカル処理：送れる形へ整える） */
@@ -5922,7 +6350,7 @@ function runGen(){
     /* 02 キャラクターカード生成（実 API・② 角色卡） */
     setNode(1,"run"); note(1);
     var stop1=ticker(1);
-    return submitCard(jpeg, (isCat()?CAT_PROMPTS:PROMPTS)[w.i])
+    return submitCard(jpeg, cardPrompts()[w.i])
       .then(function(taskPath){ return pollTask(taskPath); })
       .then(function(url){
         if(my!==runToken) return;
@@ -5933,13 +6361,13 @@ function runGen(){
         if(my!==runToken) return;
         stop1(); setNode(1,"done");
         genError(err.message||String(err));
-        onCardReady((isCat()?CAT_CRD:CRD)[w.i], true);   // 展示を止めない
+        onCardReady(sampleCards()[w.i], true);   // 展示を止めない
       });
   }).catch(function(err){
     if(my!==runToken) return;
     stop0(); setNode(0,"done");
     genError(err.message||String(err));
-    onCardReady((isCat()?CAT_CRD:CRD)[w.i], true);
+    onCardReady(sampleCards()[w.i], true);
   });
 }
 
@@ -5970,7 +6398,7 @@ function runScene(my, w){
   setNode(2,"run"); note(2);
   $("#tSweep").classList.add("on");
   var stop2=ticker(2);
-  submitScene([state.cardUrl, SCN_URL[w.i]], (isCat()?CAT_SCENE_PROMPTS:SCENE_PROMPTS)[w.i])
+  submitScene([state.cardUrl, SCN_URL[w.i]], scenePrompts()[w.i])
     .then(function(taskPath){ return pollTask(taskPath); })
     .then(function(url){
       if(my!==runToken) return;
@@ -5980,8 +6408,8 @@ function runScene(my, w){
     .catch(function(err){
       if(my!==runToken) return;
       stop2(); setNode(2,"done");
-      genError(err.message||String(err), "世界との合成");
-      onSceneReady((isCat()?CAT_SCN:WLD)[w.i], true);
+      genError(err.message||String(err), T("eScene","世界との合成"));
+      onSceneReady(sampleScenes()[w.i], true);
     });
 }
 
@@ -5995,7 +6423,7 @@ function onSceneReady(url, isSample){
   $("#sceneThumb").hidden=false;
   note(3);
 
-  // ④ 動画。スイカ🍉 で、②③ とも実生成が通ったときだけ走らせる。
+  // ④ 動画。②③ とも実生成が通ったときだけ走らせる（サンプルに落ちた回は動画も出さない）。
   var ok = canVideo() && !isSample &&
            /^https?:/i.test(String(state.cardUrl||"")) && /^https?:/i.test(String(url));
   if(!ok){
@@ -6014,7 +6442,11 @@ function runVideo(my, w){
   setNode(3,"run");
   $("#tSweep").classList.add("on");
   var stop3=ticker(3);
-  submitVideo(state.cardUrl, state.sceneUrl, CAT_VIDEO_PROMPTS[w.i])
+  /* 始まりのコマ。動物はキャラクターカードから完成カットへ。
+     人物は「無人の世界の背景」から完成カットへつなぐ（人物の顔が始点に入らない）。 */
+  var mdl   = videoModelFor(w.i);
+  var first = isPet() ? state.cardUrl : SCN_URL[w.i];
+  submitVideo(mdl, first, state.sceneUrl, videoPrompts()[w.i])
     .then(function(taskPath){ return pollTask(taskPath, null, VIDEO_TIMEOUT); })
     .then(function(url){
       if(my!==runToken) return;
@@ -6024,7 +6456,7 @@ function runVideo(my, w){
     .catch(function(err){
       if(my!==runToken) return;
       stop3(); setNode(3,"done");
-      genError(err.message||String(err), "動画の生成");
+      genError(err.message||String(err), T("eVideo","動画の生成"));
       onVideoReady(CAT_VID[w.i], true);   // 展示を止めない
     });
 }
@@ -6078,7 +6510,10 @@ function onVideoReady(url, isSample){
     if(e.key==="Escape" && $("#vfs").classList.contains("on")) closeVideo();
   });
   $("#tScene").addEventListener("click",function(){ open(state.sceneUrl); });
-  $("#resCardThumb").addEventListener("click",function(){ open(state.cardUrl); });
+  /* 結果画面の 3 工程タイル。②③ は拡大、④ は全画面で音つき再生。 */
+  $("#stepCard").addEventListener("click",function(){ open(state.cardUrl); });
+  $("#stepScene").addEventListener("click",function(){ open(state.sceneUrl); });
+  $("#stepVid").addEventListener("click",openVideo);
   $("#resImg").addEventListener("click",function(){ open(state.sceneUrl||state.cardUrl); });
   window.openLightbox=open;
   $("#lbClose").addEventListener("click",close);
@@ -6089,7 +6524,7 @@ function onVideoReady(url, isSample){
 /* ───── 結果 ───── */
 function showResult(){
   var w=WORLDS[state.world];
-  var hero=state.sceneUrl||state.cardUrl||(isCat()?CAT_CRD:CRD)[w.i];
+  var hero=state.sceneUrl||state.cardUrl||sampleCards()[w.i];
   $("#resImg").src=hero;
   // 動画まで出来ていれば、静止画の上にそれを重ねて自動再生する
   var rv=$("#resVid");
@@ -6100,34 +6535,50 @@ function showResult(){
     rv.hidden=true; try{ rv.pause(); rv.removeAttribute("src"); rv.load(); }catch(e){}
   }
   $("#resCap").textContent=w.cap;
-  $("#resTitle").textContent="「"+w.nm+"」が完成しました";
+  $("#resTitle").textContent=T("resTitle","「"+w.nm+"」が完成しました",w.nm);
 
   var made=[];
-  if(!state.cardIsSample) made.push("キャラクターカード");
-  if(state.sceneUrl && !state.sceneIsSample) made.push("完成カット");
-  if(state.videoUrl && !state.videoIsSample) made.push("7 秒の動画");
-  var from = state.subject==="pet" ? "「"+(state.label||"スイカ🍉")+"」の写真" : "あなたの写真";
+  if(!state.cardIsSample) made.push(T("mCard","キャラクターカード"));
+  if(state.sceneUrl && !state.sceneIsSample) made.push(T("mScene","完成カット"));
+  if(state.videoUrl && !state.videoIsSample) made.push(T("mVideo","7 秒の動画"));
+  var who = state.label || "スイカ🍉";
+  // 英語だけ最後を and でつなぐ。中黒や読点のまま並べると英文として読めない。
+  var list = (LANG==="en" && made.length>1)
+    ? made.slice(0,-1).join(", ")+" and "+made[made.length-1]
+    : made.join(T("mJoin","・"));
+  var from = isPet() ? T("fromPet","「"+who+"」の写真",who) : T("fromSelf","あなたの写真");
   $("#resSub").textContent = made.length
-    ? w.sub+" ／ "+w.tag+"。"+from+"から、"+made.join("・")+"を生成しました。"
-    : w.sub+" ／ "+w.tag+"。今回はサンプル画像を表示しています。";
+    ? T("resSub", w.sub+" ／ "+w.tag+"。"+from+"から、"+list+"を生成しました。", w.sub, w.tag, list, from)
+    : T("resSample", w.sub+" ／ "+w.tag+"。今回はサンプル画像を表示しています。", w.sub, w.tag);
 
-  // 入景まで進んだ回は、主役が入景カット。②のカードは小さく添えて拡大できるようにする
-  var t=$("#resCardThumb");
-  if(state.sceneUrl && state.cardUrl && state.sceneUrl!==state.cardUrl){
-    $("#resCardImg").src=state.cardUrl; t.hidden=false;
-  } else { t.hidden=true; }
-
-  var vs=$("#vslotTxt");
-  if(state.videoUrl && !state.videoIsSample){
-    vs.innerHTML="<b>動画まで生成しました</b>キャラクターカードを始まり、完成カットを終わりのコマにして、7 秒の縦型映像を生成しています。";
-  } else if(isCat()){
-    vs.innerHTML="<b>今回は動画までは進みませんでした</b>工程 ② と ③ がサンプル画像に切り替わったときは、動画の生成は行いません。";
-  } else {
-    vs.innerHTML="<b>動画の生成はペットが主役のときだけです</b>動画モデルが実在の人物の顔を含む画像を受け付けないため、人物のときは完成カットまでを生成しています。";
-  }
-  drawQR(takeawayUrl());
+  fillSteps();
+  drawQR(CONSOLE_URL);
   saveHistory();
   show("result");
+}
+
+/* 3 工程の成果物を並べる。状態は 3 つだけ：
+   done   … 実際に生成できた       sample … サンプル画像に切り替わった
+   none   … その工程まで進めなかった */
+function fillSteps(){
+  function set(el, src, state_, note, isVideo){
+    el.dataset.state = state_;
+    var m = el.querySelector(isVideo ? "video" : "img");
+    if(src){ if(m.getAttribute("src")!==src){ m.src=src; if(isVideo){ try{ m.load(); }catch(e){} } } }
+    else { m.removeAttribute("src"); }
+    el.querySelector(".ss").textContent = note;
+  }
+  set($("#stepCard"), state.cardUrl,
+      state.cardUrl ? (state.cardIsSample?"sample":"done") : "none",
+      state.cardUrl ? (state.cardIsSample?T("stZoomS","サンプル画像・タップで拡大"):T("stZoom","タップで拡大")) : T("stFail","生成できませんでした"), false);
+  set($("#stepScene"), state.sceneUrl,
+      state.sceneUrl ? (state.sceneIsSample?"sample":"done") : "none",
+      state.sceneUrl ? (state.sceneIsSample?T("stZoomS","サンプル画像・タップで拡大"):T("stZoom","タップで拡大")) : T("stNone","ここまで進みませんでした"), false);
+  var vNote = state.videoUrl
+    ? (state.videoIsSample ? T("stPlayS","サンプル動画・タップで再生") : T("stPlay","タップで全画面再生"))
+    : T("stNone","ここまで進みませんでした");
+  set($("#stepVid"), state.videoUrl,
+      state.videoUrl ? (state.videoIsSample?"sample":"done") : "none", vNote, true);
 }
 
 /* 持ち帰りページの URL。生成した画像の URL をそのまま渡す。
@@ -6290,19 +6741,19 @@ function restart(){
   closeHistItem();
   $("#vfs").classList.remove("on");
   try{ $("#vfsVid").pause(); $("#vfsVid").removeAttribute("src"); }catch(e){}
-  $("#cardThumb").hidden=true; $("#sceneThumb").hidden=true; $("#resCardThumb").hidden=true;
+  $("#cardThumb").hidden=true; $("#sceneThumb").hidden=true;
   document.querySelectorAll("[aria-pressed]").forEach(function(x){
     if(!x.closest(".lang")) x.setAttribute("aria-pressed","false");
   });
   $("#btnPetNext").disabled=true; $("#btnGen").disabled=true;
-  var pa=document.querySelector(".pet-add"); if(pa){
+  document.querySelectorAll(".pet-add").forEach(function(pa,k){
     pa.querySelector(".pa").innerHTML=
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
       '<path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
-      '<em>タップして選ぶ</em>';
-    pa.querySelector("b").textContent="別の子の写真";
-  }
-  var pf=$("#petFile"); if(pf) pf.value="";
+      '<em>'+T("tapChoose","タップして選ぶ")+'</em>';
+    pa.querySelector("b").textContent = k===0 ? T("myCat","うちのねこ") : T("myDog","うちのいぬ");
+  });
+  ["#petFile","#dogFile"].forEach(function(id){ var f=$(id); if(f) f.value=""; });
   document.getElementById("worldGrid").classList.remove("has-hover");
   attractIdx=0; setWorldBg(0); setAccent(WORLDS[0].a,WORLDS[0].b);
   show("attract",false);
@@ -6319,7 +6770,7 @@ function resetIdle(){
   if($("#hv").classList.contains("on")) return;
   if($("#vfs").classList.contains("on")) return;
   idleT=setTimeout(function(){
-    $("#idle").textContent="操作がないため最初の画面に戻ります";
+    $("#idle").textContent=T("idle","操作がないため最初の画面に戻ります");
     setTimeout(restart,2600);
   },IDLE);
 }
@@ -6327,6 +6778,307 @@ function resetIdle(){
   document.addEventListener(e,resetIdle,{passive:true});
 });
 document.addEventListener("keydown",function(e){ if(e.key==="Escape") restart(); });
+
+/* ══════════════════════════════════════════════════════════
+   多言語（日本語 / English / 中文）
+   ──────────────────────────────────────────────────────────
+   ・静的な文言は HTML の data-i18n="sNN" を差し替える。
+   ・世界名・ペット名・工程の説明は配列なので、日本語版を控えておいて
+     言語ごとに書き戻す（呼び出し側のコードは触らずに済む）。
+   ・辞書に無いキーは日本語のまま出る。訳し漏れても画面は壊れない。
+   ══════════════════════════════════════════════════════════ */
+var LANG = "ja";
+var JA_SNAP = null;   // 日本語の原文。初回に控える
+
+var I18N = {
+en:{
+ s01:"Choose your lead", s02:"Take a photo", s03:"Choose a world", s04:"Generate",
+ s06:'You become <span class="flow">the lead</span> of the story.',
+ s07:'From a single photo taken right here, into the lead of eight worlds.<br class="pc-br"> Transformation through to video, in 60 seconds.',
+ s08:"Start", s09:"View history", s10:'<span class="dot"></span>Touch the screen to start',
+ s11:"Back to start", s12:"What you have made so far",
+ s13:"Everything made on this device, newest first. Tap one to enlarge it and take it home with the QR code.",
+ s14:'Nothing here yet.<br>Tap “Start” to make your first one.',
+ s15:"Make a new one", s16:"Clear history", s17:"Back to start",
+ s18:"One photo becomes these eight styles",
+ s19:"Every image below came from a single photo. A pet photo works just as well.",
+ s20:'Just pick <b>who stars</b> for now. Which world you enter is decided after the photo.',
+ s21:"Use your own face",
+ s22:"Shot on the camera here. The data is deleted automatically when you finish.",
+ s23:"Make your pet the lead",
+ s24:"Choose from 5 cats and 3 dogs, or use a photo of your own. No shooting needed.",
+ s25:"Sample model: Suika 🍉",
+ s26:"Change the lead", s27:"Put your face inside the frame",
+ s28:"Could not reach the camera.<br>You can carry on with a sample image.",
+ s29:"Shoot in 3 s", s30:"Continue with a sample",
+ s31:"The photo is processed only on this device and is never stored on a server.",
+ s32:"Change the lead", s33:"Choose who will star",
+ s34:"Cats or dogs — and your own photo works too. The same steps as a person: character card through to video.",
+ s35:'<span class="sp-e" aria-hidden="true">🐈</span>Cats<em>5 + your own photo</em>',
+ s36:'<span class="sp-e" aria-hidden="true">🐕</span>Dogs<em>3 + your own photo</em>',
+ s37:'Examples: eight worlds generated with <b>Suika 🍉</b>',
+ s38:"Continue with this one", s39:"Retake the photo",
+ s40:"Which world will you open?",
+ s41:"Pick one world. You will be generated as its lead.",
+ s42:"Enter this world", s43:"Surprise me",
+ s44:"Stop and choose another world", s45:"Generating your character",
+ s46:"Analysing the photo", s47:"Extracting facial structure and features",
+ s48:"Generating the character card",
+ s49:"Keeping the face, swapping only costume, light and texture",
+ s50:"<b>Card ready</b>Tap to enlarge",
+ s51:"Compositing into the world",
+ s52:"Building one image from the character card and the world's backdrop, matching light direction, atmosphere and grain",
+ s53:"<b>Final cut ready</b>Tap to enlarge",
+ s54:"Rendering the video",
+ s55:"Using the character card and the final cut as the first and last frames of a 7-second vertical video",
+ s56:"Not run", s57:"<b>Video ready</b>Tap to play full screen",
+ s58:"Estimating facial structure from a single photo. Keeping it recognisably you without turning you into someone else is the hardest part here.",
+ s59:"Complete",
+ s60:"<i>02</i>Character card", s61:"Tap to enlarge",
+ s62:"<i>03</i>Final cut", s63:"Tap to enlarge",
+ s64:"<i>04</i>Video · 7 s", s65:"Tap to play full screen",
+ s66:"<b>Try Modellix on your phone</b>Scan to open the Modellix console. You can run the same three steps on your own account.",
+ s67:"Another world", s68:"Start over", s69:"Back",
+
+ _w:[["Spotted","Mech Pilot","Neon alley in the rain × cybernetics","Live-action CG"],
+     ["The dragon comes","Otherworld Hero","Floating islands × sword of light","Anime"],
+     ["First strike","Samurai","Overcast street × a duel","Period drama"],
+     ["Run!","Miniature Expedition","A clay dinosaur world","Claymation"],
+     ["By a hair","Dinosaur Survivor","Cretaceous valley × T-REX","Live-action film"],
+     ["Awakening","Guardian of the Deep","Sunken temple × the great shadow","Live-action fantasy"],
+     ["Alarm","Astronaut","Orbital station × hull breach","Live action"],
+     ["Dragon of light","Ice Mage","Aurora ice citadel","3D animation"]],
+ _cap:'Ep.1 “@”',
+ _pets:[["Kagishippo","Brown tabby"],["Goma","Black cat"],["Mitarashi","Calico"],["Mocha","Siamese"],["Hana","Tabby and white"]],
+ _dogs:[["Azuki","Shiba Inu"],["Dora","French Bulldog"],["Purin","Toy Poodle"]],
+ _notes:["Estimating facial structure from a single photo. Keeping it recognisably you without turning you into someone else is the hardest part here.",
+   "Keeping the face, swapping only costume, light, texture and expression. Sweat, dust and muscle tension are drawn in too, so it never reads as a costume pasted on.",
+   "Building a single image from two references — the character card and the world's backdrop. Light direction, colour temperature, atmosphere, grain and even the contact shadow at the feet are matched to the world."],
+
+ vnPet:"Using the character card and the final cut as the first and last frames of a 7-second vertical video.",
+ vnSelf:"Using the world's empty backdrop and the final cut as the first and last frames of a 7-second vertical video — the moment the lead arrives in that world.",
+ vnSound:" Audio is generated along with it.",
+ vdPet:"Using the character card and the final cut as the first and last frames of a 7-second vertical video",
+ vdSelf:"Using the world's backdrop and the final cut as the first and last frames of a 7-second vertical video",
+ genTitle:'Generating “@”', resTitle:'“@” is complete',
+ mCard:"a character card", mScene:"a final cut", mVideo:"a 7-second video", mJoin:", ",
+ fromSelf:"your photo", fromPet:'a photo of “@”',
+ resSub:"@1 / @2. Generated @3 from @4.", resSample:"@1 / @2. Showing sample images this time.",
+ stZoom:"Tap to enlarge", stZoomS:"Sample image · tap to enlarge", stFail:"Could not be generated",
+ stPlay:"Tap to play full screen", stPlayS:"Sample video · tap to play", stNone:"Did not get this far",
+ myCat:"My cat", myDog:"My dog", thisPhoto:"Continue with this photo",
+ tapChoose:"Tap to choose", fileNote:"JPG / PNG · up to 10 MB",
+ backPet:"Change the lead", backShot:"Retake the photo",
+ lblYou:"You", lblSample:"Sample", lblMyPet:"My pet",
+ aTooBig:"That file is larger than 10 MB.", aBadImg:"Could not read that image.", aBadFile:"Could not read that file.",
+ eLoad:"Could not load the image", eParse:"Could not read the response: ", eStart:"Could not start the generation",
+ eTimeout:"Did not finish in time", eResult:"Could not fetch the result",
+ eScene:"compositing into the world", eVideo:"generating the video", eCard:"generating the character card",
+ eFail:"@1 failed (@2).<br>Carrying on with a sample image so the demo keeps running.",
+ idle:"Returning to the start screen — no activity"
+},
+zh:{
+ s01:"选择主角", s02:"拍照", s03:"选择世界", s04:"生成",
+ s06:'你，就是<span class="flow">故事的主角</span>。',
+ s07:'用现场拍下的一张照片，成为 8 个世界的主角。<br class="pc-br"> 从变身到视频，60 秒内当场完成。',
+ s08:"开始体验", s09:"查看生成记录", s10:'<span class="dot"></span>触摸屏幕开始',
+ s11:"返回首页", s12:"已生成的作品",
+ s13:"本机生成的内容按时间倒序排列。点击可放大，并通过二维码带走。",
+ s14:'还没有作品。<br>请点击「开始体验」制作第一张。',
+ s15:"重新生成", s16:"清除记录", s17:"返回首页",
+ s18:"一张照片，变成这 8 种风格",
+ s19:"以下全部由一张照片生成。宠物照片的效果同样出色。",
+ s20:'这里只需决定<b>由谁主演</b>。进入哪个世界，拍照之后再选。',
+ s21:"用自己的脸",
+ s22:"用现场相机拍摄。数据在体验结束后自动删除。",
+ s23:"让宠物当主角",
+ s24:"可从 5 只猫和 3 只狗中挑选，也可以使用自己的照片。无需拍摄。",
+ s25:"示例模特：西瓜🍉",
+ s26:"重新选择主角", s27:"请把脸放进取景框",
+ s28:"无法连接相机。<br>可以直接使用示例图片继续。",
+ s29:"3 秒后拍摄", s30:"使用示例继续",
+ s31:"拍摄的图像仅在本机处理，不会保存到服务器。",
+ s32:"重新选择主角", s33:"请选择主角",
+ s34:"猫也好，狗也好，自己的照片也能直接使用。与人物相同的流程，从角色卡一直生成到视频。",
+ s35:'<span class="sp-e" aria-hidden="true">🐈</span>猫<em>5 只＋自有照片</em>',
+ s36:'<span class="sp-e" aria-hidden="true">🐕</span>狗<em>3 只＋自有照片</em>',
+ s37:'示例：用<b>西瓜🍉</b>生成的 8 个世界的视频',
+ s38:"用这一只继续", s39:"重新拍摄",
+ s40:"你要打开哪个世界的门？",
+ s41:"请选择一个想进入的世界，将以该世界的主角进行生成。",
+ s42:"进入这个世界", s43:"随机",
+ s44:"中止生成，重新选择世界", s45:"正在生成角色",
+ s46:"解析照片", s47:"正在提取面部结构与特征",
+ s48:"生成角色卡",
+ s49:"保持面容不变，只替换服装、光线与质感",
+ s50:"<b>角色卡已生成</b>点击可放大",
+ s51:"与世界合成",
+ s52:"以角色卡与世界背景为参考，组合成光线方向、空气感、颗粒感一致的一张图",
+ s53:"<b>成片已生成</b>点击可放大",
+ s54:"渲染视频",
+ s55:"以角色卡与成片作为首尾帧，生成 7 秒竖版视频",
+ s56:"未执行", s57:"<b>视频已生成</b>点击可全屏播放",
+ s58:"正在根据一张照片推断面部结构。既要「还能认出是本人」，又不能变成另一个人，这是最难的一步。",
+ s59:"已完成",
+ s60:"<i>02</i>角色卡", s61:"点击放大",
+ s62:"<i>03</i>成片", s63:"点击放大",
+ s64:"<i>04</i>视频 · 7 秒", s65:"点击全屏播放",
+ s66:"<b>用手机体验 Modellix</b>扫码可打开 Modellix 控制台，用自己的账号运行刚才的 3 个步骤。",
+ s67:"换个世界", s68:"从头开始", s69:"返回上一步",
+
+ _w:[["被发现了","机甲驾驶员","雨夜霓虹街 × 半机械化","实拍CG"],
+     ["巨龙来袭","异世界勇者","浮空岛 × 光之剑","动画"],
+     ["第一刀","武士","阴天街市 × 决斗","时代剧"],
+     ["快跑！","迷你探险队","黏土恐龙世界","黏土动画"],
+     ["千钧一发","恐龙幸存者","白垩纪山谷 × 霸王龙","实拍电影"],
+     ["苏醒","深海守护者","海底神殿 × 巨影","实拍奇幻"],
+     ["警报","宇航员","轨道空间站 × 船体破损","实拍"],
+     ["光之龙","冰之魔导士","极光冰城","3D 动画"]],
+ _cap:"第 1 话「@」",
+ _pets:[["钩尾","虎斑"],["芝麻","黑猫"],["团子","三花"],["摩卡","暹罗"],["小花","虎斑白"]],
+ _dogs:[["红豆","柴犬"],["铜锣","法国斗牛犬"],["布丁","贵宾犬"]],
+ _notes:["正在根据一张照片推断面部结构。既要「还能认出是本人」，又不能变成另一个人，这是最难的一步。",
+   "保持面容不变，只替换服装、光线、质感与表情。连汗水、灰尘、肌肉的紧张都会分别刻画，避免沦为单纯的换装合成。",
+   "以角色卡与世界背景两张图为参考，组合成一张。光线方向、色温、空气感、颗粒感，乃至脚下的接触阴影都会与该世界对齐。"],
+
+ vnPet:"以角色卡与成片作为首尾帧，生成 7 秒竖版视频。",
+ vnSelf:"以世界背景与成片作为首尾帧，生成 7 秒竖版视频，描绘主角进入该世界的瞬间。",
+ vnSound:"音频也会一并生成。",
+ vdPet:"以角色卡与成片作为首尾帧，生成 7 秒竖版视频",
+ vdSelf:"以世界背景与成片作为首尾帧，生成 7 秒竖版视频",
+ genTitle:"正在生成「@」", resTitle:"「@」已完成",
+ mCard:"角色卡", mScene:"成片", mVideo:"7 秒视频", mJoin:"、",
+ fromSelf:"你的照片", fromPet:"「@」的照片",
+ resSub:"@1 ／ @2。以@4生成了@3。", resSample:"@1 ／ @2。本次显示的是示例图片。",
+ stZoom:"点击放大", stZoomS:"示例图片 · 点击放大", stFail:"未能生成",
+ stPlay:"点击全屏播放", stPlayS:"示例视频 · 点击播放", stNone:"未进行到此步",
+ myCat:"我家的猫", myDog:"我家的狗", thisPhoto:"用这张照片继续",
+ tapChoose:"点击选择", fileNote:"JPG / PNG · 最大 10MB",
+ backPet:"重新选择主角", backShot:"重新拍摄",
+ lblYou:"你", lblSample:"示例", lblMyPet:"我家的宝贝",
+ aTooBig:"文件大小超过 10MB。", aBadImg:"无法读取该图片。", aBadFile:"无法读取该文件。",
+ eLoad:"无法读取图片", eParse:"无法解析响应：", eStart:"无法开始生成",
+ eTimeout:"未能在规定时间内完成", eResult:"无法获取结果",
+ eScene:"与世界合成", eVideo:"视频生成", eCard:"角色卡生成",
+ eFail:"@1失败（@2）。<br>为了不中断展示，将使用示例图片继续。",
+ idle:"无操作，即将返回首页"
+}
+};
+
+/* 辞書引き。@ / @1..@4 を置き換える簡易テンプレート付き。 */
+function T(key, ja, a, b, c, d){
+  // 起動途中（辞書の定義より前）にも呼ばれるので、未定義でも落ちないようにしておく
+  var dic = (typeof I18N !== "undefined" && I18N) ? I18N[LANG] : null;
+  var s = (dic && dic[key] != null) ? dic[key] : ja;
+  if(s == null) return "";
+  // @ は 1 番目、@1〜@4 は番号で差し込む。1 回の走査で置き換えないと
+  // 先に入れた文字列の中の @ をまた拾ってしまう。
+  var args = [a, b, c, d];
+  return s.replace(/@([1-4])?/g, function(m, n){
+    var v = args[n ? (+n - 1) : 0];
+    return v === undefined ? m : String(v);
+  });
+}
+
+function snapJA(){
+  if(JA_SNAP) return;
+  JA_SNAP = {
+    s:{}, w:WORLDS.map(function(w){ return [w.ttl,w.nm,w.sub,w.tag,w.cap]; }),
+    pets:PETS.map(function(p){ return [p.n,p.s]; }),
+    dogs:DOGS.map(function(p){ return [p.n,p.s]; }),
+    notes:NOTES.slice()
+  };
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    JA_SNAP.s[el.dataset.i18n] = el.innerHTML;
+  });
+}
+
+function applyLang(code){
+  snapJA();
+  LANG = code;
+  var dic = I18N[code] || null;
+  document.documentElement.lang = (code==="zh" ? "zh-CN" : code);
+
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var k = el.dataset.i18n;
+    var v = (dic && dic[k] != null) ? dic[k] : JA_SNAP.s[k];
+    if(v != null && el.innerHTML !== v) el.innerHTML = v;
+  });
+
+  WORLDS.forEach(function(w,i){
+    var t = dic && dic._w && dic._w[i];
+    w.ttl = t ? t[0] : JA_SNAP.w[i][0];
+    w.nm  = t ? t[1] : JA_SNAP.w[i][1];
+    w.sub = t ? t[2] : JA_SNAP.w[i][2];
+    w.tag = t ? t[3] : JA_SNAP.w[i][3];
+    w.cap = (dic && dic._cap) ? dic._cap.replace("@", w.ttl) : JA_SNAP.w[i][4];
+  });
+  [[PETS,"_pets","pets"],[DOGS,"_dogs","dogs"]].forEach(function(x){
+    x[0].forEach(function(p,i){
+      var t = dic && dic[x[1]] && dic[x[1]][i];
+      p.n = t ? t[0] : JA_SNAP[x[2]][i][0];
+      p.s = t ? t[1] : JA_SNAP[x[2]][i][1];
+    });
+  });
+  NOTES.forEach(function(_,i){
+    NOTES[i] = (dic && dic._notes && dic._notes[i] != null) ? dic._notes[i] : JA_SNAP.notes[i];
+  });
+
+  relabel();
+  document.querySelectorAll(".lang button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(b.textContent.trim() === (code==="ja"?"JA":code==="en"?"EN":"中文")));
+  });
+}
+
+/* JS が組み立てた DOM の文字だけを貼り替える。作り直すと選択状態が飛ぶため。 */
+function relabel(){
+  document.querySelectorAll("#worldGrid .world").forEach(function(b,k){
+    var w=WORLDS[k];
+    b.querySelector(".ttl").textContent=w.ttl;
+    b.querySelector(".tag").textContent=w.tag;
+    b.querySelector(".nm").textContent=w.nm;
+    b.querySelector(".sub").textContent=w.sub;
+    var im=b.querySelector(".wimg"); if(im) im.alt=w.nm;
+  });
+  ["#cardRow","#catRow"].forEach(function(sel){
+    document.querySelectorAll(sel+" .crd").forEach(function(d,k){
+      var n=d.querySelector(".cn"); if(n) n.textContent=WORLDS[k].nm;
+    });
+  });
+  [["#petGrid",PETS,"myCat","うちのねこ"],["#dogGrid",DOGS,"myDog","うちのいぬ"]].forEach(function(x){
+    var tiles=document.querySelectorAll(x[0]+" .pet");
+    tiles.forEach(function(el,i){
+      if(el.classList.contains("pet-add")){
+        var picked = el.getAttribute("aria-pressed")==="true";
+        el.querySelector("b").textContent = picked ? T("thisPhoto","この写真で進む") : T(x[2],x[3]);
+        el.querySelector("span:not(.pa)").textContent = T("fileNote","JPG / PNG・10MB まで");
+        var em=el.querySelector(".pa em"); if(em) em.textContent=T("tapChoose","タップして選ぶ");
+      } else if(x[1][i]){
+        el.querySelector("b").textContent=x[1][i].n;
+        el.querySelector("b + span").textContent=x[1][i].s;
+        var im=el.querySelector(".pa img"); if(im) im.alt=x[1][i].n;
+      }
+    });
+  });
+  var sb=document.querySelector("#s-world [data-stepback] b");
+  if(sb) sb.textContent = (state.subject==="pet") ? T("backPet","主役の子を選び直す") : T("backShot","撮影をやり直す");
+  var on=document.querySelector(".screen.on");
+  if(on && on.id==="s-result") showResult();
+  if(on && on.id==="s-gen"){
+    if(state.world!=null) $("#genTitle").textContent=T("genTitle","「"+WORLDS[state.world].nm+"」を生成しています",WORLDS[state.world].nm);
+    $("#vidStepDesc").textContent=videoStepDesc();
+  }
+  var pv=$("#pvName"); if(pv && state.world!=null) pv.textContent=WORLDS[state.world].nm;
+}
+
+document.querySelectorAll(".lang button").forEach(function(b){
+  b.addEventListener("click",function(){
+    var t=b.textContent.trim();
+    applyLang(t==="EN"?"en":t==="中文"?"zh":"ja");
+    resetIdle();
+  });
+});
+snapJA();
 
 /* ───── 起動 ───── */
 updateHistCount();
