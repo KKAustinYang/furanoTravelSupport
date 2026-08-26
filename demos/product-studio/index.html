@@ -68,9 +68,11 @@ input{font:inherit;color:inherit}
 .mark span{color:var(--sumi-3);letter-spacing:.28em;font-size:9px;font-weight:700;
   text-transform:uppercase}
 .nright{margin-left:auto;display:flex;align-items:center;gap:16px}
-.live{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:700;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--sumi-2);
+.live{display:inline-flex;align-items:center;gap:10px;font-size:9.5px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--sumi-3);
   border:1px solid var(--line-2);padding:7px 14px;white-space:nowrap;background:var(--mat)}
+.live .mx{height:13px;width:auto}
+.live em{font-style:normal;padding-left:10px;border-left:1px solid var(--line)}
 .live i{width:5px;height:5px;border-radius:50%;background:var(--shu);
   box-shadow:0 0 0 3px rgba(184,64,44,.14);animation:bl 2.6s ease-in-out infinite}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
@@ -483,6 +485,10 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
 .foot .wrap{display:flex;gap:18px;flex-wrap:wrap;align-items:center;
   font-size:10.5px;color:var(--sumi-3)}
 .foot code{font-family:var(--mono);color:var(--sumi-2);font-size:10px}
+.foot .by{display:inline-flex;align-items:center;gap:9px;color:var(--sumi-2);font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;padding-right:18px;margin-right:2px;
+  border-right:1px solid var(--line-2)}
+.foot .mx{height:15px;width:auto}
 .foot .sp{margin-left:auto;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase}
 </style>
 </head>
@@ -492,7 +498,7 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
   <div class="wrap">
     <div class="mark"><b>AURORA</b><span>Studio</span></div>
     <div class="nright">
-      <span class="live"><i></i>Modellix ／ LLM + nano-banana-2</span>
+      <span class="live"><i></i><img class="mx" src="modellix.svg" alt="Modellix"><em>LLM + Nano Banana Pro</em></span>
     </div>
   </div>
 </header>
@@ -504,12 +510,12 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
       <p class="rail"><s></s><em>001</em>AI Product Photography</p>
       <h1 class="disp">商品写真は、<br><span class="n">1</span> 枚あれば<u>いい</u>。</h1>
       <p class="lead">スマホで撮った 1 枚を AI が読み取り、商品名・価格・説明文を書き起こしたうえで、
-        EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
+EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
         白背景・俯瞰・シズルマクロ・モデル着用・季節ロケーション。
         スタジオも、モデルも、ロケハンも要りません。</p>
       <div class="stats">
         <div class="stat"><b>5<i>カット</i></b><span>Parallel</span></div>
-        <div class="stat"><b>30–60<i>秒</i></b><span>Turnaround</span></div>
+        <div class="stat"><b>60–120<i>秒</i></b><span>Turnaround</span></div>
         <div class="stat"><b>¥0<i>撮影費</i></b><span>Per product</span></div>
       </div>
       <div class="cta">
@@ -712,7 +718,8 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
 
 <footer class="foot">
   <div class="wrap">
-    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code>google/nano-banana-2-edit</code> を 5 本同時。いずれも Modellix 経由。</span>
+    <span class="by">Powered by <img class="mx" src="modellix.svg" alt="Modellix"></span>
+    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code>google/nano-banana-pro-edit</code> を 5 本同時。</span>
     <span class="sp">Aurora Mobile — Product Demo</span>
   </div>
 </footer>
@@ -767,10 +774,10 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
  * ════════════════════════════════════════════════════════════ */
 
 var API     = "/api/v1";
-var MODEL   = "google/nano-banana-2-edit";
+var MODEL   = "google/nano-banana-pro-edit";
 var ASPECT  = "4:5";              // EC の縦カット。5 枚とも揃えないと商品ページで段差が出る
-var SIZE    = "1K";               // 2K は 1 枚 6MB 前後。展示回線では 1K のほうが体験が良い
-var TIMEOUT = 4 * 60 * 1000;      // 実測 20〜60 秒。余裕を持って 4 分で打ち切る
+var SIZE    = "2K";               // 商談は大画面。1K だと粗さが目に付くので 2K で出す
+var TIMEOUT = 5 * 60 * 1000;      // Pro は実測 30〜80 秒。余裕を持って 5 分で打ち切る
 var MAX_SIDE = 1400;              // 参照画像の長辺。これ以上は仕上がりに効かない
 var LLM_API  = "/api/llm/v1";     // 画像・動画とはホストが別（proxy が振り分ける）
 var LLM      = "google/gemini-3.6-flash";
@@ -823,16 +830,29 @@ var STYLES = [
       "Sharp from front to back, neutral white balance, no studio reflections. "+
       "Do NOT: redesign, recolour or restyle the product; alter any logo or lettering; add props, hands, text or watermarks; crop any part of the product."; } },
 
-  { id:"flatlay", n:"俯瞰フラットレイ", en:"Overhead Flat Lay", sample:"samples/flatlay.jpg",
+  { id:"flatlay", n:"別アングル・俯瞰", en:"High Angle", sample:"samples/flatlay.jpg",
     role:"技術の証明", cost:12000, lead:"3 日",
-    d:"正面 1 枚から視点そのものが変わる。背景の差し替えではないことを示せる唯一のカット。背面は編集ではなく創作になるので作らない。",
-    build:function(v){ return "Re-photograph this exact "+v.kind+" from directly overhead — a true top-down flat lay — on a "+
-      (v.cut02_surface||"pale oak plank")+" surface. "+
-      "The product lies flat and centred, occupying about 60% of the frame height, with generous even margins. "+
-      "Soft broad slightly-directional daylight from the upper left; a short soft shadow anchoring it to the surface. "+
-      "Show only the top face that is visible or logically implied by the reference — same colour, material, logo placement and proportions. "+
-      "Do NOT: invent the back or underside of the product; redesign or recolour it; alter any logo or lettering; "+
-      "add props, hands, text or watermarks; tilt the camera off the vertical axis."; } },
+    d:"正面 1 枚から視点そのものが変わる。背景の差し替えではないことを示せる唯一のカット。真俯瞰が無理のある形（傘・ボトルなど）は 45 度のハイアングルに寄せる。背面は編集ではなく創作になるので作らない。",
+    build:function(v){
+      /* 真上からの一枚は、モデルが見たことのない面を創作することになる。
+         平らに置ける商品だけ真俯瞰にして、そうでないものは 45 度に留める。
+         傘が壁掛けになったり、鞄が潰れたりするのは、ここを強制していたのが原因。 */
+      var top = v.cut02_angle === "top_down";
+      return "Re-photograph this exact "+v.kind+" from a camera raised above the reference viewpoint, on a "+
+      (v.cut02_surface||"pale oak plank")+" laid out horizontally and lit softly from above. "+
+      (top
+        ? "Camera directly overhead looking straight down — a true flat lay. The product lies flat on the side it naturally rests on, "
+        : "Camera raised to about a 45-degree high angle looking down at the product as it stands or rests naturally on the surface, ")+
+      "fully inside the frame, occupying about 60% of the frame height, with generous even margins. "+
+      "The product remains a single rigid intact object with exactly the same parts, part count, proportions, materials and logo placement as the reference — "+
+      "nothing is duplicated, mirrored, stretched, squashed, melted or merged, and no part is invented. "+
+      "It rests on the surface in a physically stable way with visible points of contact; if it cannot stand stably in the configuration "+
+      "shown in the reference, it lies on its side exactly as it naturally would. "+
+      "The surface is horizontal and gravity pulls downward into the frame. "+
+      "Soft broad daylight from the upper left, with a short soft contact shadow anchoring the product to the surface. "+
+      "Do NOT: invent the back or underside; duplicate, mirror or merge any part of the product; deform, squash or stretch it; "+
+      "hang or mount it on a vertical wall; open, close or reconfigure it differently from the reference; "+
+      "add props, hands, text or watermarks."; } },
 
   { id:"sizzle", n:"シズルマクロ", en:"Sizzle Macro", sample:"samples/sizzle.jpg",
     role:"質感", cost:45000, lead:"1 週間",
@@ -848,14 +868,18 @@ var STYLES = [
   { id:"model", n:"モデル着用・使用", en:"In Use / Model", sample:"samples/model.jpg",
     role:"コスト差",  cost:350000, lead:"2 週間",
     d:"モデル・スタジオ・修整と、2 週間の調整が要る 1 枚。首から下・後ろ姿・手元だけに絞る。生成が崩れる顔と指を避けつつ、肖像権の都合で日本の EC が実際に多用する構図でもある。",
-    build:function(v){ return "Show this exact "+v.kind+" in use by a person. "+
+    build:function(v){ return "Show this exact "+v.kind+" in use by a person, "+
+      (v.cut04_setting||"in a calm Japanese setting where it is actually used")+". "+
       (v.cut04_use||"A person holds it naturally at waist height")+". "+
-      "Framed from the collarbone down — the face is never in frame. "+
-      "The product occupies about 30% of the frame height and is the sharpest thing in it; the person is secondary and softly lit. "+
-      "Soft natural window light, muted Japanese editorial palette, shallow depth of field. "+
-      "Hands, if visible, are relaxed and partly out of frame. "+
+      "Framed from the collarbone down: the head is outside the frame, and the product is never used to cover or stand in for the face. "+
+      "The product is held, worn or carried exactly as it is in real use, at its true real-world size relative to the body — "+
+      "neither shrunk nor enlarged — and it may be cropped by an edge of the frame if that is where it naturally sits. "+
+      "It is the sharpest thing in the picture; the person is secondary. "+
+      "Natural light appropriate to that setting, muted Japanese editorial palette, shallow depth of field. "+
+      "Hands are whole and relaxed, with five natural fingers, attached to arms that continue out of frame. "+
       "Keep the product exactly as in the reference — same shape, proportions, colour, material and every logo or label. "+
-      "Do NOT: show a face, a chin or a mouth; show splayed or deformed fingers; redesign or recolour the product; add text or watermarks."; } },
+      "Do NOT: show a face, a chin or a mouth; show splayed, extra or deformed fingers; use the product somewhere it would never be used "+
+      "(an umbrella opened indoors, a coat worn in summer); change its size relative to the body; redesign or recolour it; add text or watermarks."; } },
 
   { id:"season", n:"季節・催事ロケーション", en:"Seasonal Location", sample:"samples/season.jpg",
     role:"客が指定", cost:600000, lead:"3 週間", seasonal:true,
@@ -864,6 +888,8 @@ var STYLES = [
       (v.scene||"a quiet Japanese street in soft seasonal light")+". "+
       "This is an environmental, cinematic frame. The product stands or is held on a real support that the scene provides "+
       "— a table top, a counter, a cup holder, a bench, a hand — never balanced on the bare ground and never floating. "+
+      "Either no person is in frame at all, or one whole person seen from behind uses the product at a distance — "+
+      "never a hand or arm entering from the edge of the frame without a body. "+
       "It occupies roughly 20% of the frame height, sits in the near-middle ground and is partly overlapped by the surroundings, "+
       "yet is unmistakably present and the only thing in sharp focus. The location does the talking. "+
       "Rich natural light appropriate to the season, atmospheric depth, focus falling off behind. "+
@@ -892,9 +918,9 @@ var AI_SCHEMA = [
   { k:"price_jpy",     t:"Price"                },
   { k:"desc_ja",       t:"Copy",     wide:true  },
   { k:"keep_en",       t:"Preserve", cls:"en", wide:true },
-  { k:"cut02_surface", t:"Cut 02",   cls:"en"   },
+  { k:"_cut02",        t:"Cut 02",   cls:"en"   },
   { k:"cut03_sizzle",  t:"Cut 03",   cls:"en"   },
-  { k:"cut04_use",     t:"Cut 04",   cls:"en", wide:true },
+  { k:"_cut04",        t:"Cut 04",   cls:"en", wide:true },
   { k:"_seasons",      t:"Cut 05",   cls:"en", wide:true },
   { k:"_scene",        t:"Scene",    cls:"en", wide:true }
 ];
@@ -914,15 +940,24 @@ var AI_ASK =
   "keep_en: one English sentence listing the details a retoucher must preserve.\n" +
   "cut02_surface: short English noun phrase for a flat-lay surface that suits THIS product " +
   "(for example 'pale oak plank', 'warm grey concrete', 'washed linen cloth').\n" +
+  "cut02_angle: either 'top_down' or 'high_angle'. Choose 'top_down' ONLY if this product has a flat, stable resting side " +
+  "and a well-defined top face that a photographer could shoot straight down onto - flat packaging, a folded garment, " +
+  "stationery, cosmetics laid on their side. Choose 'high_angle' for anything tall, upright, hollow, hinged or umbrella-like, " +
+  "where a true overhead view would have to invent a face that the reference photo never shows.\n" +
   "cut03_sizzle: one English clause naming the tactile phenomenon that sells THIS product in extreme macro " +
   "- condensation beading on cold steel, rain beading on canopy fabric, steam rising from a rim, oiled leather grain, and so on. " +
   "It must be physically possible for this product.\n" +
-  "cut04_use: one English clause describing how a person uses or wears THIS product, framed from the collarbone down, " +
-  "no face, hands relaxed.\n" +
+  "cut04_setting: one short English clause naming the real place where THIS product is used, and whether it is indoors or outdoors " +
+  "(for example 'on a rain-soaked city pavement', 'in a bright minimal apartment', 'on a station platform in winter'). " +
+  "It must be somewhere the product would genuinely be used - an umbrella is never opened indoors.\n" +
+  "cut04_use: one English clause describing how a person holds, wears or carries THIS product in that setting, " +
+  "framed from the collarbone down, no face, hands relaxed.\n" +
   "cut05_scenes: object with keys sakura, tsuyu, summer, autumn, xmas, newyear. Each value is ONE English sentence " +
   "placing THIS product in a Japanese seasonal location where it would genuinely be used. " +
-  "Each sentence must name the surface or hand that actually supports the product - a cafe table, a counter, a cup holder, " +
-  "a picnic blanket, a gloved hand - so it is never left standing on bare ground or floating. " +
+  "Prefer a scene with no person in it, where the product rests on a named support - a cafe table, a counter, a cup holder, " +
+  "a picnic blanket, a stone step - so it is never left standing on bare ground or floating. " +
+  "Only if the product cannot rest anywhere (an opened umbrella, for instance) describe one whole person seen from behind, " +
+  "at a distance, using it. Never describe a hand or arm on its own. " +
   "Never place a product somewhere it would not plausibly be: an insulated bottle is carried on an outing or set on a table, " +
   "it does not stand alone in the rain; an umbrella belongs in rain or strong sun, not on a beach towel; " +
   "a leather bag is not left in a downpour.\n" +
@@ -1151,7 +1186,9 @@ function promptFor(st){
   var v = {
     kind: trimDot(ai.kind_en) || current.kind || "product",
     cut02_surface: trimDot(ai.cut02_surface),
+    cut02_angle:   ai.cut02_angle,
     cut03_sizzle:  trimDot(ai.cut03_sizzle),
+    cut04_setting: trimDot(ai.cut04_setting),
     cut04_use:     trimDot(ai.cut04_use),
     scene: trimDot(sceneFor(season))
   };
@@ -1251,6 +1288,10 @@ function paintAiRows(o, loading){
       }).join("　");
     }
     if(f.k === "_scene" && o) v = sceneFor(season);
+    if(f.k === "_cut04" && o) v = [o.cut04_setting, o.cut04_use].filter(Boolean).join(" / ");
+    if(f.k === "_cut02" && o){
+      v = (o.cut02_angle === "top_down" ? "top-down" : "45° high angle") + " / " + (o.cut02_surface || "—");
+    }
     if(Array.isArray(v)) v = v.join("・");
     if(f.k === "price_jpy" && v != null && v !== "") v = yen(v);
     row.innerHTML = '<dt>'+f.t+'</dt><dd class="'+(f.cls||"")+'">'+
