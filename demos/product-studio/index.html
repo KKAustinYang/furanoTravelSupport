@@ -118,6 +118,8 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
 .stat+.stat{border-left:1px solid var(--line);padding-left:22px}
 .stat b{display:block;font-family:var(--mincho);font-size:27px;line-height:1.15;
   font-weight:600;letter-spacing:.01em}
+#statTime::after{content:"秒";font-size:12.5px;color:var(--sumi-2);margin-left:4px;
+  font-family:var(--sans);font-weight:600}
 .stat b i{font-style:normal;font-size:12.5px;color:var(--sumi-2);margin-left:4px;
   font-family:var(--sans);font-weight:600}
 .stat span{display:block;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
@@ -317,6 +319,17 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
 
 .runbar{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-top:40px;
   padding-top:32px;border-top:1px solid var(--line-2)}
+/* 生成モード。速さを見せるか、仕上がりを見せるかをその場で切り替える */
+.modes{display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.modes .ml{font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--sumi-3);font-weight:700}
+.mseg{display:inline-flex;border:1px solid var(--line-2);background:var(--mat)}
+.md{padding:9px 18px;font-size:12.5px;font-weight:700;color:var(--sumi-2);transition:var(--t);
+  white-space:nowrap}
+.md+.md{border-left:1px solid var(--line-2)}
+.md:hover{color:var(--shu)}
+.md[aria-pressed=true]{background:var(--sumi);color:#fff}
+.modes .mnote{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--sumi-3)}
 .runbar p{margin:0;font-size:11.5px;color:var(--sumi-3);max-width:42em;line-height:1.95}
 .runbar .btn{margin-left:auto}
 @media(max-width:680px){.runbar .btn{margin-left:0;width:100%}}
@@ -498,7 +511,7 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
   <div class="wrap">
     <div class="mark"><b>AURORA</b><span>Studio</span></div>
     <div class="nright">
-      <span class="live"><i></i><img class="mx" src="modellix.svg" alt="Modellix"><em>LLM + Nano Banana Pro</em></span>
+      <span class="live"><i></i><img class="mx" src="modellix.svg" alt="Modellix"><em id="navBadge">LLM + Nano Banana Pro</em></span>
     </div>
   </div>
 </header>
@@ -515,7 +528,7 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
         スタジオも、モデルも、ロケハンも要りません。</p>
       <div class="stats">
         <div class="stat"><b>5<i>カット</i></b><span>Parallel</span></div>
-        <div class="stat"><b>60–120<i>秒</i></b><span>Turnaround</span></div>
+        <div class="stat"><b id="statTime">60–120</b><span>Turnaround</span></div>
         <div class="stat"><b>¥0<i>撮影費</i></b><span>Per product</span></div>
       </div>
       <div class="cta">
@@ -631,6 +644,11 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
       <div class="runbar rv">
         <p>それぞれ独立したリクエストなので、早く終わったカットから順に表示されます。
           1 カットが失敗しても、ほかの 4 カットはそのまま仕上がります。</p>
+        <div class="modes">
+          <span class="ml">Mode</span>
+          <div class="mseg" id="modePick"></div>
+          <span class="mnote" id="modeNote"></span>
+        </div>
         <button class="btn btn-s btn-xl" id="btnRun">5 カットを同時に撮影する</button>
       </div>
       <p class="weak"><b>いま苦手なもの：</b>文字情報の多いパッケージ、透明なガラス、鏡面の複雑な映り込み。
@@ -719,7 +737,7 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
 <footer class="foot">
   <div class="wrap">
     <span class="by">Powered by <img class="mx" src="modellix.svg" alt="Modellix"></span>
-    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code>google/nano-banana-pro-edit</code> を 5 本同時。</span>
+    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code id="footModel">google/nano-banana-pro-edit</code> を 5 本同時。</span>
     <span class="sp">Aurora Mobile — Product Demo</span>
   </div>
 </footer>
@@ -774,10 +792,20 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
  * ════════════════════════════════════════════════════════════ */
 
 var API     = "/api/v1";
-var MODEL   = "google/nano-banana-pro-edit";
 var ASPECT  = "4:5";              // EC の縦カット。5 枚とも揃えないと商品ページで段差が出る
-var SIZE    = "2K";               // 商談は大画面。1K だと粗さが目に付くので 2K で出す
-var TIMEOUT = 5 * 60 * 1000;      // Pro は実測 30〜80 秒。余裕を持って 5 分で打ち切る
+var TIMEOUT = 5 * 60 * 1000;      // Pro は実測 60〜110 秒。余裕を持って 5 分で打ち切る
+
+/* ───── 生成モード ─────
+   速さを見せたいときと、仕上がりを見せたいときで要るモデルが違う。
+   商談では「まず普通で 20 秒、その場で高級に切り替えてもう一度」が効く。
+   プロンプトは共通。変わるのはモデルと出力解像度だけ。 */
+var MODES = {
+  basic: { key:"basic", n:"ノーマル", model:"google/nano-banana-2-edit",   size:"1K",
+           badge:"LLM + Nano Banana 2",   note:"Nano Banana 2 ／ 1K ／ 5 枚で 約 20 秒", stat:"20–40" },
+  pro:   { key:"pro",   n:"ハイクオリティ", model:"google/nano-banana-pro-edit", size:"2K",
+           badge:"LLM + Nano Banana Pro", note:"Nano Banana Pro ／ 2K ／ 5 枚で 約 60〜110 秒", stat:"60–120" }
+};
+var mode = MODES.pro;
 var MAX_SIDE = 1400;              // 参照画像の長辺。これ以上は仕上がりに効かない
 var LLM_API  = "/api/llm/v1";     // 画像・動画とはホストが別（proxy が振り分ける）
 var LLM      = "google/gemini-3.6-flash";
@@ -1352,6 +1380,33 @@ function refreshTileFrom(p){
   if(sub) sub.textContent = (p.cat || "Upload") + " — " + yen(p.price);
 }
 
+/* ═══════════ 生成モードの切り替え ═══════════ */
+function paintMode(){
+  $$("#modePick .md").forEach(function(b){
+    b.setAttribute("aria-pressed", b.dataset.k === mode.key ? "true" : "false");
+  });
+  $("#modeNote").textContent  = mode.note;
+  $("#navBadge").textContent  = mode.badge;
+  $("#statTime").textContent  = mode.stat;
+  $("#footModel").textContent = mode.model;
+}
+
+(function buildModes(){
+  var box = $("#modePick");
+  ["basic","pro"].forEach(function(k){
+    var m = MODES[k];
+    var b = document.createElement("button");
+    b.className = "md"; b.type = "button"; b.dataset.k = k; b.textContent = m.n;
+    b.addEventListener("click", function(){
+      if(busy) return;                 // 走っている最中に足元を変えない
+      mode = m;
+      paintMode();
+    });
+    box.appendChild(b);
+  });
+  paintMode();
+})();
+
 /* ═══════════ 参照画像を data URI に揃える ═══════════ */
 function toJpeg(src, maxSide){
   return new Promise(function(resolve, reject){
@@ -1376,10 +1431,10 @@ function toJpeg(src, maxSide){
 function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 
 function submit(imageUri, prompt){
-  return fetch(API + "/" + MODEL, {
+  return fetch(API + "/" + mode.model, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ prompt: prompt, image:[imageUri], aspectRatio: ASPECT, imageSize: SIZE })
+    body: JSON.stringify({ prompt: prompt, image:[imageUri], aspectRatio: ASPECT, imageSize: mode.size })
   }).then(function(r){ return r.text(); }).then(function(t){
     var j; try{ j = JSON.parse(t); }catch(e){ throw new Error("応答を解釈できませんでした: " + t.slice(0,90)); }
     if(!j.data || !j.data.task_id) throw new Error(j.message || "生成を開始できませんでした");
