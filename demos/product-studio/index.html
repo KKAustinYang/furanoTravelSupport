@@ -511,7 +511,7 @@ h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
   <div class="wrap">
     <div class="mark"><b>AURORA</b><span>Studio</span></div>
     <div class="nright">
-      <span class="live"><i></i><img class="mx" src="modellix.svg" alt="Modellix"><em id="navBadge">LLM + Nano Banana Pro</em></span>
+      <span class="live"><i></i><img class="mx" src="modellix.svg" alt="Modellix"><em id="navBadge">LLM + Nano Banana 2</em></span>
     </div>
   </div>
 </header>
@@ -528,7 +528,7 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
         スタジオも、モデルも、ロケハンも要りません。</p>
       <div class="stats">
         <div class="stat"><b>5<i>カット</i></b><span>Parallel</span></div>
-        <div class="stat"><b id="statTime">60–120</b><span>Turnaround</span></div>
+        <div class="stat"><b id="statTime">20–40</b><span>Turnaround</span></div>
         <div class="stat"><b>¥0<i>撮影費</i></b><span>Per product</span></div>
       </div>
       <div class="cta">
@@ -737,7 +737,7 @@ EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
 <footer class="foot">
   <div class="wrap">
     <span class="by">Powered by <img class="mx" src="modellix.svg" alt="Modellix"></span>
-    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code id="footModel">google/nano-banana-pro-edit</code> を 5 本同時。</span>
+    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code id="footModel">google/nano-banana-2-edit</code> を 5 本同時。</span>
     <span class="sp">Aurora Mobile — Product Demo</span>
   </div>
 </footer>
@@ -805,7 +805,7 @@ var MODES = {
   pro:   { key:"pro",   n:"ハイクオリティ", model:"google/nano-banana-pro-edit", size:"2K",
            badge:"LLM + Nano Banana Pro", note:"Nano Banana Pro ／ 2K ／ 5 枚で 約 60〜110 秒", stat:"60–120" }
 };
-var mode = MODES.pro;
+var mode = MODES.basic;   // 既定はノーマル。まず速さを見せて、その場でハイクオリティに切り替える
 var MAX_SIDE = 1400;              // 参照画像の長辺。これ以上は仕上がりに効かない
 var LLM_API  = "/api/llm/v1";     // 画像・動画とはホストが別（proxy が振り分ける）
 var LLM      = "google/gemini-3.6-flash";

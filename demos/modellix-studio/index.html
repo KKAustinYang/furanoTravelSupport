@@ -1037,7 +1037,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
           <img id="resImg" alt="生成されたキャラクターカード">
           <video id="resVid" playsinline loop muted hidden></video>
           <div class="pv"></div><div class="pg"></div>
-          <div class="live" id="resModel"><span class="dot"></span>SEEDREAM 5.0 PRO</div>
+          <div class="live" id="resModel"><span class="dot"></span>NANO BANANA 2 LITE</div>
           <div class="cap" id="resCap"></div>
         </div>
         <div class="res-side">
@@ -3418,11 +3418,11 @@ var qrcode = function() {
       <i id="pvSub"></i>
       <!-- 動画のグレード。世界を決めたあと、生成に入る前にここで選ぶ -->
       <div class="pv-q" id="pvQ" role="group" aria-label="動画のグレード">
-        <button class="qbtn" type="button" data-q="basic" aria-pressed="false">
+        <button class="qbtn" type="button" data-q="basic" aria-pressed="true">
           <b data-i18n="s72">ベーシック</b><i data-i18n="s73">軽量モデル・動画 5 秒</i>
           <em data-i18n="s76">できあがりまで 約 1 分</em>
         </button>
-        <button class="qbtn" type="button" data-q="pro" aria-pressed="true">
+        <button class="qbtn" type="button" data-q="pro" aria-pressed="false">
           <b data-i18n="s74">プレミアム</b><i data-i18n="s75">高精細・動画 7 秒</i>
           <em data-i18n="s77">できあがりまで 約 5 分</em>
         </button>
@@ -4016,7 +4016,7 @@ var adoptPetPhoto = null;   // カメラ画面から撮れた写真を受け取�
 
 /* ───── 状態と画面遷移 ───── */
 function blankState(){
-  return {subject:null,species:"cat",quality:"pro",camFor:"self",shot:null,petImg:null,label:"",world:null,
+  return {subject:null,species:"cat",quality:"basic",camFor:"self",shot:null,petImg:null,label:"",world:null,
           cardUrl:null,cardIsSample:false,sceneUrl:null,sceneIsSample:false,
           videoUrl:null,videoIsSample:false};
 }
