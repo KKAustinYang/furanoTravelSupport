@@ -34,6 +34,12 @@ const GPTBOTS_PREFIX = 'gptbots/'
 // 既定はシンガポールDC。US Virginia を使う場合だけ ENGAGELAB_MA_BASE_URL を設定する。
 const MA_PREFIX = 'ma/'
 
+// Modellix の LLM ゲートウェイは画像・動画の API とホストが別。
+//   /api/llm/v1/chat/completions  ->  https://llm.modellix.ai/v1/chat/completions
+// 鍵は MODELLIX_KEY を共用する（同じアカウントの API キー）。
+const LLM_PREFIX = 'llm/'
+const LLM_BASE = 'https://llm.modellix.ai'
+
 function maBase() {
   const v = (process.env.ENGAGELAB_MA_BASE_URL || '').trim().replace(/\/+$/, '')
   return v || 'https://ma-api.engagelab.com'
@@ -99,9 +105,17 @@ export default async function handler(req, res) {
 
   const toGptbots = path.startsWith(GPTBOTS_PREFIX)
   const toMa = path.startsWith(MA_PREFIX)
+  const toLlm = path.startsWith(LLM_PREFIX)
 
   let target, auth, authScheme = 'Bearer'
-  if (toMa) {
+  if (toLlm) {
+    if (!key) {
+      res.status(401).json({ message: 'API key is missing. Set it in the demo, or configure MODELLIX_KEY on the server.' })
+      return
+    }
+    target = `${LLM_BASE}/${path.slice(LLM_PREFIX.length)}`
+    auth = key
+  } else if (toMa) {
     const apiKey = process.env.ENGAGELAB_MA_API_KEY
     const secret = process.env.ENGAGELAB_MA_API_SECRET
     if (!apiKey || !secret) {

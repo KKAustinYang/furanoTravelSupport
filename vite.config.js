@@ -63,6 +63,21 @@ export default defineConfig(({ mode }) => {
             })
           },
         },
+        // LLM ゲートウェイは別ホスト。'/api' より先に置くこと。
+        '/api/llm': {
+          target: 'https://llm.modellix.ai',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (p) => p.replace(/^\/api\/llm/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const fromClient = req.headers['x-modellix-key']
+              if (fromClient) proxyReq.setHeader('Authorization', 'Bearer ' + fromClient)
+              else if (key) proxyReq.setHeader('Authorization', 'Bearer ' + key)
+              proxyReq.removeHeader('x-modellix-key')
+            })
+          },
+        },
         '/api/gptbots': {
           target: gptbotsEndpoint,
           changeOrigin: true,

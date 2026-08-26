@@ -4061,7 +4061,12 @@ document.querySelectorAll("[data-subject]").forEach(function(b){
     document.querySelectorAll("[data-subject]").forEach(function(x){x.setAttribute("aria-pressed","false")});
     b.setAttribute("aria-pressed","true");
     later(function(){
-      if(state.subject==="self"){ show("capture"); startCam(); } else { show("pet"); }
+      if(state.subject==="self"){
+        /* 撮影画面はペットの持ち込みと兼用。直前にペット用で開いていた名残が
+           残っていると、自撮りがペット一覧へ吸い込まれて参考画像に使われない。 */
+        state.camFor="self"; adoptPetPhoto=null;
+        show("capture"); startCam();
+      } else { show("pet"); }
     },240);
   });
 });
@@ -4129,9 +4134,10 @@ function capture(){
 
   /* ペットの持ち込み撮影。お客様のスマホに出した写真をこの端末で撮る用途なので、
      撮り終えたら世界選択へは進めず、ペット一覧へ戻して選択状態にする。 */
-  if(state.camFor === "pet"){
+  if(state.camFor === "pet" && adoptPetPhoto){
     state.camFor = "self";
     var adopt = adoptPetPhoto;
+    adoptPetPhoto = null;
     later(function(){
       hist.pop();               // capture へ来たときに積んだ "pet" を戻す
       show("pet", false);
@@ -4139,11 +4145,13 @@ function capture(){
     }, 420);
     return;
   }
+  state.camFor = "self";
 
   if(shot){ state.shot=shot; state.label=T("lblYou","あなた"); }
   else { state.shot=sampleShot(); state.label=T("lblSample","サンプル"); }
   later(function(){show("world")},420);
 }
+
 
 /* ══════════════════════════════════════════════════════════
    生成：Modellix（bytedance/seedream-5.0-pro-edit）
@@ -7357,7 +7365,7 @@ document.querySelectorAll("[data-go]").forEach(function(b){
 function goBack(){
   // 生成中に戻るときは、走っている生成を切り離してから帰る（結果が後から割り込まないように）
   if(current==="gen"){ runToken++; clearAll(); stopTickers(); $("#genErr").hidden=true; }
-  if(current==="capture") stopCam();
+  if(current==="capture"){ stopCam(); state.camFor="self"; adoptPetPhoto=null; }
   if(pvOpen) closePreview();
   var p=hist.pop()||"attract";
   show(p,false);

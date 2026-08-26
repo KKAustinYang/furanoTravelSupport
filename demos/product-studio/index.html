@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AURORA STUDIO ｜ 商品写真 1 枚から、プロ撮影 5 カットを</title>
+<meta name="description" content="スマホで撮った商品写真 1 枚から、EC 掲載用のプロ撮影 5 カットを同時生成。白背景・ミニマルスタジオ・ライフスタイル・実使用シーン・マクロディテール。">
+<link rel="icon" href="favicon.svg">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   0. デザインの骨格
+   ──────────────────────────────────────────────────────────────
+   画廊の壁と、額装した写真。地は磁器のグレージュ（青みの寒色）、
+   文字は墨、差し色は朱の一色だけ。他デモの温色系と混ざらないよう、
+   ここは意図的に冷たい方へ振ってある。
+   写真はすべて白いマット（余白）で囲ってから薄い額に入れる。
+   これだけで生成物が「作品」に見え、UI が写真の邪魔をしない。
+   見出しは明朝。日本語の商材ページで一番品よく効く。
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  --wall:#eceeec;        /* 画廊の壁 */
+  --wall-2:#e3e6e4;
+  --mat:#fff;            /* 額の中のマット */
+  --panel:#f6f7f6;
+  --sumi:#111315;        /* 墨 */
+  --sumi-2:#4c5254;
+  --sumi-3:#8b9193;
+  --line:#dcdfdd;
+  --line-2:#c3c8c5;
+  --shu:#b8402c;         /* 朱 */
+  --shu-d:#93321f;
+  --shu-w:#f6e9e5;
+  --live:#1f7a5c;
+  --warn:#9c3a22; --warn-w:#f8ece7;
+  --t:.4s cubic-bezier(.2,.7,.2,1);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,system-ui,sans-serif;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Songti SC","Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--wall);color:var(--sumi);font-family:var(--sans);
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;overflow-x:hidden;
+  font-variant-numeric:tabular-nums}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+input{font:inherit;color:inherit}
+.wrap{max-width:1260px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+.hide{display:none!important}
+
+.disp{font-family:var(--mincho);font-weight:600;letter-spacing:.012em;
+  line-height:1.36;font-feature-settings:"palt" 1}
+
+.rv{opacity:0;transform:translateY(20px)}
+.rv.in{opacity:1;transform:none;transition:opacity 1s var(--t),transform 1s var(--t)}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}html{scroll-behavior:auto}}
+
+/* ══════════════ 1. ヘッダー ══════════════ */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;transition:var(--t);
+  border-bottom:1px solid transparent}
+.nav.stuck{background:rgba(236,238,236,.82);backdrop-filter:saturate(1.3) blur(18px);
+  border-bottom-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:20px;height:68px}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark b{font-family:var(--mincho);font-size:16.5px;letter-spacing:.2em;font-weight:600}
+.mark span{color:var(--sumi-3);letter-spacing:.28em;font-size:9px;font-weight:700;
+  text-transform:uppercase}
+.nright{margin-left:auto;display:flex;align-items:center;gap:16px}
+.live{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--sumi-2);
+  border:1px solid var(--line-2);padding:7px 14px;white-space:nowrap;background:var(--mat)}
+.live i{width:5px;height:5px;border-radius:50%;background:var(--shu);
+  box-shadow:0 0 0 3px rgba(184,64,44,.14);animation:bl 2.6s ease-in-out infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+@media(max-width:620px){.live{display:none}}
+
+/* ══════════════ 2. 索引レール（左端の目次） ══════════════
+   いま何工程目を見ているかが、常に画面の端に出ている。 */
+.idx{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:40;
+  display:flex;flex-direction:column;gap:2px;opacity:0;transition:var(--t);
+  pointer-events:none}
+.idx.on{opacity:1;pointer-events:auto}
+.idx a{display:flex;align-items:center;gap:10px;text-decoration:none;padding:5px 0;
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--sumi-3);
+  font-weight:700;transition:var(--t)}
+.idx a s{width:16px;height:1px;background:var(--line-2);text-decoration:none;
+  transition:var(--t);flex:none}
+.idx a em{font-style:normal;opacity:0;transform:translateX(-4px);transition:var(--t);
+  white-space:nowrap;font-family:var(--sans);letter-spacing:.06em;font-size:10.5px}
+.idx a:hover em{opacity:.7;transform:none}
+.idx a.now{color:var(--shu)}
+.idx a.now s{background:var(--shu);width:26px}
+.idx a.now em{opacity:1;transform:none;color:var(--sumi-2)}
+@media(max-width:1420px){.idx{display:none}}
+
+/* ══════════════ 3. ヒーロー ══════════════ */
+.hero{padding:158px 0 112px;position:relative;overflow:hidden;
+  background:linear-gradient(#f4f6f4 0,var(--wall) 58%)}
+.hero .wrap{display:grid;grid-template-columns:1.04fr .96fr;gap:clamp(34px,5.4vw,84px);
+  align-items:center;position:relative}
+.rail{display:flex;align-items:center;gap:13px;font-size:10px;font-weight:700;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--shu);margin:0 0 28px}
+.rail em{font-style:normal;font-family:var(--mono);color:var(--sumi-3);letter-spacing:.12em}
+.rail s{width:52px;height:1px;background:var(--shu);text-decoration:none;opacity:.5}
+h1{margin:0 0 28px;font-size:clamp(35px,5.4vw,66px);line-height:1.26}
+h1 u{text-decoration:none;color:var(--shu)}
+h1 .n{font-size:1.44em;line-height:0;vertical-align:-.045em;color:var(--shu);
+  padding:0 .05em;font-weight:400}
+.lead{color:var(--sumi-2);font-size:15px;line-height:2.05;margin:0 0 36px;max-width:33em}
+.lead b{color:var(--sumi);font-weight:700}
+.stats{display:flex;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
+  margin:0 0 34px}
+.stat{flex:1;padding:17px 0 16px}
+.stat+.stat{border-left:1px solid var(--line);padding-left:22px}
+.stat b{display:block;font-family:var(--mincho);font-size:27px;line-height:1.15;
+  font-weight:600;letter-spacing:.01em}
+.stat b i{font-style:normal;font-size:12.5px;color:var(--sumi-2);margin-left:4px;
+  font-family:var(--sans);font-weight:600}
+.stat span{display:block;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--sumi-3);margin-top:6px;font-weight:700}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+@media(max-width:560px){.cta .btn{flex:1 1 100%}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  border:1px solid transparent;border-radius:0;padding:15px 28px;font-size:12.5px;
+  font-weight:700;letter-spacing:.09em;transition:var(--t);white-space:nowrap;
+  text-decoration:none;position:relative;overflow:hidden}
+.btn-p{background:var(--sumi);color:var(--mat)}
+.btn-p:hover{background:#000;transform:translateY(-2px)}
+.btn-s{background:var(--shu);color:#fff;box-shadow:0 10px 24px rgba(184,64,44,.22)}
+.btn-s:hover{background:var(--shu-d);transform:translateY(-2px);
+  box-shadow:0 14px 30px rgba(184,64,44,.28)}
+.btn-o{border-color:var(--line-2);color:var(--sumi);background:var(--mat)}
+.btn-o:hover{border-color:var(--sumi);background:#fff}
+.btn-xl{padding:19px 36px;font-size:13px}
+.btn:disabled{opacity:.38;pointer-events:none}
+.btn.busy::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.34) 50%,transparent 70%);
+  background-size:250% 100%;animation:sweep 1.5s linear infinite}
+@keyframes sweep{0%{background-position:130% 0}100%{background-position:-40% 0}}
+
+/* ── 額装。マット（白余白）＋薄い額。写真はこの中に入れる ── */
+.mount{background:var(--mat);border:1px solid var(--line);padding:14px;
+  box-shadow:0 1px 2px rgba(17,19,21,.04),0 26px 60px -30px rgba(17,19,21,.4)}
+.show{position:relative}
+.frame{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--wall-2)}
+.frame>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity 1.2s var(--t),transform 7s linear}
+.frame>img.on{opacity:1;transform:scale(1.05)}
+.showcap{display:flex;align-items:baseline;gap:12px;padding:13px 2px 0 104px}
+.showcap b{font-family:var(--mincho);font-size:14.5px;font-weight:600;letter-spacing:.05em}
+.showcap span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--sumi-3);
+  font-weight:700;margin-left:auto;font-family:var(--mono)}
+.dots{position:absolute;top:14px;right:14px;display:flex;gap:5px;z-index:3}
+.dots i{width:14px;height:2px;background:rgba(255,255,255,.55);transition:var(--t);
+  box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.dots i.on{background:#fff;width:24px}
+/* 入力の 1 枚は、額の外に立てかける */
+.inp{position:absolute;left:-30px;bottom:-30px;width:122px;background:var(--mat);
+  border:1px solid var(--line);padding:9px 9px 0;
+  box-shadow:0 20px 44px -18px rgba(17,19,21,.5);z-index:4}
+.inp img{aspect-ratio:1;object-fit:contain;width:100%;background:#fff}
+.inp em{display:block;font-style:normal;font-size:8px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--sumi-3);font-weight:700;padding:9px 1px 10px;
+  font-family:var(--mono)}
+@media(max-width:960px){
+  .hero{padding:124px 0 78px}
+  .hero .wrap{grid-template-columns:1fr;gap:56px}
+  .show{max-width:420px}
+  .showcap{padding:13px 92px 0 2px}
+  .inp{left:auto;right:-14px;bottom:-22px;width:98px}
+}
+
+/* ══════════════ 4. 工程バンド ══════════════ */
+.band{border-top:1px solid var(--line-2);padding:clamp(58px,7.4vw,100px) 0;
+  scroll-margin-top:68px;position:relative}
+.band-h{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:start;
+  margin-bottom:42px}
+.band-h .no{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;color:var(--shu);
+  font-weight:700;padding-top:12px}
+.band-h h2{margin:0;font-size:clamp(23px,2.9vw,33px)}
+.band-h p{margin:11px 0 0;font-size:13px;color:var(--sumi-2);max-width:50em;line-height:1.95}
+.band-h .meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--sumi-3);white-space:nowrap;padding-top:14px}
+@media(max-width:720px){.band-h{grid-template-columns:auto 1fr}.band-h .meta{display:none}}
+
+/* ══════════════ 5. 01 商品 ══════════════ */
+.pgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line)}
+@media(max-width:900px){.pgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ptile{background:var(--panel);position:relative;text-align:left;transition:var(--t);
+  display:flex;flex-direction:column;align-items:stretch}
+.ptile:hover{background:var(--mat)}
+.ptile[aria-pressed=true]{background:var(--mat)}
+.ptile .th{display:block;flex:none;height:0;padding-top:100%;overflow:hidden;position:relative;
+  background:#fff}
+.ptile .th img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:11%;
+  transition:transform .8s var(--t)}
+.ptile:hover .th img{transform:scale(1.06)}
+/* 選択は朱の細い枠で示す。塗りつぶすと商品写真の色が読めなくなる */
+.ptile[aria-pressed=true]::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 1px var(--shu);z-index:3}
+.ptile .mt{display:block;margin-top:auto;padding:14px 16px 17px}
+.ptile b{display:block;font-size:12.5px;font-weight:700;line-height:1.55;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptile .sub{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+  color:var(--sumi-3);margin-top:5px}
+.ptile[aria-pressed=true] b{color:var(--shu)}
+.ptile .chk{position:absolute;top:12px;left:13px;font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.2em;color:var(--shu);opacity:0;transform:translateY(-4px);
+  transition:var(--t);font-weight:700;text-transform:uppercase;z-index:4}
+.ptile[aria-pressed=true] .chk{opacity:1;transform:none}
+.ptile.slot .th{background:var(--wall-2)}
+.slotin{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:11px;
+  color:var(--sumi-3);transition:var(--t)}
+.slotin svg{width:23px;height:23px}
+.slotin em{font-style:normal;font-size:9px;letter-spacing:.2em;font-weight:700;
+  text-transform:uppercase;font-family:var(--mono)}
+.ptile.slot:hover .slotin{color:var(--shu)}
+
+.fields{display:grid;grid-template-columns:1.6fr 1fr .8fr;gap:30px;margin-top:36px;
+  padding-top:32px;border-top:1px solid var(--line-2)}
+@media(max-width:720px){.fields{grid-template-columns:1fr;gap:24px}}
+.fld label{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--sumi-3);margin-bottom:11px;font-weight:700}
+.fld input{width:100%;background:none;border:0;border-bottom:1px solid var(--line-2);
+  padding:6px 2px 11px;font-size:15px;font-family:var(--mincho);letter-spacing:.02em;
+  transition:var(--t)}
+.fld input:focus{outline:none;border-bottom-color:var(--shu)}
+.fnote{margin:20px 0 0;font-size:11px;color:var(--sumi-3)}
+
+/* ══════════════ 6. 02 商品を読み取る ══════════════ */
+.aip{display:grid;grid-template-columns:212px 1fr;gap:clamp(22px,3.6vw,46px);
+  background:var(--mat);border:1px solid var(--line);padding:clamp(20px,2.8vw,32px);
+  box-shadow:0 1px 2px rgba(17,19,21,.04)}
+@media(max-width:760px){.aip{grid-template-columns:1fr}}
+.aip-l{display:flex;flex-direction:column;gap:14px}
+.aip-l .pic{aspect-ratio:1;background:#fff;border:1px solid var(--line);overflow:hidden}
+.aip-l .pic img{width:100%;height:100%;object-fit:contain;padding:9%}
+.aip-l .btn{width:100%}
+.aip-r{min-width:0}
+.aistate{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--sumi-3);font-weight:700;
+  padding-bottom:15px;margin-bottom:19px;border-bottom:1px solid var(--line)}
+.aistate .tick{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:none}
+.aip.run .aistate .tick{background:var(--shu);animation:bl 1.1s ease-in-out infinite}
+.aip.ok .aistate .tick{background:var(--live)}
+.aistate .ms{margin-left:auto;color:var(--sumi-3)}
+.airows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 clamp(20px,3vw,42px)}
+@media(max-width:560px){.airows{grid-template-columns:1fr}}
+.airow{display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:baseline;
+  padding:10px 0;border-bottom:1px solid var(--line);min-width:0}
+.airow dt{font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--sumi-3);font-weight:700}
+.airow dd{margin:0;font-size:13px;line-height:1.75;min-width:0;word-break:break-word}
+.airow dd.q{font-family:var(--mincho);font-size:15px;letter-spacing:.02em}
+.airow.wide{grid-column:1/-1}
+.airow dd.en{font-family:var(--mono);font-size:10.5px;color:var(--sumi-2);line-height:1.9}
+.aiskl{height:11px;background:var(--wall-2);position:relative;overflow:hidden;max-width:80%}
+.aiskl::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 26%,rgba(255,255,255,.95) 50%,transparent 74%);
+  background-size:260% 100%;animation:sweep 1.4s linear infinite}
+.aip:not(.run) .aiskl{opacity:.5}
+.aip:not(.run) .aiskl::after{display:none}
+.aihint{margin:20px 0 0;font-size:11px;color:var(--sumi-3);line-height:1.95}
+.aierr{margin:16px 0 0;font-size:12px;color:var(--warn);background:var(--warn-w);
+  border-left:2px solid var(--warn);padding:11px 15px;line-height:1.8}
+
+/* ══════════════ 7. 03 スタイル ══════════════ */
+.strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+@media(max-width:1040px){.strip{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.strip{grid-template-columns:1fr}}
+.scard{position:relative;display:flex;flex-direction:column;transition:var(--t)}
+.scard:hover{transform:translateY(-6px)}
+.scard .sv{aspect-ratio:4/5;overflow:hidden;background:var(--wall-2);position:relative}
+.scard .sv img{width:100%;height:100%;object-fit:cover;transition:transform 1s var(--t)}
+.scard:hover .sv img{transform:scale(1.07)}
+.scard .mount{padding:9px;transition:var(--t)}
+.scard:hover .mount{box-shadow:0 1px 2px rgba(17,19,21,.05),0 30px 56px -28px rgba(17,19,21,.5)}
+.scard .sv em{position:absolute;top:8px;left:8px;font-style:normal;font-family:var(--mono);
+  font-size:8.5px;letter-spacing:.2em;font-weight:700;color:#fff;
+  background:rgba(17,19,21,.52);backdrop-filter:blur(4px);padding:4px 8px}
+.scard .sb{padding:14px 2px 0;flex:1;display:flex;flex-direction:column}
+.scard .sb>p:first-of-type{flex:1}
+.scard .seasons+.cost{margin-top:14px}
+.scard b{display:block;font-family:var(--mincho);font-size:14.5px;font-weight:600;
+  letter-spacing:.04em;line-height:1.55}
+.scard p{margin:8px 0 0;font-size:11.5px;color:var(--sumi-2);line-height:1.9}
+.scard .pv{margin-top:12px;align-self:flex-start;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--sumi-3);font-weight:700;
+  border-bottom:1px solid var(--line-2);padding-bottom:3px;transition:var(--t)}
+.scard .pv:hover{color:var(--shu);border-bottom-color:var(--shu)}
+.prompt{margin:13px 0 0;font-size:9.5px;line-height:1.95;color:var(--sumi-2);
+  background:var(--panel);border:1px solid var(--line);padding:12px 13px;
+  white-space:pre-wrap;font-family:var(--mono);max-height:190px;overflow:auto}
+.samplenote{margin:20px 0 0;font-size:11px;color:var(--sumi-3)}
+
+.scard .role{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--shu);font-weight:700;margin-bottom:7px}
+.scard .cost{display:flex;align-items:baseline;gap:8px;margin:14px 0 0;padding-top:11px;
+  border-top:1px solid var(--line);font-size:10px;color:var(--sumi-3);
+  font-family:var(--mono);letter-spacing:.1em}
+.scard .cost b{color:var(--sumi);font-size:12px;font-weight:700;letter-spacing:0}
+.scard .cost i{font-style:normal;margin-left:auto}
+/* 季節・催事のチップ。商談中にお客様が押す唯一の操作なので、少し大きめ */
+.seasons{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.sn{border:1px solid var(--line-2);padding:6px 10px;font-size:11.5px;background:#fff;
+  transition:var(--t);line-height:1.3}
+.sn:hover{border-color:var(--shu);color:var(--shu)}
+.sn[aria-pressed=true]{background:var(--shu);border-color:var(--shu);color:#fff}
+
+.runbar{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-top:40px;
+  padding-top:32px;border-top:1px solid var(--line-2)}
+.runbar p{margin:0;font-size:11.5px;color:var(--sumi-3);max-width:42em;line-height:1.95}
+.runbar .btn{margin-left:auto}
+@media(max-width:680px){.runbar .btn{margin-left:0;width:100%}}
+.err-line{margin:20px 0 0;font-size:12px;color:var(--warn);background:var(--warn-w);
+  border-left:2px solid var(--warn);padding:11px 15px;line-height:1.8}
+
+/* ══════════════ 8. 04 結果（コンタクトシート） ══════════════ */
+.resbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.rcount{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--sumi-2);
+  white-space:nowrap;font-weight:700}
+.prog{flex:1;min-width:150px;height:1px;background:var(--line-2);position:relative}
+.prog i{position:absolute;inset:0 auto 0 0;width:0;background:var(--shu);
+  transition:width .7s var(--t)}
+.rgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+@media(max-width:900px){.rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.rgrid{grid-template-columns:1fr}}
+.shot{display:flex;flex-direction:column}
+.shot .mount{padding:11px;transition:var(--t)}
+.shot .fr{aspect-ratio:4/5;background:var(--wall-2);position:relative;overflow:hidden;
+  width:100%;display:block}
+.shot.ok .mount:hover{box-shadow:0 1px 2px rgba(17,19,21,.05),0 32px 60px -28px rgba(17,19,21,.5)}
+.shot .fr img{width:100%;height:100%;object-fit:cover;opacity:0;
+  transition:opacity .9s var(--t),transform 1s var(--t)}
+.shot .fr img.on{opacity:1}
+.shot.ok .mount:hover img{transform:scale(1.04)}
+/* 現像を待っているあいだ。走査灯が一本、上から下へ抜けていく */
+.skl{position:absolute;inset:0;background:
+  linear-gradient(transparent 0,rgba(255,255,255,.45) 44%,#fff 50%,rgba(255,255,255,.45) 56%,transparent 100%);
+  background-size:100% 44%;background-repeat:no-repeat;animation:scan 2.4s ease-in-out infinite}
+@keyframes scan{0%{background-position:0 -60%}100%{background-position:0 160%}}
+.shot.ok .skl,.shot.ng .skl{display:none}
+/* 待機中の枠内に出る、経過秒つきのラベル */
+.expo{position:absolute;left:0;right:0;bottom:0;padding:12px 13px;display:flex;
+  align-items:baseline;gap:10px;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--sumi-3);font-weight:700}
+.expo .sec{margin-left:auto;color:var(--sumi-2)}
+.shot.ok .expo,.shot.ng .expo{display:none}
+/* 届いた瞬間に、朱の線が一度だけ枠を走る */
+.shot.land .mount{box-shadow:0 0 0 1px var(--shu),0 26px 60px -30px rgba(17,19,21,.4)}
+.shot .zi{position:absolute;right:11px;bottom:11px;font-family:var(--mono);font-size:8px;
+  letter-spacing:.18em;text-transform:uppercase;color:#fff;background:rgba(17,19,21,.6);
+  padding:5px 9px;opacity:0;transition:var(--t);backdrop-filter:blur(4px)}
+.shot.ok .mount:hover .zi{opacity:1}
+.shot .fb{padding:13px 2px 0;display:flex;align-items:baseline;gap:10px}
+.shot .fb b{font-family:var(--mincho);font-size:13.5px;font-weight:600;letter-spacing:.04em;
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shot .fb .st{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;color:var(--sumi-3);
+  white-space:nowrap;font-weight:700;text-transform:uppercase}
+.shot.ok .fb .st{color:var(--live)}
+.shot.ng .fb .st{color:var(--warn)}
+.shot .dl{display:none;font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--sumi-3);border-bottom:1px solid var(--line-2);
+  text-decoration:none;font-weight:700;padding-bottom:2px}
+.shot .dl:hover{color:var(--shu);border-bottom-color:var(--shu)}
+.shot.ok .dl{display:inline-block}
+.shot.ok .fb .st{display:none}
+.shot .err{position:absolute;inset:0;display:grid;place-items:center;align-content:center;
+  gap:6px;padding:20px;text-align:center;font-size:11px;color:var(--warn);line-height:1.85;
+  background:var(--warn-w)}
+.shot.orig .mount{background:var(--panel);box-shadow:none;border-style:dashed;
+  border-color:var(--line-2)}
+.shot.orig .fr{background:#fff}
+.shot.orig .fr img{opacity:1;object-fit:contain;padding:9%}
+.shot.orig .fb b{color:var(--sumi-3);font-family:var(--mono);font-size:9px;
+  letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+
+/* 各カットの下に置く「従来いくら・何日 → 何秒」 */
+.save{margin:7px 2px 0;display:flex;align-items:baseline;gap:9px;font-family:var(--mono);
+  font-size:9.5px;letter-spacing:.1em;color:var(--sumi-3);min-height:15px}
+.save s{text-decoration:line-through;text-decoration-thickness:1px}
+.save b{color:var(--shu);font-size:11px;letter-spacing:0}
+.shot.orig .save{display:none}
+.totals{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:30px 0 0;
+  padding-top:22px;border-top:1px solid var(--line-2);font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sumi-3)}
+.totals s{text-decoration:line-through;text-decoration-thickness:1px;color:var(--sumi-2)}
+.totals em{font-style:normal;color:var(--line-2)}
+.totals b{font-family:var(--mincho);font-size:24px;letter-spacing:.02em;color:var(--shu);
+  text-transform:none}
+/* 苦手なものを自分から出す。試して分かるより、先に言ったほうが信用が残る */
+.weak{margin:22px 0 0;font-size:11px;color:var(--sumi-3);line-height:1.95;
+  border-left:1px solid var(--line-2);padding-left:14px}
+.weak b{color:var(--sumi-2);font-weight:700}
+
+/* ══════════════ 9. 05 ストアフロント ══════════════ */
+/* 工程は壁の色、店頭だけ真っ白。場面が変わったことを地の色で示す */
+.band.store{background:var(--mat);border-top-color:var(--line)}
+.pdp{display:grid;grid-template-columns:1.04fr .96fr;gap:clamp(28px,4.6vw,64px)}
+@media(max-width:880px){.pdp{grid-template-columns:1fr}}
+.gal{display:grid;grid-template-columns:62px 1fr;gap:14px}
+.rail-t{display:flex;flex-direction:column;gap:9px}
+.rail-t button{overflow:hidden;aspect-ratio:4/5;border:1px solid var(--line);
+  transition:var(--t);opacity:.5;background:var(--wall-2)}
+.rail-t button:hover{opacity:1}
+.rail-t button[aria-pressed=true]{opacity:1;border-color:var(--shu)}
+.rail-t img{width:100%;height:100%;object-fit:cover}
+.stage{position:relative;overflow:hidden;aspect-ratio:4/5;background:var(--wall-2);
+  border:1px solid var(--line)}
+.stage img{width:100%;height:100%;object-fit:cover}
+.stage .lbl{position:absolute;left:13px;bottom:13px;font-family:var(--mono);font-size:8.5px;
+  letter-spacing:.18em;text-transform:uppercase;background:rgba(255,255,255,.94);
+  padding:6px 10px;color:var(--sumi-2);font-weight:700}
+.pinfo .br{margin:0 0 12px;font-family:var(--mono);font-size:9px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--sumi-3);font-weight:700}
+.pinfo .nm{margin:0 0 16px;font-family:var(--mincho);font-size:clamp(22px,2.6vw,29px);
+  font-weight:600;line-height:1.5;letter-spacing:.02em}
+.pinfo .pr{margin:0 0 5px;font-family:var(--mincho);font-size:23px;font-weight:600}
+.pinfo .tax{margin:0 0 22px;font-size:11px;color:var(--sumi-3)}
+.stars{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--sumi-3);
+  margin:0 0 26px;padding-bottom:24px;border-bottom:1px solid var(--line)}
+.stars b{color:var(--shu);letter-spacing:2px;font-size:11px}
+.opt{margin-bottom:22px}
+.opt .ol{font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--sumi-3);margin-bottom:11px;font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);padding:10px 17px;font-size:12px;background:#fff;
+  transition:var(--t);color:var(--sumi)}
+.chip:hover{border-color:var(--sumi-3)}
+.chip[aria-pressed=true]{border-color:var(--sumi);background:var(--sumi);color:#fff}
+.buy{display:grid;gap:9px;margin:28px 0 20px}
+.buy .btn{width:100%;padding:17px}
+.btn-k{background:var(--sumi);color:#fff}
+.btn-k:hover{background:#000;transform:translateY(-2px)}
+.btn-w{border-color:var(--line-2);color:var(--sumi);background:#fff}
+.btn-w:hover{border-color:var(--sumi)}
+.ship{display:flex;gap:11px;font-size:11px;color:var(--sumi-2);line-height:1.9;
+  border-top:1px solid var(--line);padding-top:18px;margin:0}
+.ship svg{flex:none;margin-top:3px}
+.pdesc{margin-top:22px;padding-top:22px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--sumi-2);line-height:2.05}
+.pdesc h4{margin:0 0 9px;font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--sumi);font-weight:700}
+.pdesc p{margin:0}
+
+/* ══════════════ 10. カメラ／拡大 ══════════════ */
+.ov{position:fixed;inset:0;z-index:70;background:rgba(17,19,21,.58);
+  backdrop-filter:blur(8px);display:none;place-items:center;padding:22px}
+.ov.on{display:grid;animation:fade .3s var(--t)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--mat);border:1px solid var(--line);width:min(430px,100%);
+  box-shadow:0 44px 90px -30px rgba(17,19,21,.7)}
+.sheet-h{display:flex;align-items:center;padding:17px 21px;border-bottom:1px solid var(--line)}
+.sheet-h b{font-family:var(--mincho);font-size:15px;font-weight:600;letter-spacing:.06em}
+.sheet-h button{margin-left:auto;color:var(--sumi-3);font-size:18px;line-height:1;padding:2px 4px}
+.sheet-h button:hover{color:var(--sumi)}
+.camview{position:relative;aspect-ratio:1;background:#0e1012;overflow:hidden}
+.camview video{width:100%;height:100%;object-fit:cover}
+.camview .cfb{position:absolute;inset:0;display:grid;place-items:center;align-content:center;
+  color:#9aa0a2;font-size:12px;text-align:center;padding:28px;line-height:1.9}
+.camview .g3{position:absolute;inset:0;pointer-events:none;opacity:.3;
+  background-image:linear-gradient(90deg,#fff 1px,transparent 1px),
+                   linear-gradient(#fff 1px,transparent 1px);
+  background-size:33.33% 33.33%;background-position:33.33% 33.33%}
+.sheet-b{padding:17px 21px 21px;display:flex;gap:10px}
+.sheet-b .btn{flex:1}
+.zoom{max-width:min(94vw,800px);max-height:92vh;background:var(--mat);
+  border:1px solid var(--line);box-shadow:0 44px 90px -30px rgba(17,19,21,.7);padding:14px}
+.zoom img{max-height:74vh;width:auto;margin:0 auto;object-fit:contain}
+.zoom .zb{display:flex;align-items:center;gap:14px;padding:14px 2px 2px}
+.zoom .zb b{font-family:var(--mincho);font-size:15px;font-weight:600;letter-spacing:.05em}
+.zoom .zb .sp{margin-left:auto;display:flex;gap:10px}
+.zoom .zb .btn{padding:11px 19px;font-size:11px}
+
+/* ══════════════ 11. フッター ══════════════ */
+.foot{border-top:1px solid var(--line-2);padding:36px 0 56px;background:var(--panel)}
+.foot .wrap{display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+  font-size:10.5px;color:var(--sumi-3)}
+.foot code{font-family:var(--mono);color:var(--sumi-2);font-size:10px}
+.foot .sp{margin-left:auto;font-family:var(--mono);letter-spacing:.2em;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <div class="mark"><b>AURORA</b><span>Studio</span></div>
+    <div class="nright">
+      <span class="live"><i></i>Modellix ／ LLM + nano-banana-2</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════ ヒーロー ══════════ -->
+<section class="hero">
+  <div class="wrap">
+    <div class="rv in">
+      <p class="rail"><s></s><em>001</em>AI Product Photography</p>
+      <h1 class="disp">商品写真は、<br><span class="n">1</span> 枚あれば<u>いい</u>。</h1>
+      <p class="lead">スマホで撮った 1 枚を AI が読み取り、商品名・価格・説明文を書き起こしたうえで、
+        EC 掲載用の <b>プロ撮影 5 カット</b> を同時に生成します。
+        白背景・俯瞰・シズルマクロ・モデル着用・季節ロケーション。
+        スタジオも、モデルも、ロケハンも要りません。</p>
+      <div class="stats">
+        <div class="stat"><b>5<i>カット</i></b><span>Parallel</span></div>
+        <div class="stat"><b>30–60<i>秒</i></b><span>Turnaround</span></div>
+        <div class="stat"><b>¥0<i>撮影費</i></b><span>Per product</span></div>
+      </div>
+      <div class="cta">
+        <button class="btn btn-s btn-xl" id="goStart">商品を選んで撮影する</button>
+        <a class="btn btn-o btn-xl" href="#step2">5 つのスタイルを見る</a>
+      </div>
+    </div>
+
+    <div class="show rv in">
+      <div class="mount">
+        <div class="frame" id="heroFrame">
+          <div class="dots" id="heroDots" aria-hidden="true"></div>
+        </div>
+        <div class="showcap"><b id="heroCap">白背景・基本カット</b><span id="heroNo">Cut 01</span></div>
+      </div>
+      <div class="inp">
+        <img src="products/s/umbrella.jpg" alt="入力した商品写真">
+        <em>Input</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="idx" id="idx" aria-label="工程">
+  <a href="#step1"><s></s>01<em>商品を選ぶ</em></a>
+  <a href="#stepAi"><s></s>02<em>AI が読み取る</em></a>
+  <a href="#step2"><s></s>03<em>撮影スタイル</em></a>
+  <a href="#cardResult"><s></s>04<em>撮影結果</em></a>
+  <a href="#cardPdp"><s></s>05<em>商品ページ</em></a>
+</nav>
+
+<main>
+  <!-- ══════════ 01 商品 ══════════ -->
+  <section class="band" id="step1">
+    <div class="wrap">
+      <div class="band-h rv">
+        <span class="no">01</span>
+        <div>
+          <h2 class="disp">商品を選ぶ</h2>
+          <p>サンプル商品から選ぶか、お手元の商品写真をそのままお使いください。必要なのは 1 枚だけです。</p>
+        </div>
+        <span class="meta">Input — 1 image</span>
+      </div>
+
+      <div class="pgrid rv" id="pGrid"></div>
+
+      <div class="fields rv">
+        <div class="fld">
+          <label for="fName">商品名</label>
+          <input id="fName" type="text" value="ウィンドプルーフ 折りたたみ傘 ／ ベージュ">
+        </div>
+        <div class="fld">
+          <label for="fBrand">ブランド</label>
+          <input id="fBrand" type="text" value="AURORA HERITAGE">
+        </div>
+        <div class="fld">
+          <label for="fPrice">販売価格（円）</label>
+          <input id="fPrice" type="text" value="8800" inputmode="numeric">
+        </div>
+        <p class="fnote">商品名は生成の手がかりとして使います。空欄のままでも生成できます。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 02 商品を読み取る ══════════ -->
+  <section class="band" id="stepAi">
+    <div class="wrap">
+      <div class="band-h rv">
+        <span class="no">02</span>
+        <div>
+          <h2 class="disp">AI が商品を読み取る</h2>
+          <p>写真だけを見て、何の商品かを言語モデルが判定します。商品名・カテゴリー・色展開・想定売価・説明文まで書き起こし、
+            この結果が次の撮影プロンプトの土台になります。</p>
+        </div>
+        <span class="meta">Modellix LLM — vision</span>
+      </div>
+
+      <div class="aip rv" id="aiPanel">
+        <div class="aip-l">
+          <div class="pic"><img id="aiImg" src="products/umbrella.jpg" alt="読み取り対象の商品写真"></div>
+          <button class="btn btn-o" id="aiRun">読み取り直す</button>
+        </div>
+        <div class="aip-r">
+          <div class="aistate">
+            <span class="tick"></span><span id="aiState">未実行</span>
+            <span class="ms" id="aiMs"></span>
+          </div>
+          <dl class="airows" id="aiRows"></dl>
+          <p class="aihint">01 で商品を選んだ時点で、読み取りは自動ではじまります。
+            結果は商品名・価格・説明文として出品情報に入り、そのまま 03 の 5 枚それぞれの場面になります。</p>
+          <p class="aierr hide" id="aiErr"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 03 スタイル ══════════ -->
+  <section class="band" id="step2">
+    <div class="wrap">
+      <div class="band-h rv">
+        <span class="no">03</span>
+        <div>
+          <h2 class="disp">撮影スタイル ／ 5 カット同時</h2>
+          <p>商品ページに要る 5 種類のカットを、5 本の API を同時に投げて一度に撮ります。</p>
+        </div>
+        <span class="meta">5 requests — parallel</span>
+      </div>
+
+      <div class="strip rv" id="sGrid"></div>
+      <p class="samplenote rv">左から右へ、劇的さが上がっていきます。場面が派手なほど商品は小さく・遠くなる設計です
+        （生成が崩れる余地を残さないため）。上の作例はすべて、01 の折りたたみ傘 1 枚から生成したものです。</p>
+
+      <div class="runbar rv">
+        <p>それぞれ独立したリクエストなので、早く終わったカットから順に表示されます。
+          1 カットが失敗しても、ほかの 4 カットはそのまま仕上がります。</p>
+        <button class="btn btn-s btn-xl" id="btnRun">5 カットを同時に撮影する</button>
+      </div>
+      <p class="weak"><b>いま苦手なもの：</b>文字情報の多いパッケージ、透明なガラス、鏡面の複雑な映り込み。
+        原図の文字が長い場合、02 以降で読めなくなることがあります。この 3 つは今日の時点では正直に不得手です。</p>
+      <p class="err-line hide" id="runErr"></p>
+    </div>
+  </section>
+
+  <!-- ══════════ 03 結果 ══════════ -->
+  <section class="band hide" id="cardResult">
+    <div class="wrap">
+      <div class="band-h">
+        <span class="no">04</span>
+        <div>
+          <h2 class="disp">撮影結果</h2>
+          <p id="resSub">5 本のリクエストを同時に投げています。早く終わったカットから表示されます。</p>
+        </div>
+        <span class="meta" id="resTag">Shooting</span>
+      </div>
+
+      <div class="resbar">
+        <span class="rcount" id="rCount">0 / 5 CUTS</span>
+        <span class="prog"><i id="rProg"></i></span>
+        <button class="btn btn-o" id="btnRedo" style="padding:10px 20px;font-size:11.5px">撮り直す</button>
+      </div>
+      <div class="rgrid" id="rGrid"></div>
+      <p class="totals hide" id="totals"></p>
+    </div>
+  </section>
+
+  <!-- ══════════ 04 ストアフロント ══════════ -->
+  <section class="band store hide" id="cardPdp">
+    <div class="wrap">
+      <div class="band-h">
+        <span class="no">05</span>
+        <div>
+          <h2 class="disp">そのまま商品ページへ</h2>
+          <p>生成した 5 カットを差し込んだ、EC の商品ページです。ここまでが 1 枚の写真から出来ています。</p>
+        </div>
+        <span class="meta">Storefront preview</span>
+      </div>
+
+      <div class="pdp rv">
+        <div class="gal">
+          <div class="rail-t" id="pdpRail"></div>
+          <div class="stage">
+            <img id="pdpMain" alt="商品画像">
+            <span class="lbl" id="pdpLbl"></span>
+          </div>
+        </div>
+        <div class="pinfo">
+          <p class="br" id="pdpBrand">AURORA HERITAGE</p>
+          <p class="nm" id="pdpName">ウィンドプルーフ 折りたたみ傘 ／ ベージュ</p>
+          <p class="pr" id="pdpPrice">¥8,800</p>
+          <p class="tax">税込・送料無料（3,000 円以上のお買い上げ）</p>
+          <p class="stars"><b>★★★★★</b> 4.8 ／ 126 件のレビュー</p>
+
+          <div class="opt">
+            <div class="ol">Colour</div>
+            <div class="chips" id="chipColor"></div>
+          </div>
+          <div class="opt">
+            <div class="ol">Quantity</div>
+            <div class="chips" id="chipQty"></div>
+          </div>
+
+          <div class="buy">
+            <button class="btn btn-k">カートに入れる</button>
+            <button class="btn btn-w">今すぐ購入</button>
+          </div>
+          <p class="ship">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg>
+            <span>14 時までのご注文で当日出荷。サイズが合わない場合は 30 日以内の返品を承ります。</span>
+          </p>
+          <div class="pdesc">
+            <h4>About</h4>
+            <p id="pdpDesc">風に強い 8 本骨と、遮光・遮熱の二層コーティング。畳んだときは 24cm、重さは 210g。
+              通勤カバンにも入る大きさのまま、雨の日の視界と足元を守ります。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>商品の読み取りに <code>google/gemini-3.6-flash</code>、撮影に <code>google/nano-banana-2-edit</code> を 5 本同時。いずれも Modellix 経由。</span>
+    <span class="sp">Aurora Mobile — Product Demo</span>
+  </div>
+</footer>
+
+<!-- カメラ -->
+<div class="ov" id="camOv">
+  <div class="sheet">
+    <div class="sheet-h"><b>商品を撮影する</b><button type="button" id="camClose" aria-label="閉じる">✕</button></div>
+    <div class="camview">
+      <video id="camVid" autoplay playsinline muted></video>
+      <div class="g3" aria-hidden="true"></div>
+      <div class="cfb hide" id="camFb">カメラに接続できませんでした。<br>サンプル商品またはファイル選択をご利用ください。</div>
+    </div>
+    <div class="sheet-b">
+      <button class="btn btn-o" id="camCancel">やめる</button>
+      <button class="btn btn-s" id="camShoot">撮影する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 拡大 -->
+<div class="ov" id="zoomOv">
+  <div class="zoom">
+    <img id="zoomImg" alt="">
+    <div class="zb"><b id="zoomLbl"></b>
+      <span class="sp">
+        <a class="btn btn-o" id="zoomDl" download>ダウンロード</a>
+        <button class="btn btn-p" id="zoomClose">閉じる</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileIn" accept="image/*" hidden>
+
+<script>
+(function(){
+"use strict";
+/* ════════════════════════════════════════════════════════════
+ *  AURORA STUDIO ／ AI 商品撮影（EC の商品ページ想定・ストア名は架空）
+ *  ──────────────────────────────────────────────────────────
+ *  POST /api/v1/google/nano-banana-2-edit   ×5（同時）
+ *  GET  /api/v1/tasks/{task_id}
+ *
+ *  ブラウザは自分のオリジン（/api/v1/...）だけを叩き、api/proxy.js が
+ *  サーバー側の MODELLIX_KEY を付けて api.modellix.ai へ中継する。
+ *  鍵は画面にもバンドルにも出さない。
+ *
+ *  参照画像は必ずブラウザ内で JPEG の data URI に揃えてから送る。
+ *  同梱のサンプルもアップロードした写真もこの端末の中にしかなく、
+ *  Modellix 側から取りに行けないため。
+ * ════════════════════════════════════════════════════════════ */
+
+var API     = "/api/v1";
+var MODEL   = "google/nano-banana-2-edit";
+var ASPECT  = "4:5";              // EC の縦カット。5 枚とも揃えないと商品ページで段差が出る
+var SIZE    = "1K";               // 2K は 1 枚 6MB 前後。展示回線では 1K のほうが体験が良い
+var TIMEOUT = 4 * 60 * 1000;      // 実測 20〜60 秒。余裕を持って 4 分で打ち切る
+var MAX_SIDE = 1400;              // 参照画像の長辺。これ以上は仕上がりに効かない
+var LLM_API  = "/api/llm/v1";     // 画像・動画とはホストが別（proxy が振り分ける）
+var LLM      = "google/gemini-3.6-flash";
+
+var $  = function(s){ return document.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+/* ───── サンプル商品（同梱の 3 点） ─────
+   外部サイトへの直リンクは、展示中に落ちたり bot 遮断されたりするので使わない。 */
+var PRODUCTS = [
+  { id:"umbrella", url:"products/umbrella.jpg",
+    name:"ウィンドプルーフ 折りたたみ傘 ／ ベージュ", brand:"AURORA HERITAGE",
+    price:8800, cat:"Accessory", colors:["ベージュ","ブラック","ネイビー"],
+    kind:"compact folding umbrella",
+    desc:"風に強い 8 本骨と、遮光・遮熱の二層コーティング。畳んだときは 24cm、重さは 210g。通勤カバンにも入る大きさのまま、雨の日の視界と足元を守ります。" },
+  { id:"tumbler", url:"products/tumbler.jpg",
+    name:"真空断熱タンブラー 480ml ／ チャコール", brand:"AURORA DAILY",
+    price:5400, cat:"Kitchen", colors:["チャコール","サンド","アイボリー"],
+    kind:"stainless steel vacuum tumbler",
+    desc:"二重構造のステンレスで、6 時間後も温度差は 3℃ 以内。片手で開くレバー式の蓋は、丸ごと外して洗えます。" },
+  { id:"tote", url:"products/tote.jpg",
+    name:"フルグレインレザー トートバッグ ／ タン", brand:"AURORA HERITAGE",
+    price:42000, cat:"Bag", colors:["タン","ブラック","ダークブラウン"],
+    kind:"full-grain leather tote bag",
+    desc:"一枚革を折り返して縫い上げた、芯地に頼らない自立するトート。使うほどに角から色が濃くなり、持ち主の形になります。" }
+];
+
+/* ───── 撮影スタイル 5 種 ─────
+   狙いは「色違い」ではなく「撮り方違い」。EC の商品ページに要る 5 枚
+   ＝ 基本カット／ブランドカット／暮らし／実使用／素材、を一度に揃える。
+   sample は同梱の作例（すべて products/umbrella.jpg 1 枚から生成したもの）。
+   @KIND は選択中の商品の英語名に、@NAME は商品名に差し替えて送る。 */
+/* ───── 撮影スロット 5 種 ─────
+   並べる順が演出そのもの。左から右へ「劇的さ」が上がっていく。
+     01 証拠 → 02 技術の証明 → 03 質感 → 04 コスト差 → 05 客が指定
+   設計原則：劇的さと、画面に占める商品の大きさは反比例させる。
+   場面が派手なほど商品は小さく・遠く・一部が隠れる（生成が崩れず、
+   細部も詮索されない）。逆に商品が画面を占める 01 と 03 は保守的に撮る。
+   各スロットの「場面」は LLM の読み取り結果から差し込む。ここを固定にすると、
+   保温杯が雨のストリートに立つような、商品と噛み合わない絵が出る。 */
+var STYLES = [
+  { id:"white", n:"白背景・基本カット", en:"Pure White Packshot", sample:"samples/white.jpg",
+    role:"証拠", cost:8000, lead:"3 日",
+    d:"作品ではなく証拠。ロゴ・印刷・縫製を原図と見比べてもらう 1 枚。これが無いと残り 4 枚が信じてもらえない。",
+    build:function(v){ return "Retouch this photograph of a "+v.kind+" into the standard e-commerce hero packshot. "+
+      "Place the product on a pure white (#FFFFFF) seamless background, centred, filling about 80% of the frame height with even margins. "+
+      "Broad soft light from the front-left with a large fill from the right, a clean specular roll-off along every edge, "+
+      "and one soft grounded contact shadow directly beneath. "+
+      "This frame is evidence: every logo, label, seam, texture and proportion must match the reference photograph exactly and stay legible at full zoom. "+
+      "Sharp from front to back, neutral white balance, no studio reflections. "+
+      "Do NOT: redesign, recolour or restyle the product; alter any logo or lettering; add props, hands, text or watermarks; crop any part of the product."; } },
+
+  { id:"flatlay", n:"俯瞰フラットレイ", en:"Overhead Flat Lay", sample:"samples/flatlay.jpg",
+    role:"技術の証明", cost:12000, lead:"3 日",
+    d:"正面 1 枚から視点そのものが変わる。背景の差し替えではないことを示せる唯一のカット。背面は編集ではなく創作になるので作らない。",
+    build:function(v){ return "Re-photograph this exact "+v.kind+" from directly overhead — a true top-down flat lay — on a "+
+      (v.cut02_surface||"pale oak plank")+" surface. "+
+      "The product lies flat and centred, occupying about 60% of the frame height, with generous even margins. "+
+      "Soft broad slightly-directional daylight from the upper left; a short soft shadow anchoring it to the surface. "+
+      "Show only the top face that is visible or logically implied by the reference — same colour, material, logo placement and proportions. "+
+      "Do NOT: invent the back or underside of the product; redesign or recolour it; alter any logo or lettering; "+
+      "add props, hands, text or watermarks; tilt the camera off the vertical axis."; } },
+
+  { id:"sizzle", n:"シズルマクロ", en:"Sizzle Macro", sample:"samples/sizzle.jpg",
+    role:"質感", cost:45000, lead:"1 週間",
+    d:"水滴・結露・湯気・艶。専用ライティングと時間が要る領域。画面には一部しか写らないので、生成が最も安全な 1 枚でもある。",
+    build:function(v){ return "Make an extreme macro detail cut of this exact "+v.kind+" for the specification section of a product page. "+
+      "Fill the frame with a single fragment of the product — no more than a quarter of it — showing "+
+      (v.cut03_sizzle||"the finest texture of its surface catching a raking light")+". "+
+      "Shot on a 100mm macro at f/4: razor sharp at the point of contact and falling away fast. "+
+      "Raking light from the side to reveal texture, weave, grain and every droplet; a deep, quiet, near-black surround. "+
+      "The material, colour and finish must match the reference exactly. "+
+      "Do NOT: show the whole product; include any logo or lettering; use flat even lighting; redesign or recolour the product; add text or watermarks."; } },
+
+  { id:"model", n:"モデル着用・使用", en:"In Use / Model", sample:"samples/model.jpg",
+    role:"コスト差",  cost:350000, lead:"2 週間",
+    d:"モデル・スタジオ・修整と、2 週間の調整が要る 1 枚。首から下・後ろ姿・手元だけに絞る。生成が崩れる顔と指を避けつつ、肖像権の都合で日本の EC が実際に多用する構図でもある。",
+    build:function(v){ return "Show this exact "+v.kind+" in use by a person. "+
+      (v.cut04_use||"A person holds it naturally at waist height")+". "+
+      "Framed from the collarbone down — the face is never in frame. "+
+      "The product occupies about 30% of the frame height and is the sharpest thing in it; the person is secondary and softly lit. "+
+      "Soft natural window light, muted Japanese editorial palette, shallow depth of field. "+
+      "Hands, if visible, are relaxed and partly out of frame. "+
+      "Keep the product exactly as in the reference — same shape, proportions, colour, material and every logo or label. "+
+      "Do NOT: show a face, a chin or a mouth; show splayed or deformed fingers; redesign or recolour the product; add text or watermarks."; } },
+
+  { id:"season", n:"季節・催事ロケーション", en:"Seasonal Location", sample:"samples/season.jpg",
+    role:"客が指定", cost:600000, lead:"3 週間", seasonal:true,
+    d:"販促カレンダーに直結する 1 枚。桜・梅雨・真夏・紅葉・クリスマス・正月から、商談の場でお客様に選んでいただきます。",
+    build:function(v){ return "Place this exact "+v.kind+" into a seasonal Japanese location: "+
+      (v.scene||"a quiet Japanese street in soft seasonal light")+". "+
+      "This is an environmental, cinematic frame. The product stands or is held on a real support that the scene provides "+
+      "— a table top, a counter, a cup holder, a bench, a hand — never balanced on the bare ground and never floating. "+
+      "It occupies roughly 20% of the frame height, sits in the near-middle ground and is partly overlapped by the surroundings, "+
+      "yet is unmistakably present and the only thing in sharp focus. The location does the talking. "+
+      "Rich natural light appropriate to the season, atmospheric depth, focus falling off behind. "+
+      "Keep the product exactly as in the reference — same shape, proportions, colour and material, at its true real-world size relative to the scene. "+
+      "Do NOT: enlarge the product to fill the frame; float it, tilt it or balance it on the bare ground; show a second copy or a similar rival product; "+
+      "show a recognisable face; redesign or recolour the product; add text, captions or watermarks."; } }
+];
+
+/* 季節・催事のスロット。場面文は LLM が商品ごとに書き分けたものを使う。 */
+var SEASONS = [
+  { k:"sakura",  n:"桜",        fb:"under blossoming cherry trees along a canal in early April" },
+  { k:"tsuyu",   n:"梅雨",      fb:"on a rain-soaked stone path lined with blue hydrangeas at a temple" },
+  { k:"summer",  n:"真夏",      fb:"on a sun-bleached seaside boardwalk at midday in August" },
+  { k:"autumn",  n:"紅葉",      fb:"among red maple leaves on a stone stair in late November" },
+  { k:"xmas",    n:"クリスマス", fb:"on an illuminated Tokyo street at dusk in December" },
+  { k:"newyear", n:"正月",      fb:"at a shrine approach with new-year decorations in early January" }
+];
+var season = SEASONS[1];
+
+/* 読み取りで受け取る項目。左の並びがそのまま画面の並びになる。 */
+var AI_SCHEMA = [
+  { k:"kind_en",       t:"Product",  cls:"en"   },
+  { k:"category_en",   t:"Category", cls:"en"   },
+  { k:"name_ja",       t:"Name",     cls:"q", wide:true },
+  { k:"colors_ja",     t:"Colours"              },
+  { k:"price_jpy",     t:"Price"                },
+  { k:"desc_ja",       t:"Copy",     wide:true  },
+  { k:"keep_en",       t:"Preserve", cls:"en", wide:true },
+  { k:"cut02_surface", t:"Cut 02",   cls:"en"   },
+  { k:"cut03_sizzle",  t:"Cut 03",   cls:"en"   },
+  { k:"cut04_use",     t:"Cut 04",   cls:"en", wide:true },
+  { k:"_seasons",      t:"Cut 05",   cls:"en", wide:true },
+  { k:"_scene",        t:"Scene",    cls:"en", wide:true }
+];
+
+/* 読み取りは「商品を言い当てる」だけでは足りない。
+   5 枚それぞれの場面をこの商品に合わせて書かせて、はじめて
+   「保温ボトルが雨のストリートに立っている」ような噛み合わない絵が消える。 */
+var AI_ASK =
+  "You are art-directing an e-commerce photo shoot from this single product photo. " +
+  "Return JSON with keys:\n" +
+  "kind_en: short English noun phrase for the product.\n" +
+  "name_ja: Japanese product name for an EC listing.\n" +
+  "category_en: one English word.\n" +
+  "colors_ja: array of exactly 3 Japanese colour names, the first being the colour actually shown.\n" +
+  "price_jpy: integer, a plausible Japanese retail price.\n" +
+  "desc_ja: 80-120 Japanese characters of product copy.\n" +
+  "keep_en: one English sentence listing the details a retoucher must preserve.\n" +
+  "cut02_surface: short English noun phrase for a flat-lay surface that suits THIS product " +
+  "(for example 'pale oak plank', 'warm grey concrete', 'washed linen cloth').\n" +
+  "cut03_sizzle: one English clause naming the tactile phenomenon that sells THIS product in extreme macro " +
+  "- condensation beading on cold steel, rain beading on canopy fabric, steam rising from a rim, oiled leather grain, and so on. " +
+  "It must be physically possible for this product.\n" +
+  "cut04_use: one English clause describing how a person uses or wears THIS product, framed from the collarbone down, " +
+  "no face, hands relaxed.\n" +
+  "cut05_scenes: object with keys sakura, tsuyu, summer, autumn, xmas, newyear. Each value is ONE English sentence " +
+  "placing THIS product in a Japanese seasonal location where it would genuinely be used. " +
+  "Each sentence must name the surface or hand that actually supports the product - a cafe table, a counter, a cup holder, " +
+  "a picnic blanket, a gloved hand - so it is never left standing on bare ground or floating. " +
+  "Never place a product somewhere it would not plausibly be: an insulated bottle is carried on an outing or set on a table, " +
+  "it does not stand alone in the rain; an umbrella belongs in rain or strong sun, not on a beach towel; " +
+  "a leather bag is not left in a downpour.\n" +
+  "best_season: which of those six keys suits THIS product best - the season a buyer would most naturally picture it in.";
+
+var yen = function(n){ return "¥" + Number(n||0).toLocaleString("ja-JP"); };
+var small = function(u){ return /^(products|samples)\//.test(u) ? u.replace(/^(products|samples)\//,"$1/s/") : u; };
+
+/* ═══════════ ヒーロー：1 枚 → 5 カットを回し続ける ═══════════ */
+(function heroLoop(){
+  var frame = $("#heroFrame"), dots = $("#heroDots");
+  var imgs = STYLES.map(function(s, i){
+    var im = document.createElement("img");
+    im.src = s.sample; im.alt = s.n; im.loading = i ? "lazy" : "eager";
+    frame.insertBefore(im, frame.firstChild);
+    dots.appendChild(document.createElement("i"));
+    return im;
+  });
+  var i = 0;
+  function to(k){
+    imgs.forEach(function(im, n){ im.classList.toggle("on", n === k); });
+    $$("#heroDots i").forEach(function(d, n){ d.classList.toggle("on", n === k); });
+    $("#heroCap").textContent = STYLES[k].n;
+    $("#heroNo").textContent = "Cut 0" + (k+1);
+  }
+  to(0);
+  setInterval(function(){ i = (i+1) % imgs.length; to(i); }, 3000);
+})();
+
+/* ═══════════ 選択中の商品 ═══════════ */
+var current = PRODUCTS[0];
+var customCount = 0;
+
+function selectProduct(p, tile){
+  current = p;
+  $$("#pGrid .ptile").forEach(function(t){ t.setAttribute("aria-pressed","false"); });
+  if(tile) tile.setAttribute("aria-pressed","true");
+  $("#fName").value  = p.name  || "";
+  $("#fBrand").value = p.brand || "";
+  $("#fPrice").value = p.price != null ? String(p.price) : "";
+  syncAiPanel();
+}
+
+/* 読み取りパネルは、いま選ばれている商品の状態をそのまま映す */
+function syncAiPanel(){
+  var panel = $("#aiPanel"); if(!panel) return;
+  aiToken++;                       // 走っている読み取りの結果を捨てる
+  $("#aiImg").src = current.url;
+  $("#aiErr").classList.add("hide");
+  $("#aiRun").disabled = false;
+  panel.classList.remove("run");
+  if(current.ai){
+    var best = SEASONS.filter(function(x){ return x.k === current.ai.best_season; })[0];
+    if(best) season = best;
+    buildSeasons();
+    panel.classList.add("ok");
+    paintAiRows(current.ai, false);
+    $("#aiState").textContent = "読み取り完了";
+    $("#aiMs").textContent = LLM;
+    $("#aiRun").textContent = "読み取り直す";
+  } else {
+    panel.classList.remove("ok");
+    paintAiRows(null, false);
+    $("#aiState").textContent = "未実行";
+    $("#aiMs").textContent = "";
+    $("#aiRun").textContent = "読み取る";
+  }
+}
+
+var CHK = '<span class="chk">Selected</span>';
+
+function tileFor(p){
+  var b = document.createElement("button");
+  b.className = "ptile"; b.type = "button"; b.setAttribute("aria-pressed","false");
+  b.innerHTML = CHK +
+    '<span class="th"><img src="'+small(p.url)+'" alt="'+esc(p.name)+'" loading="lazy"></span>'+
+    '<span class="mt"><b>'+esc(p.name)+'</b><span class="sub">'+esc(p.cat||"Upload")+' — '+yen(p.price)+'</span></span>';
+  b.addEventListener("click", function(){ selectProduct(p, b); gotoAnalyse(); });
+  return b;
+}
+
+/* 商品を選んだ時点で、読み取りまでは自動で進める。
+   ボタンを 1 つ挟むと、商談中に「押してください」と言う手間が入るため。 */
+function gotoAnalyse(){
+  $("#stepAi").scrollIntoView({ behavior:"smooth", block:"start" });
+  if(current.ai) return;                       // 読み取り済みならスクロールだけ
+  setTimeout(runAnalyse, 420);                 // 画面が落ち着いてから走らせる
+}
+
+/* 持ち込みの 2 枚（ファイル・撮影）は見た目も選ばれ方も同じにしておく。 */
+function slotTile(hint, label, icon, onPick){
+  var b = document.createElement("button");
+  b.className = "ptile slot"; b.type = "button"; b.setAttribute("aria-pressed","false");
+  b.innerHTML = CHK +
+    '<span class="th"><span class="slotin">'+icon+'<em>'+hint+'</em></span></span>'+
+    '<span class="mt"><b>'+label+'</b><span class="sub">JPG / PNG — 10MB</span></span>';
+  b.addEventListener("click", onPick);
+  return b;
+}
+
+var UP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>';
+var CAM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+
+var slotFile, slotCam;
+(function buildProducts(){
+  var g = $("#pGrid");
+  PRODUCTS.forEach(function(p){ g.appendChild(tileFor(p)); });
+  slotFile = slotTile("Upload", "商品写真を選ぶ", UP_ICON, function(){ $("#fileIn").click(); });
+  slotCam  = slotTile("Shoot",  "その場で撮影する", CAM_ICON, openCam);
+  g.appendChild(slotFile); g.appendChild(slotCam);
+  selectProduct(PRODUCTS[0], g.querySelector(".ptile"));
+})();
+
+/* 持ち込んだ写真は、そのタイル自体をサムネイルに差し替えて選択状態にする。 */
+function adopt(tile, dataUrl, label){
+  customCount++;
+  var p = { id:"own"+customCount, url:dataUrl, name:label, brand:$("#fBrand").value || "AURORA STORE",
+            price:Number(String($("#fPrice").value).replace(/[^0-9]/g,"")) || 0,
+            cat:"Your photo", colors:["標準"], kind:"product", desc:"" };
+  tile.classList.remove("slot");
+  tile.innerHTML = CHK +
+    '<span class="th"><img src="'+dataUrl+'" alt="" style="object-fit:cover;padding:0"></span>'+
+    '<span class="mt"><b>'+esc(label)+'</b><span class="sub">この写真で撮影する</span></span>';
+  tile.addEventListener("click", function(){ selectProduct(p, tile); gotoAnalyse(); });
+  selectProduct(p, tile);
+  // 何の商品かこちらには分からないので、持ち込みは必ず読み取ってから撮る
+  gotoAnalyse();
+}
+
+$("#fileIn").addEventListener("change", function(ev){
+  var f = ev.target.files && ev.target.files[0];
+  if(!f) return;
+  if(f.size > 10*1024*1024){ alert("ファイルサイズが 10MB を超えています。"); ev.target.value=""; return; }
+  var r = new FileReader();
+  r.onload = function(){
+    toJpeg(r.result, MAX_SIDE).then(function(d){ adopt(slotFile, d, "アップロードした商品"); })
+      .catch(function(){ alert("画像を読み込めませんでした。"); });
+  };
+  r.onerror = function(){ alert("ファイルを読み込めませんでした。"); };
+  r.readAsDataURL(f);
+  ev.target.value = "";
+});
+
+/* ═══════════ カメラ ═══════════ */
+var stream = null;
+function openCam(){
+  $("#camOv").classList.add("on");
+  var v = $("#camVid"), fb = $("#camFb");
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ fb.classList.remove("hide"); return; }
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"environment" }, width:{ideal:1600}, height:{ideal:1600} }, audio:false })
+    .then(function(s){ stream = s; v.srcObject = s; fb.classList.add("hide"); })
+    .catch(function(){ fb.classList.remove("hide"); });
+}
+function closeCam(){
+  $("#camOv").classList.remove("on");
+  if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+}
+$("#camClose").addEventListener("click", closeCam);
+$("#camCancel").addEventListener("click", closeCam);
+$("#camShoot").addEventListener("click", function(){
+  var v = $("#camVid");
+  if(!stream || !v.videoWidth){ closeCam(); return; }
+  // 商品カットは正方形で切り出す。EC のサムネイルがどこも 1:1 のため。
+  var w = v.videoWidth, h = v.videoHeight, side = Math.min(w,h);
+  var c = document.createElement("canvas"); c.width = 1200; c.height = 1200;
+  c.getContext("2d").drawImage(v, (w-side)/2, (h-side)/2, side, side, 0, 0, 1200, 1200);
+  var data = c.toDataURL("image/jpeg", .9);
+  closeCam();
+  adopt(slotCam, data, "撮影した商品");
+});
+
+/* ═══════════ スタイルのフィルムストリップ ═══════════ */
+(function buildStyles(){
+  var g = $("#sGrid");
+  STYLES.forEach(function(s, i){
+    var el = document.createElement("article");
+    el.className = "scard";
+    el.innerHTML =
+      '<div class="mount"><div class="sv"><img src="'+small(s.sample)+'" alt="'+esc(s.n)+' の作例" loading="lazy">'+
+        '<em>Cut 0'+(i+1)+'</em></div></div>'+
+      '<div class="sb">'+
+        '<span class="role">'+s.role+'</span>'+
+        '<b>'+s.n+'</b>'+
+        '<p>'+s.d+'</p>'+
+        (s.seasonal ? '<div class="seasons" id="seasonPick"></div>' : '')+
+        '<p class="cost"><span>従来</span><b>'+yen(s.cost)+'</b><i>'+s.lead+'</i></p>'+
+        '<button class="pv" type="button">Prompt</button>'+
+        '<pre class="prompt hide"></pre>'+
+      '</div>';
+    var pv = el.querySelector(".pv"), pre = el.querySelector(".prompt");
+    pv.addEventListener("click", function(){
+      var open = pre.classList.toggle("hide") === false;
+      if(open) pre.textContent = promptFor(s);
+      pv.textContent = open ? "Close" : "Prompt";
+    });
+    g.appendChild(el);
+  });
+  buildSeasons();
+})();
+
+/* 季節・催事の選択。ここは商談の場でお客様に選んでいただく前提の操作なので、
+   押した瞬間に「その 1 枚だけ」を撮り直せるようにしてある。 */
+function buildSeasons(){
+  var box = $("#seasonPick"); if(!box) return;
+  box.innerHTML = "";
+  SEASONS.forEach(function(sn){
+    var b = document.createElement("button");
+    b.className = "sn"; b.type = "button"; b.textContent = sn.n;
+    b.setAttribute("aria-pressed", sn === season ? "true" : "false");
+    b.addEventListener("click", function(){
+      season = sn;
+      $$("#seasonPick .sn").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      b.setAttribute("aria-pressed","true");
+      if(current.ai) paintAiRows(current.ai, false);
+      var i = STYLES.length - 1;
+      if(shotTiles[i] && !busy) reshoot(i);      // 撮影済みならその場で撮り直す
+    });
+    box.appendChild(b);
+  });
+}
+
+/* 読み取り結果をスロットの変数に流し込んでプロンプトを組む。
+   場面（surface / sizzle / use / scene）はすべて商品ごとに書き分けられたもの。 */
+function promptFor(st){
+  var ai = current.ai || {};
+  var v = {
+    kind: trimDot(ai.kind_en) || current.kind || "product",
+    cut02_surface: trimDot(ai.cut02_surface),
+    cut03_sizzle:  trimDot(ai.cut03_sizzle),
+    cut04_use:     trimDot(ai.cut04_use),
+    scene: trimDot(sceneFor(season))
+  };
+  var out = st.build(v);
+  // 読み取りで挙がった「絶対に変えてはいけない特徴」は、否定条件の前に足す。
+  // 後ろに置くと Do NOT の並びに埋もれて効きが落ちる。
+  if(ai.keep_en) out = out.replace(" Do NOT:", " Preserve exactly: " + ai.keep_en + " Do NOT:");
+  return out;
+}
+
+/* 差し込む一文の末尾の句点を落とす。テンプレート側が「. 」を付けるので二重になる。 */
+function trimDot(v){ return v == null ? v : String(v).trim().replace(/[.。]+$/, ""); }
+
+/* 季節の場面文。商品ごとの書き分けがあればそれを、無ければ汎用文を使う。 */
+function sceneFor(sn){
+  var sc = (current.ai && current.ai.cut05_scenes) || {};
+  return sc[sn.k] || sn.fb;
+}
+
+/* ═══════════ 商品の読み取り（Modellix LLM・画像入力） ═══════════
+   写真だけを手がかりに、EC の商品メタを書き起こさせる。
+   ここで得た kind_en / keep_en が、そのまま撮影プロンプトの土台になる。 */
+
+/* 応答から JSON を取り出す。json_object を指定していても、
+   前後に説明が付いたりコードフェンスが残ったりすることがあるので、
+   最初の { から括弧の対応を数えて本体だけを切り出す（文字列内の括弧は数えない）。 */
+function carveJson(text){
+  var t = String(text || "");
+  var i = t.indexOf("{");
+  if(i < 0) return null;
+  var depth = 0, inStr = false, esc = false;
+  for(var k = i; k < t.length; k++){
+    var ch = t.charAt(k);
+    if(esc){ esc = false; continue; }
+    if(ch === "\\"){ esc = true; continue; }
+    if(ch === '"'){ inStr = !inStr; continue; }
+    if(inStr) continue;
+    if(ch === "{") depth++;
+    else if(ch === "}"){ depth--; if(depth === 0) return t.slice(i, k+1); }
+  }
+  return null;   // 閉じていない ＝ 途中で切れている
+}
+
+function askLlm(imageUri, budget){
+  return fetch(LLM_API + "/chat/completions", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      model: LLM,
+      max_tokens: budget,
+      response_format: { type:"json_object" },
+      messages: [
+        { role:"system", content:"You return only a single JSON object. No prose, no markdown fences." },
+        { role:"user", content:[
+          { type:"text", text: AI_ASK },
+          { type:"image_url", image_url:{ url: imageUri } }
+        ]}
+      ]
+    })
+  }).then(function(r){ return r.text(); }).then(function(t){
+    var j; try{ j = JSON.parse(t); }catch(e){ throw new Error("応答を解釈できませんでした"); }
+    if(j.error) throw new Error(j.error.message || "読み取りに失敗しました");
+    var ch = (j.choices && j.choices[0]) || {};
+    var c  = ch.message && ch.message.content;
+    // 文字の多いラベルほど思考が長くなり、上限に当たって途中で切れる
+    if(ch.finish_reason === "length") throw new Error("__LENGTH__");
+    if(!c) throw new Error(j.message || "読み取り結果が空でした");
+    var body = carveJson(c);
+    if(!body) throw new Error("__LENGTH__");
+    try{ return JSON.parse(body); }
+    catch(e){ throw new Error("JSON を解釈できませんでした"); }
+  });
+}
+
+/* 途中で切れた回は、上限を上げて 1 度だけ取り直す。 */
+function analyse(imageUri){
+  return askLlm(imageUri, 4000).catch(function(err){
+    if(err.message !== "__LENGTH__") throw err;
+    return askLlm(imageUri, 8000).catch(function(e2){
+      throw new Error(e2.message === "__LENGTH__"
+        ? "説明が長くなりすぎて最後まで受け取れませんでした" : e2.message);
+    });
+  });
+}
+
+var aiToken = 0;
+function paintAiRows(o, loading){
+  var dl = $("#aiRows"); dl.innerHTML = "";
+  AI_SCHEMA.forEach(function(f){
+    var row = document.createElement("div");
+    row.className = "airow" + (f.wide ? " wide" : "");
+    var v = o ? o[f.k] : null;
+    if(f.k === "_seasons" && o){
+      var sc = o.cut05_scenes || {};
+      v = SEASONS.map(function(x){
+        return x.n + (x === season ? " ●" : (sc[x.k] ? " ◯" : " —"));
+      }).join("　");
+    }
+    if(f.k === "_scene" && o) v = sceneFor(season);
+    if(Array.isArray(v)) v = v.join("・");
+    if(f.k === "price_jpy" && v != null && v !== "") v = yen(v);
+    row.innerHTML = '<dt>'+f.t+'</dt><dd class="'+(f.cls||"")+'">'+
+      (o ? esc(v == null || v === "" ? "—" : v) : (loading ? '<span class="aiskl"></span>' : "—"))+'</dd>';
+    dl.appendChild(row);
+  });
+}
+paintAiRows(null, false);
+
+function runAnalyse(){
+  var my = ++aiToken;
+  var panel = $("#aiPanel"), t0 = Date.now();
+  panel.classList.remove("ok"); panel.classList.add("run");
+  $("#aiErr").classList.add("hide");
+  $("#aiState").textContent = "読み取り中";
+  $("#aiMs").textContent = LLM;
+  $("#aiRun").disabled = true;
+  paintAiRows(null, true);
+
+  return toJpeg(current.url, 1000).then(analyse).then(function(o){
+    if(my !== aiToken) return;
+    current.ai = o;
+    // 読み取った内容で、そのまま出品情報を埋める（PDP まで一気につながる）
+    if(o.name_ja)  { current.name = o.name_ja;  $("#fName").value = o.name_ja; }
+    if(o.price_jpy){ current.price = o.price_jpy; $("#fPrice").value = String(o.price_jpy); }
+    if(Array.isArray(o.colors_ja) && o.colors_ja.length) current.colors = o.colors_ja;
+    if(o.desc_ja)  current.desc = o.desc_ja;
+    if(o.kind_en)  current.kind = o.kind_en;
+    // 既定の季節を商品に合わせる。全商品「梅雨」固定だと、水筒が雨の中に置かれる
+    var best = SEASONS.filter(function(x){ return x.k === o.best_season; })[0];
+    if(best){ season = best; buildSeasons(); }
+    paintAiRows(o, false);
+    panel.classList.remove("run"); panel.classList.add("ok");
+    $("#aiState").textContent = "読み取り完了";
+    $("#aiMs").textContent = LLM + " ／ " + Math.round((Date.now()-t0)/1000) + "s";
+    $("#aiRun").disabled = false;
+    $("#aiRun").textContent = "読み取り直す";
+    refreshTileFrom(current);
+  }).catch(function(err){
+    if(my !== aiToken) return;
+    panel.classList.remove("run");
+    paintAiRows(null, false);
+    $("#aiState").textContent = "読み取り失敗";
+    $("#aiMs").textContent = "";
+    $("#aiErr").textContent = "商品を読み取れませんでした（" + (err.message||err) + "）。同梱の情報でそのまま撮影できます。";
+    $("#aiErr").classList.remove("hide");
+    $("#aiRun").disabled = false;
+  });
+}
+$("#aiRun").addEventListener("click", runAnalyse);
+
+/* 読み取りで名前や価格が変わったら、選択中のタイルの表示も合わせる */
+function refreshTileFrom(p){
+  var t = document.querySelector("#pGrid .ptile[aria-pressed=true]");
+  if(!t) return;
+  var b = t.querySelector("b"), sub = t.querySelector(".sub");
+  if(b) b.textContent = p.name || "";
+  if(sub) sub.textContent = (p.cat || "Upload") + " — " + yen(p.price);
+}
+
+/* ═══════════ 参照画像を data URI に揃える ═══════════ */
+function toJpeg(src, maxSide){
+  return new Promise(function(resolve, reject){
+    var im = new Image();
+    im.onload = function(){
+      var w = im.naturalWidth || 1000, h = im.naturalHeight || 1000;
+      var sc = Math.min(1, (maxSide||1400) / Math.max(w,h));
+      var c = document.createElement("canvas");
+      c.width  = Math.max(2, Math.round(w*sc));
+      c.height = Math.max(2, Math.round(h*sc));
+      var g = c.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0,0,c.width,c.height);
+      g.drawImage(im, 0, 0, c.width, c.height);
+      try { resolve(c.toDataURL("image/jpeg", .92)); } catch(e){ reject(e); }
+    };
+    im.onerror = function(){ reject(new Error("画像を読み込めませんでした")); };
+    im.src = src;
+  });
+}
+
+/* ═══════════ 送信とポーリング ═══════════ */
+function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+function submit(imageUri, prompt){
+  return fetch(API + "/" + MODEL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ prompt: prompt, image:[imageUri], aspectRatio: ASPECT, imageSize: SIZE })
+  }).then(function(r){ return r.text(); }).then(function(t){
+    var j; try{ j = JSON.parse(t); }catch(e){ throw new Error("応答を解釈できませんでした: " + t.slice(0,90)); }
+    if(!j.data || !j.data.task_id) throw new Error(j.message || "生成を開始できませんでした");
+    var u = (j.data.get_result && j.data.get_result.url) || (API + "/tasks/" + j.data.task_id);
+    try{ var x = new URL(u); return x.pathname + x.search; }catch(e){ return u; }
+  });
+}
+
+function poll(path){
+  var deadline = Date.now() + TIMEOUT;
+  function step(){
+    if(Date.now() > deadline) throw new Error("時間内に完了しませんでした");
+    return sleep(3000).then(function(){
+      return fetch(path).then(function(r){ return r.text(); });
+    }).then(function(t){
+      var j; try{ j = JSON.parse(t); }catch(e){ throw new Error("結果を取得できませんでした"); }
+      var d = j.data || {};
+      if(d.status === "success" || d.status === "succeeded" || d.status === "completed"){
+        var u = d.result && d.result.resources && d.result.resources[0] && d.result.resources[0].url;
+        if(!u) throw new Error("画像 URL を取得できませんでした");
+        return u;
+      }
+      if(d.status === "failed" || d.status === "error" || d.status === "canceled" || d.status === "cancelled"){
+        throw new Error(d.error || d.error_message || "生成に失敗しました");
+      }
+      return step();
+    });
+  }
+  return step();
+}
+
+/* ═══════════ 5 カット同時生成 ═══════════ */
+var busy = false, runToken = 0, results = [];
+var shotTiles = [], lastRef = null;
+var pdpIndex = 0;
+
+function shotTile(s, i){
+  var el = document.createElement("article");
+  el.className = "shot"; el.dataset.i = String(i);
+  el.innerHTML =
+    '<div class="mount"><button class="fr" type="button" disabled>'+
+      '<span class="skl"></span><img alt="">'+
+      '<span class="expo"><span>Queued</span><span class="sec"></span></span>'+
+      '<span class="zi">Tap to enlarge</span></button></div>'+
+    '<div class="fb"><b>'+s.n+'</b><span class="st"></span>'+
+      '<a class="dl" target="_blank" rel="noopener">Download</a></div>'+
+    '<p class="save"></p>';
+  return el;
+}
+
+/* 撮影中の枠には、経過秒を出しておく。何も動かない待ち時間は長く感じる。 */
+function startExpo(tile){
+  var lab = tile.querySelector(".expo span"), sec = tile.querySelector(".expo .sec");
+  var t0 = Date.now();
+  lab.textContent = "Exposing";
+  tile._expo = setInterval(function(){
+    sec.textContent = Math.round((Date.now()-t0)/1000) + "s";
+  }, 1000);
+  sec.textContent = "0s";
+}
+function stopExpo(tile){ if(tile._expo){ clearInterval(tile._expo); tile._expo = null; } }
+/* 届いた瞬間の合図。朱の枠が一度だけ光って消える */
+function land(tile){
+  tile.classList.add("land");
+  setTimeout(function(){ tile.classList.remove("land"); }, 900);
+}
+
+/* 1 枚ぶんの撮影。API は即座に投げ、画面に出すタイミングだけ gate で待たせる。 */
+function runOne(i, ref, my, gate){
+  var st = STYLES[i], tile = shotTiles[i], t0 = Date.now();
+  return submit(ref, promptFor(st)).then(poll).then(function(url){
+    return (gate || Promise.resolve()).then(function(){ return url; });
+  }).then(function(url){
+    if(my !== runToken) return;
+    results[i] = { style:st, url:url, sec: Math.round((Date.now()-t0)/1000) };
+    var img = tile.querySelector("img");
+    img.onload = function(){ img.classList.add("on"); };
+    img.src = url;
+    tile.classList.remove("ng");
+    tile.classList.add("ok");
+    var fr = tile.querySelector(".fr");
+    fr.disabled = false;
+    if(!fr._bound){
+      fr._bound = true;
+      fr.addEventListener("click", function(){
+        var r = results[i]; if(r) openZoom(r.style.n, r.url);
+      });
+    }
+    var a = tile.querySelector(".dl");
+    a.href = url;
+    a.setAttribute("download", (current.id||"product") + "-" + st.id + ".png");
+    stopExpo(tile);
+    paintSave(tile, st, results[i].sec);
+    land(tile);
+    buildPdp();   // 届いたカットから商品ページに差し込んでいく
+  }).catch(function(err){
+    if(my !== runToken) return;
+    stopExpo(tile);
+    tile.classList.add("ng");
+    tile.querySelector(".st").textContent = "Failed";
+    var e = document.createElement("span");
+    e.className = "err"; e.textContent = err.message || String(err);
+    tile.querySelector(".fr").appendChild(e);
+  });
+}
+
+/* 従来かかっていた費用と納期を、その場の秒数の横に置く。 */
+function paintSave(tile, st, sec){
+  var el = tile.querySelector(".save");
+  el.innerHTML = '<s>'+yen(st.cost)+'・'+st.lead+'</s><b>'+sec+' 秒</b>';
+}
+
+/* 5 枚ぶんの合計。ここが商談でいちばん効く数字になる。 */
+function paintTotals(){
+  var got = results.filter(Boolean);
+  if(!got.length){ $("#totals").classList.add("hide"); return; }
+  var yenSum = got.reduce(function(a,r){ return a + r.style.cost; }, 0);
+  var secMax = got.reduce(function(a,r){ return Math.max(a, r.sec); }, 0);
+  $("#totals").classList.remove("hide");
+  $("#totals").innerHTML =
+    '<span>従来（'+got.length+' カット）</span><s>'+yen(yenSum)+'・最長 3 週間</s>'+
+    '<em>→</em><b>'+secMax+' 秒</b>';
+}
+
+/* 05 だけを撮り直す。季節を選び直したときの動き。 */
+function reshoot(i){
+  if(busy || !lastRef) return;
+  busy = true;
+  var my = runToken;              // 走っている回の続きとして扱う
+  var tile = shotTiles[i];
+  results[i] = null;
+  tile.classList.remove("ok","ng");
+  var img = tile.querySelector("img");
+  img.classList.remove("on"); img.removeAttribute("src");
+  var e = tile.querySelector(".err"); if(e) e.remove();
+  tile.querySelector(".save").innerHTML = "";
+  tile.querySelector(".fr").disabled = true;
+  startExpo(tile);
+  $("#btnRun").disabled = true;
+  $("#resTag").textContent = "Reshooting 05";
+  $("#cardResult").scrollIntoView({ behavior:"smooth", block:"start" });
+  runOne(i, lastRef, my, null).then(function(){
+    busy = false;
+    $("#btnRun").disabled = false;
+    var ok = results.filter(Boolean).length;
+    $("#resTag").textContent = ok + " / " + STYLES.length + " done";
+    paintTotals();
+  });
+}
+
+/* 結果欄を組み立てて、そこまでスクロールする。
+   ボタンを押した直後は必ずここへ来てもらう。読み取りが要る回でも、
+   十数秒のあいだ画面が動かないと「押せていないのでは」と思われるため、
+   先に枠だけ出しておいて、待っていることが見えるようにする。 */
+function layoutResult(tag, sub, label){
+  var card = $("#cardResult");
+  card.classList.remove("hide");
+  $("#cardPdp").classList.add("hide");
+  $("#runErr").classList.add("hide");
+  $("#totals").classList.add("hide");
+  $("#resTag").textContent = tag;
+  $("#resSub").textContent = sub;
+
+  // 元の写真も 1 枚目に並べる。「何から作ったか」が同じ画面にないと比べられない。
+  var g = $("#rGrid"); g.innerHTML = "";
+  var orig = document.createElement("article");
+  orig.className = "shot orig ok";
+  orig.innerHTML = '<div class="mount"><span class="fr"><img class="on" src="'+current.url+'" alt="元の写真"></span></div>'+
+                   '<div class="fb"><b>Input ／ 元の写真</b></div>';
+  g.appendChild(orig);
+
+  shotTiles = STYLES.map(function(st,i){
+    var t = shotTile(st,i); g.appendChild(t);
+    if(label) t.querySelector(".expo span").textContent = label;
+    return t;
+  });
+  setProgress(0);
+  card.scrollIntoView({ behavior:"smooth", block:"start" });
+  return shotTiles;
+}
+
+function runAll(reuse){
+  if(busy) return;
+  busy = true;
+  var my = ++runToken;
+  results = new Array(STYLES.length);
+  pdpIndex = 0;
+
+  $("#btnRun").disabled = true;
+  $("#btnRun").classList.add("busy");
+
+  var tiles;
+  if(reuse && shotTiles.length === STYLES.length){
+    tiles = shotTiles;
+    $("#resTag").textContent = "Shooting";
+    $("#resSub").textContent = "5 本のリクエストを同時に投げています。早く終わったカットから表示されます。";
+  } else {
+    tiles = layoutResult("Shooting",
+      "5 本のリクエストを同時に投げています。早く終わったカットから表示されます。");
+  }
+  var done = 0;
+  setProgress(0);
+  toJpeg(current.url, MAX_SIDE).then(function(ref){
+    if(my !== runToken) return;
+    lastRef = ref;
+    tiles.forEach(function(t){ startExpo(t); });
+
+    /* 5 本とも同時に投げるが、表に出す順だけは制御する。
+       01（白背景＝証拠）より先にモデル写真が出ると、
+       「これは自分の商品だ」と思う前に疑いが立ってしまう。 */
+    var openGate, gate = new Promise(function(r){ openGate = r; });
+    var relief = setTimeout(function(){ openGate(); }, 75000);   // 01 が詰まったときの保険
+
+    STYLES.forEach(function(st, i){
+      runOne(i, ref, my, i === 0 ? null : gate).then(function(){
+        if(i === 0){ clearTimeout(relief); openGate(); }
+        finish();
+      });
+    });
+
+    function finish(){
+      done++;
+      setProgress(done);
+      if(done < STYLES.length) return;
+      busy = false;
+      $("#btnRun").disabled = false;
+      $("#btnRun").classList.remove("busy");
+      var ok = results.filter(Boolean).length;
+      $("#resTag").textContent = ok + " / " + STYLES.length + " done";
+      $("#resSub").textContent = ok
+        ? "カットをタップすると大きく表示・ダウンロードできます。05 の場面は 03 のチップから選び直せます。"
+        : "生成できませんでした。時間をおいてもう一度お試しください。";
+      if(ok) buildPdp(); else $("#cardPdp").classList.add("hide");
+      paintTotals();
+    }
+  }).catch(function(err){
+    if(my !== runToken) return;
+    busy = false;
+    $("#btnRun").disabled = false;
+    $("#btnRun").classList.remove("busy");
+    $("#runErr").textContent = "商品画像を読み込めませんでした（" + (err.message||err) + "）。";
+    $("#runErr").classList.remove("hide");
+  });
+}
+
+function setProgress(done){
+  $("#rCount").textContent = done + " / " + STYLES.length + " CUTS";
+  $("#rProg").style.width = Math.round(done / STYLES.length * 100) + "%";
+}
+
+/* 読み取りがまだなら、先に読み取ってから撮る。プロンプトの土台が変わるため。 */
+function analyseThenRun(){
+  if(busy) return;
+  if(current.ai) return runAll();
+  // 読み取りが要る回。先に結果欄を出して連れて行き、待っていることを見せる
+  layoutResult("Reading", "先に商品を読み取っています。読み取り次第、5 本同時に撮影をはじめます。", "Reading");
+  $("#btnRun").disabled = true;
+  $("#btnRun").classList.add("busy");
+  runAnalyse().then(function(){
+    $("#btnRun").disabled = false;
+    $("#btnRun").classList.remove("busy");
+    runAll(true);
+  });
+}
+$("#btnRun").addEventListener("click", analyseThenRun);
+// 引数なしで呼ぶ。イベントオブジェクトが reuse として渡ると、前回のカットを使い回してしまう
+$("#btnRedo").addEventListener("click", function(){ runAll(); });
+$("#goStart").addEventListener("click", function(){
+  $("#step1").scrollIntoView({ behavior:"smooth", block:"start" });
+});
+
+/* ═══════════ 商品ページのモック ═══════════ */
+function buildPdp(){
+  var cuts = results.filter(Boolean);
+  if(!cuts.length) return;
+  if(pdpIndex >= cuts.length) pdpIndex = 0;
+  $("#cardPdp").classList.remove("hide");
+
+  $("#pdpBrand").textContent = $("#fBrand").value || current.brand || "AURORA STORE";
+  $("#pdpName").textContent  = $("#fName").value  || current.name  || "商品名";
+  var price = Number(String($("#fPrice").value).replace(/[^0-9]/g,"")) || current.price || 0;
+  $("#pdpPrice").textContent = yen(price);
+  $("#pdpDesc").textContent  = current.desc || "この商品の説明文がここに入ります。";
+
+  var rail = $("#pdpRail"); rail.innerHTML = "";
+  function pick(i){
+    pdpIndex = i;
+    $("#pdpMain").src = cuts[i].url;
+    $("#pdpLbl").textContent = cuts[i].style.en;
+    $$("#pdpRail button").forEach(function(b,k){ b.setAttribute("aria-pressed", k===i ? "true":"false"); });
+  }
+  cuts.forEach(function(c, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-pressed","false");
+    b.innerHTML = '<img src="'+c.url+'" alt="'+esc(c.style.n)+'">';
+    b.addEventListener("click", function(){ pick(i); });
+    rail.appendChild(b);
+  });
+  pick(pdpIndex);
+
+  chips("#chipColor", current.colors || ["標準"]);
+  chips("#chipQty", ["1","2","3"]);
+}
+
+function chips(sel, list){
+  var box = $(sel); box.innerHTML = "";
+  list.forEach(function(v, i){
+    var b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = v;
+    b.setAttribute("aria-pressed", i===0 ? "true":"false");
+    b.addEventListener("click", function(){
+      $$(sel + " .chip").forEach(function(x){ x.setAttribute("aria-pressed","false"); });
+      b.setAttribute("aria-pressed","true");
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ═══════════ 拡大 ═══════════ */
+function openZoom(label, url){
+  $("#zoomImg").src = url;
+  $("#zoomLbl").textContent = label;
+  $("#zoomDl").href = url;
+  $("#zoomDl").setAttribute("download", (current.id||"product") + ".png");
+  $("#zoomOv").classList.add("on");
+}
+function closeZoom(){ $("#zoomOv").classList.remove("on"); $("#zoomImg").removeAttribute("src"); }
+$("#zoomClose").addEventListener("click", closeZoom);
+$("#zoomOv").addEventListener("click", function(e){ if(e.target === $("#zoomOv")) closeZoom(); });
+$("#camOv").addEventListener("click", function(e){ if(e.target === $("#camOv")) closeCam(); });
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Escape") return;
+  if($("#zoomOv").classList.contains("on")) closeZoom();
+  if($("#camOv").classList.contains("on")) closeCam();
+});
+
+/* ═══════════ ヘッダー・索引レール・スクロール演出 ═══════════ */
+(function chrome(){
+  var nav = $("#nav"), idx = $("#idx");
+  var links = $$("#idx a");
+  var onScroll = function(){
+    nav.classList.toggle("stuck", window.scrollY > 24);
+    // 索引はヒーローを抜けてから出す。最初の画面では邪魔になる
+    idx.classList.toggle("on", window.scrollY > window.innerHeight * .62);
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive:true });
+
+  /* いま画面の中心にいるバンドを索引に映す。まだ出ていない工程は薄いまま。 */
+  var marks = links.map(function(a){
+    var el = document.querySelector(a.getAttribute("href"));
+    return { a:a, el:el };
+  }).filter(function(m){ return m.el; });
+  function paintIdx(){
+    var mid = window.scrollY + window.innerHeight * .42, now = null;
+    marks.forEach(function(m){
+      m.a.style.opacity = m.el.classList.contains("hide") ? ".34" : "";
+      if(m.el.classList.contains("hide")) return;
+      var top = m.el.getBoundingClientRect().top + window.scrollY;
+      if(top <= mid) now = m;
+    });
+    marks.forEach(function(m){ m.a.classList.toggle("now", m === now); });
+  }
+  paintIdx();
+  window.addEventListener("scroll", paintIdx, { passive:true });
+  window.addEventListener("resize", paintIdx, { passive:true });
+  // 工程が現れた／消えたときも索引を合わせる
+  new MutationObserver(paintIdx).observe(document.body,
+    { subtree:true, attributes:true, attributeFilter:["class"] });
+
+  if(!("IntersectionObserver" in window)){
+    $$(".rv").forEach(function(el){ el.classList.add("in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting) return;
+      // 同じ帯の中の要素を、わずかにずらして起こす
+      var d = Number(en.target.dataset.d || 0);
+      setTimeout(function(){ en.target.classList.add("in"); }, d);
+      io.unobserve(en.target);
+    });
+  }, { rootMargin:"0px 0px -10% 0px", threshold:.06 });
+  $$(".rv:not(.in)").forEach(function(el, i){ el.dataset.d = String((i % 3) * 90); io.observe(el); });
+})();
+
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c];
+  });
+}
+})();
+</script>
+</body>
+</html>
