@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>バーチャルステージング ｜ MANJIRO</title>
+<meta name="description" content="空室の物件写真に、AI が家具を配置します。部屋の広さに合わせた家具を選び、3つのパターンをご提案します。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+/* ============================================================
+   1. トークン（ブランドカラー未確定のため、ここだけ差し替えれば色が変わる）
+   ============================================================ */
+:root{
+  --bg:#FAF9F7;
+  --card:#FFFFFF;
+  --line:#E5E1DA;
+  --line-soft:#EFEBE4;
+  --text:#2B2823;
+  --text-sub:#7A736A;
+  --accent:#8C6E4A;
+  --accent-dark:#75593A;
+  --accent-soft:#F0E9E0;
+  --disabled:#C4BFB7;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px; --sp-16:64px; --sp-20:80px;
+
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:22px;
+  --shadow-sm:0 1px 2px rgba(43,40,35,.05);
+  --shadow-md:0 10px 30px rgba(43,40,35,.07);
+  --shadow-lg:0 26px 70px rgba(43,40,35,.13);
+
+  --ease:cubic-bezier(.16,1,.3,1);
+  --fast:150ms; --base:280ms; --slow:520ms;
+
+  --container:1240px;
+  color-scheme:light;
+}
+
+/* ============================================================
+   2. リセット / 日本語タイポグラフィ
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+body{
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","BIZ UDPGothic","Noto Sans JP",system-ui,sans-serif;
+  font-size:16px;
+  line-height:1.8;
+  letter-spacing:.02em;
+  font-feature-settings:"palt" 1;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+:where(p,li,h1,h2,h3,h4,dd,dt,span,b){line-break:strict; overflow-wrap:break-word; word-break:normal}
+h1,h2,h3,h4{line-height:1.4; letter-spacing:.01em; font-weight:600; text-wrap:balance}
+p{text-wrap:pretty}
+img{display:block; max-width:100%; height:auto}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:var(--r-sm)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.num{font-variant-numeric:tabular-nums; letter-spacing:0}
+.nw{white-space:nowrap}   /* 数字と単位が行をまたいで分かれるのを防ぐ */
+
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--sp-6)}
+@media (max-width:640px){ .container{padding-inline:var(--sp-4)} }
+
+/* ============================================================
+   3. ヘッダー
+   ============================================================ */
+.site-header{
+  position:sticky; top:0; z-index:60;
+  background:rgba(250,249,247,.86);
+  backdrop-filter:blur(14px) saturate(160%);
+  border-bottom:1px solid var(--line);
+}
+.header-inner{display:flex; align-items:center; gap:var(--sp-4); height:64px}
+.brand{display:inline-flex; align-items:center; gap:10px; text-decoration:none; color:inherit}
+.brand svg{width:26px; height:26px; flex:none}
+.brand b{font-weight:600; font-size:17px; letter-spacing:.26em}
+.header-nav{display:none; gap:var(--sp-6); margin-left:var(--sp-8)}
+@media (min-width:900px){ .header-nav{display:flex} }
+.header-nav span{font-size:13.5px; color:var(--text-sub)}
+.header-right{margin-left:auto; display:flex; align-items:center; gap:var(--sp-3); min-width:0}
+.chip.member-chip{display:none}
+@media (min-width:560px){ .chip.member-chip{display:inline-flex} }
+
+.chip{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 11px; border-radius:999px;
+  border:1px solid var(--line); background:#fff;
+  font-size:12.5px; color:var(--text-sub); white-space:nowrap;
+}
+.chip-accent{color:var(--accent); border-color:rgba(140,110,74,.28); background:var(--accent-soft)}
+.dot{width:5px; height:5px; border-radius:999px; background:currentColor; flex:none}
+
+/* ============================================================
+   4. ヒーロー
+   ============================================================ */
+.hero{padding-block:var(--sp-12) var(--sp-8); border-bottom:1px solid var(--line-soft)}
+@media (max-width:640px){ .hero{padding-block:var(--sp-10) var(--sp-8)} }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:12px; letter-spacing:.16em; color:var(--accent); font-weight:600;
+}
+.hero h1{margin-top:var(--sp-3); font-size:clamp(27px,3.6vw,40px); line-height:1.32; letter-spacing:.02em}
+.hero-lead{margin-top:var(--sp-4); font-size:clamp(15px,1.5vw,17px); line-height:1.9; color:var(--text-sub); max-width:34em}
+.hero-note{margin-top:var(--sp-4); font-size:12.5px; line-height:1.8; color:var(--text-sub)}
+
+/* ============================================================
+   5. ステップインジケータ
+   ============================================================ */
+.steps{
+  position:sticky; top:64px; z-index:50;
+  background:rgba(250,249,247,.92); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.steps-inner{display:flex; align-items:center; gap:var(--sp-2); padding-block:var(--sp-4); overflow-x:auto; scrollbar-width:none}
+.steps-inner::-webkit-scrollbar{display:none}
+.step{display:flex; align-items:center; gap:9px; flex:none; padding-right:var(--sp-2)}
+.step-no{
+  width:26px; height:26px; border-radius:999px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12.5px; font-weight:600;
+  border:1px solid var(--line); color:var(--disabled); background:#fff;
+  transition:background var(--base) var(--ease), color var(--base) var(--ease), border-color var(--base) var(--ease);
+}
+.step-name{font-size:13.5px; color:var(--disabled); white-space:nowrap; transition:color var(--base) var(--ease)}
+.step-sep{width:26px; height:1px; background:var(--line); flex:none; margin-right:var(--sp-2)}
+.step.is-current .step-no{background:var(--accent); border-color:var(--accent); color:#fff}
+.step.is-current .step-name{color:var(--text); font-weight:600}
+.step.is-done .step-no{background:var(--accent-soft); border-color:rgba(140,110,74,.3); color:var(--accent)}
+.step.is-done .step-name{color:var(--text-sub)}
+@media (max-width:720px){
+  .step-name{display:none}
+  .step.is-current .step-name{display:inline}   /* 現在地だけは名前を残す */
+  .step-sep{width:14px}
+}
+
+/* ============================================================
+   6. パネル共通
+   ============================================================ */
+.panel{padding-block:var(--sp-12); border-bottom:1px solid var(--line-soft)}
+.panel[hidden]{display:none}
+@media (max-width:640px){ .panel{padding-block:var(--sp-8)} }
+.panel-head{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap}
+.panel-head h2{font-size:clamp(19px,2.2vw,24px)}
+.panel-sub{margin-top:var(--sp-3); font-size:14px; line-height:1.85; color:var(--text-sub); max-width:40em}
+.panel-body{margin-top:var(--sp-6)}
+
+/* 選択済みサマリー */
+.summary{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); padding-block:var(--sp-4); border-bottom:1px solid var(--line-soft)}
+@media (max-width:640px){ .summary{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none} .summary::-webkit-scrollbar{display:none} .sum-item{flex:none} }
+.summary[hidden]{display:none}
+.sum-item{display:flex; align-items:center; gap:10px; padding:6px 8px 6px 6px; border:1px solid var(--line); border-radius:999px; background:#fff}
+.sum-item img{width:34px; height:34px; border-radius:999px; object-fit:cover; flex:none}
+.sum-item .sum-label{font-size:11px; color:var(--text-sub); line-height:1.3}
+.sum-item .sum-value{font-size:13px; line-height:1.4}
+.sum-item button{font-size:12px; color:var(--accent); padding:4px 8px; border-radius:999px}
+.sum-item button:hover{background:var(--accent-soft)}
+
+/* ボタン */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  min-height:50px; padding:0 var(--sp-6);
+  border-radius:var(--r-md); border:1px solid transparent;
+  font-size:15px; font-weight:600; letter-spacing:.03em; line-height:1;
+  transition:background var(--fast) var(--ease), border-color var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent); color:#fff}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-primary[disabled]{background:var(--disabled); cursor:not-allowed}
+.btn-ghost{border-color:var(--line); background:#fff}
+.btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+.btn-sm{min-height:44px; font-size:14px; padding:0 var(--sp-5)}
+
+/* ============================================================
+   7. ② 物件カード
+   ============================================================ */
+.props{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-5)}
+@media (max-width:900px){ .props{grid-template-columns:1fr} }
+.prop{
+  display:block; text-align:left; overflow:hidden; position:relative;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);
+  transition:transform var(--base) var(--ease), box-shadow var(--base) var(--ease), border-color var(--fast) var(--ease);
+}
+.prop:hover{transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:rgba(140,110,74,.34)}
+.prop[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent), var(--shadow-md)}
+.prop-thumb{display:block; position:relative; aspect-ratio:16/10; background:var(--accent-soft); overflow:hidden}
+.prop-thumb img{width:100%; height:100%; object-fit:cover; transition:transform var(--slow) var(--ease)}
+.prop:hover .prop-thumb img{transform:scale(1.04)}
+.prop-badge{display:block; position:absolute; left:12px; top:12px; padding:4px 10px; border-radius:999px; background:rgba(43,40,35,.78); color:#fff; font-size:11.5px}
+.prop-body{display:block; padding:var(--sp-5)}
+.prop-name{display:block; font-size:16.5px; font-weight:600; line-height:1.5}
+.prop-meta{margin-top:var(--sp-3); display:flex; flex-wrap:wrap; gap:6px}
+.prop-foot{margin-top:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--line)}
+.prop-price{display:block; font-size:23px; font-weight:600; letter-spacing:0; line-height:1.3; white-space:nowrap}
+.prop-place{display:block; margin-top:6px; font-size:12.5px; line-height:1.7; color:var(--text-sub)}
+.prop-place i{font-style:normal; display:block}
+.prop-check{
+  position:absolute; right:12px; top:12px; width:26px; height:26px; border-radius:999px;
+  background:var(--accent); display:none; align-items:center; justify-content:center;
+}
+.prop[aria-pressed="true"] .prop-check{display:flex}
+.prop-check::after{content:""; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(42deg) translate(-1px,-1px)}
+
+/* ============================================================
+   8. ③ 部屋サムネイル
+   ============================================================ */
+.rooms{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--sp-4)}
+@media (max-width:960px){ .rooms{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:640px){
+  .rooms{grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-3)}
+}
+.room{
+  position:relative; display:block; text-align:left; overflow:hidden;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-md);
+  transition:transform var(--base) var(--ease), box-shadow var(--base) var(--ease), border-color var(--fast) var(--ease);
+}
+.room-shot{display:block; position:relative; aspect-ratio:16/9; background:var(--accent-soft); overflow:hidden}
+.room-shot img{width:100%; height:100%; object-fit:cover; transition:transform var(--slow) var(--ease)}
+.room:not([disabled]):hover{transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:rgba(140,110,74,.34)}
+.room:not([disabled]):hover .room-shot img{transform:scale(1.05)}
+.room[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+.room[disabled]{cursor:not-allowed; background:#FCFBFA}
+.room[disabled] .room-shot img{filter:grayscale(1); opacity:.5}
+.room[disabled] .room-cap b{color:var(--disabled)}
+.room-cap{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px 11px}
+.room-cap b{font-size:13.5px; font-weight:600}
+.room-cap i{font-style:normal; font-size:11.5px; color:var(--text-sub)}
+.room-tag{
+  display:block; position:absolute; right:8px; top:8px; padding:3px 9px; border-radius:999px;
+  font-size:11px; line-height:1.6; letter-spacing:.02em;
+}
+.room-tag.ng{background:rgba(43,40,35,.72); color:#fff}
+.room-tag.rec{background:var(--accent); color:#fff}
+.room-why{
+  display:block; position:absolute; left:8px; right:8px; bottom:8px; z-index:3;
+  padding:7px 10px; border-radius:var(--r-sm);
+  background:rgba(43,40,35,.9); color:#fff; font-size:11.5px; line-height:1.6;
+  opacity:0; transform:translateY(4px); pointer-events:none;
+  transition:opacity var(--base) var(--ease), transform var(--base) var(--ease);
+}
+.room[disabled]:hover .room-why, .room[disabled]:focus-visible .room-why{opacity:1; transform:none}
+@media (hover:none){ .room[disabled] .room-why{opacity:1; transform:none} }
+@media (max-width:640px){
+  .room-why{left:6px; right:6px; bottom:6px; padding:5px 7px; font-size:10.5px; line-height:1.5}
+  /* 幅が足りないので、部屋名と広さは縦に積む（横並びだと両方が折り返す） */
+  .room-cap{flex-direction:column; align-items:flex-start; justify-content:flex-start; gap:1px; padding:8px 10px 9px}
+  .room-cap b{font-size:12.5px; line-height:1.5}
+  .room-cap i{font-size:11px}
+}
+
+/* ============================================================
+   9. ④ スタイル
+   ============================================================ */
+.styles{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-5)}
+@media (max-width:860px){ .styles{grid-template-columns:1fr} }
+.style{
+  position:relative; display:block; text-align:left; overflow:hidden;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+  transition:transform var(--base) var(--ease), box-shadow var(--base) var(--ease), border-color var(--fast) var(--ease);
+}
+.style:hover{transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:rgba(140,110,74,.34)}
+.style[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent), var(--shadow-md)}
+.style-thumb{display:block; position:relative; aspect-ratio:16/9; background:var(--accent-soft); overflow:hidden}
+.style-thumb img{
+  width:100%; height:122%;            /* 下18%＝焼き込みバーを外して見せる */
+  object-fit:cover; object-position:center top;
+  transition:transform var(--slow) var(--ease);
+}
+.style:hover .style-thumb img{transform:scale(1.05)}
+.style-thumb::after{
+  content:"イメージ例"; position:absolute; left:10px; top:10px;   /* 下は焼き込みバーが入る */
+  padding:3px 9px; border-radius:999px; background:rgba(43,40,35,.68); color:#fff; font-size:10.5px;
+}
+.style-body{display:block; padding:var(--sp-5)}
+.style-body b{display:block; font-size:16px}
+.style[aria-pressed="true"] .style-body b{color:var(--accent)}
+.style-desc{display:block; margin-top:6px; font-size:13px; line-height:1.85; color:var(--text-sub)}
+.style-check{
+  position:absolute; right:12px; top:12px; width:26px; height:26px; border-radius:999px;
+  background:var(--accent); display:none; align-items:center; justify-content:center; z-index:2;
+}
+.style[aria-pressed="true"] .style-check{display:flex}
+.style-check::after{content:""; width:6px; height:11px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(42deg) translate(-1px,-1px)}
+.run-bar{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-4); margin-top:var(--sp-8)}
+.run-note{font-size:13px; line-height:1.8; color:var(--text-sub); flex:1 1 22em; max-width:40em}
+
+/* ============================================================
+   10. ⑤ 生成中
+   ============================================================ */
+.gen{
+  position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--sp-5);
+  min-height:min(56vh,440px);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-xl); box-shadow:var(--shadow-md);
+  padding:var(--sp-8) var(--sp-6);
+}
+.gen::before{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(120% 80% at 50% 0%, var(--accent-soft), transparent 62%);
+  opacity:.75; pointer-events:none;
+}
+.gen > *{position:relative}
+.loader{width:44px; height:44px; border-radius:999px; border:2px solid var(--line); border-top-color:var(--accent); animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-text{font-size:16px; letter-spacing:.03em; text-align:center; min-height:1.9em; transition:opacity var(--base) var(--ease)}
+.gen-text.is-out{opacity:0}
+.gen-bar{width:min(340px,84%); height:3px; border-radius:999px; background:var(--line-soft); overflow:hidden}
+.gen-bar i{display:block; height:100%; width:0; background:var(--accent); border-radius:999px; transition:width .7s var(--ease)}
+.gen-note{font-size:12.5px; color:var(--text-sub)}
+
+/* ============================================================
+   11. ⑥ 3パターン
+   ============================================================ */
+.patterns{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--sp-5)}
+@media (max-width:900px){ .patterns{grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-4)} }
+.pattern{
+  position:relative; display:block; text-align:left; overflow:hidden;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+  transition:transform var(--base) var(--ease), box-shadow var(--base) var(--ease), border-color var(--fast) var(--ease);
+  opacity:0; animation:rise var(--slow) var(--ease) forwards;
+}
+@keyframes rise{to{opacity:1; transform:none}}
+.pattern{transform:translateY(14px)}
+.pattern:nth-child(2){animation-delay:90ms}
+.pattern:nth-child(3){animation-delay:180ms}
+.pattern:hover{transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:rgba(140,110,74,.34)}
+.pattern[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent), var(--shadow-md)}
+.pattern-shot{display:block; position:relative; aspect-ratio:16/9; background:var(--accent-soft); overflow:hidden}
+.pattern-shot img{width:100%; height:100%; object-fit:cover}
+.pattern-cap{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px var(--sp-4) 13px}
+.pattern-cap b{font-size:14px}
+.pattern-cap span{font-size:12px; color:var(--accent)}
+.regen-bar{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-4); margin-top:var(--sp-6)}
+
+/* ============================================================
+   12. ⑦ Before / After
+   ============================================================ */
+.viewer{
+  position:relative; background:var(--card); border:1px solid var(--line);
+  border-radius:var(--r-xl); box-shadow:var(--shadow-md); padding:10px;
+  /* ノートPCでも「注記まで含めた1枚」が画面に収まる高さに抑える。
+     会議室で1回もスクロールさせないための制約。 */
+  margin-inline:auto;
+  max-width:min(100%, calc((100vh - 250px) * 16 / 9));
+}
+@media (max-width:640px){ .viewer{max-width:100%} }
+@media (max-width:640px){ .viewer{padding:6px} }
+.ba{position:relative; aspect-ratio:16/9; border-radius:var(--r-lg); overflow:hidden; background:var(--accent-soft); touch-action:pan-y}
+@media (max-width:640px){ .ba{border-radius:var(--r-md)} }
+.ba img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; user-select:none; -webkit-user-drag:none}
+.ba-after{position:absolute; inset:0; overflow:hidden; will-change:clip-path}
+.ba-range{position:absolute; inset:0; width:100%; height:100%; opacity:0; margin:0; cursor:ew-resize; z-index:5}
+.ba-line{position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; background:#fff; box-shadow:0 0 0 1px rgba(43,40,35,.22); pointer-events:none; z-index:4}
+.ba-knob{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:52px; height:52px; border-radius:999px;
+  background:#fff; box-shadow:0 6px 20px rgba(43,40,35,.28);
+  display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.ba-knob i{display:block; width:0; height:0; border-block:5px solid transparent}
+.ba-knob i:first-child{border-right:7px solid var(--accent)}
+.ba-knob i:last-child{border-left:7px solid var(--accent)}
+.ba-line.is-nudge .ba-knob{animation:nudge 1.6s var(--ease) 2}
+@keyframes nudge{
+  0%,100%{transform:translate(-50%,-50%)}
+  35%{transform:translate(calc(-50% - 10px),-50%)}
+  65%{transform:translate(calc(-50% + 10px),-50%)}
+}
+.ba-range:focus-visible + .ba-line .ba-knob{outline:3px solid var(--accent); outline-offset:3px}
+@media (max-width:640px){
+  .ba-knob{width:40px; height:40px}
+  .ba-knob i{border-block-width:4px}
+  .ba-knob i:first-child{border-right-width:6px} .ba-knob i:last-child{border-left-width:6px}
+}
+.ba-label{
+  position:absolute; top:14px; z-index:6; padding:6px 14px; border-radius:999px;
+  font-size:12px; letter-spacing:.08em; background:rgba(43,40,35,.66); color:#fff; pointer-events:none;
+  transition:opacity var(--base) var(--ease);
+}
+.ba-label.left{left:14px}
+.ba-label.right{right:14px}
+@media (max-width:640px){ .ba-label{top:9px; font-size:10.5px; padding:4px 10px} .ba-label.left{left:9px} .ba-label.right{right:9px} }
+.ba-hint{
+  position:absolute; inset:0; z-index:7; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; transition:opacity var(--base) var(--ease);
+}
+.ba-hint span{padding:9px 18px; border-radius:999px; background:rgba(43,40,35,.72); color:#fff; font-size:13px}
+.ba-hint.is-off{opacity:0}
+.result-meta{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-3); margin-top:var(--sp-5)}
+.result-actions{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-6)}
+.result-note{margin-top:var(--sp-5); font-size:12.5px; line-height:1.85; color:var(--text-sub); max-width:44em}
+
+/* パターンの切り替え（仕上がり画面で戻らずに見比べる） */
+.viewer-note{margin-top:var(--sp-4); font-size:12.5px; line-height:1.8; color:var(--text-sub); max-width:52em}
+.viewer-note span{display:block; font-size:11.5px; opacity:.85}
+.switcher{display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-5); flex-wrap:wrap}
+.switcher-label{font-size:12.5px; color:var(--text-sub); white-space:nowrap}
+.switcher-list{display:flex; gap:var(--sp-2); overflow-x:auto; padding-bottom:2px; scrollbar-width:none}
+.switcher-list::-webkit-scrollbar{display:none}
+.swi{
+  flex:none; width:104px; overflow:hidden; text-align:left;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-sm);
+  transition:border-color var(--fast) var(--ease), transform var(--fast) var(--ease);
+}
+.swi:hover{border-color:var(--accent); transform:translateY(-2px)}
+.swi[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+.swi img{display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:var(--accent-soft)}
+.swi b{display:block; padding:5px 8px 6px; font-size:11.5px; font-weight:600}
+.swi[aria-pressed="true"] b{color:var(--accent)}
+@media (max-width:640px){ .swi{width:88px} .switcher-label{width:100%} }
+
+/* ============================================================
+   12.7 生成履歴
+   ============================================================ */
+.hist-btn{
+  display:none; align-items:center; gap:8px; min-height:40px; padding:0 14px;
+  border:1px solid var(--line); border-radius:999px; background:#fff;
+  font-size:13px; color:var(--text-sub);
+  transition:border-color var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+.hist-btn.is-on{display:inline-flex}
+.hist-btn:hover{border-color:var(--accent); color:var(--accent)}
+.hist-btn svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+.hist-btn b{
+  min-width:20px; height:20px; padding:0 6px; border-radius:999px;
+  background:var(--accent); color:#fff; font-size:11.5px; font-weight:600;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+
+.hist-list{display:flex; flex-direction:column; gap:var(--sp-3); margin-top:var(--sp-6)}
+.hist-row{
+  display:grid; grid-template-columns:auto 1fr auto; gap:var(--sp-4); align-items:center;
+  padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg);
+  transition:border-color var(--fast) var(--ease), box-shadow var(--base) var(--ease);
+}
+.hist-row:hover{border-color:rgba(140,110,74,.4); box-shadow:var(--shadow-sm)}
+@media (max-width:640px){ .hist-row{grid-template-columns:auto 1fr; gap:var(--sp-3)} }
+.hist-shots{display:flex; align-items:center; gap:6px; flex:none}
+.hist-shots img{width:76px; aspect-ratio:16/9; object-fit:cover; border-radius:var(--r-sm); background:var(--accent-soft)}
+.hist-shots i{font-style:normal; font-size:11px; color:var(--disabled)}
+@media (max-width:640px){ .hist-shots img{width:56px} .hist-shots i{display:none} .hist-shots img:first-child{display:none} }
+.hist-body{min-width:0}
+.hist-body b{display:block; font-size:14.5px; font-weight:600; line-height:1.5}
+.hist-meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+.hist-time{font-size:11.5px; color:var(--text-sub); font-variant-numeric:tabular-nums}
+.hist-actions{display:flex; align-items:center; gap:var(--sp-2); flex:none}
+@media (max-width:640px){ .hist-actions{grid-column:1/-1; justify-content:flex-end} }
+.hist-del{
+  width:38px; height:38px; border-radius:var(--r-sm); border:1px solid var(--line);
+  display:inline-flex; align-items:center; justify-content:center; color:var(--text-sub);
+  transition:border-color var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+.hist-del:hover{border-color:var(--accent); color:var(--accent)}
+.hist-del svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round}
+.hist-empty{margin-top:var(--sp-6); font-size:14px; color:var(--text-sub)}
+.hist-foot{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-6)}
+
+/* ============================================================
+   12.8 導入のメリット
+   ============================================================ */
+.merit{padding-block:var(--sp-20); border-top:1px solid var(--line-soft)}
+@media (max-width:640px){ .merit{padding-block:var(--sp-12)} }
+.merit h2{font-size:clamp(21px,2.6vw,30px); margin-top:var(--sp-3); line-height:1.45}
+.merit-lead{margin-top:var(--sp-4); font-size:15px; line-height:1.95; color:var(--text-sub); max-width:38em}
+
+.price{
+  display:grid; gap:var(--sp-6); margin-top:var(--sp-8);
+  padding:var(--sp-6) var(--sp-6) var(--sp-5);
+  background:var(--card); border:1px solid rgba(140,110,74,.3); border-radius:var(--r-xl);
+  box-shadow:var(--shadow-md);
+}
+@media (min-width:900px){ .price{grid-template-columns:300px 1fr; gap:var(--sp-10); align-items:center} }
+.price-head b{display:block; font-size:clamp(30px,4vw,42px); font-weight:600; letter-spacing:0; line-height:1.15; color:var(--accent)}
+.price-head b em{font-style:normal; font-size:.42em; font-weight:600; margin-left:4px; color:var(--text)}
+.price-head span{display:block; margin-top:var(--sp-2); font-size:13.5px; line-height:1.8; color:var(--text-sub)}
+.price-head .fast{
+  display:inline-flex; align-items:center; gap:7px; margin-top:var(--sp-4);
+  padding:5px 13px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-size:13px;
+}
+.bars{display:flex; flex-direction:column; gap:var(--sp-4)}
+.bar-row{display:grid; grid-template-columns:96px 1fr; gap:var(--sp-3); align-items:center}
+@media (max-width:520px){ .bar-row{grid-template-columns:1fr; gap:4px} }
+.bar-name{font-size:13px; color:var(--text-sub); line-height:1.5}
+.bar-track{position:relative; height:34px; background:var(--accent-soft); border-radius:var(--r-sm); overflow:hidden}
+.bar-fill{
+  position:absolute; inset:0 auto 0 0; display:flex; align-items:center; justify-content:flex-end;
+  padding-right:12px; border-radius:var(--r-sm); font-size:13.5px; color:#fff; white-space:nowrap;
+}
+.bar-row.ours .bar-name{color:var(--text); font-weight:600}
+.bar-row.ours .bar-fill{background:var(--accent)}
+.bar-row.other .bar-fill{background:var(--disabled)}
+.price-note{grid-column:1/-1; margin-top:var(--sp-2); font-size:11.5px; line-height:1.8; color:var(--text-sub)}
+
+.merits{display:grid; gap:var(--sp-4); margin-top:var(--sp-8); grid-template-columns:repeat(3,1fr)}
+@media (max-width:1000px){ .merits{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:600px){ .merits{grid-template-columns:1fr} }
+.merit-card{padding:var(--sp-5); background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg)}
+.merit-card svg{width:22px; height:22px; stroke:var(--accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
+.merit-card h3{margin-top:var(--sp-3); font-size:15.5px}
+.merit-card p{margin-top:var(--sp-2); font-size:13px; line-height:1.9; color:var(--text-sub)}
+
+/* ============================================================
+   13. 説明セクション / フッター
+   ============================================================ */
+.about{background:#fff; border-top:1px solid var(--line); padding-block:var(--sp-20)}
+@media (max-width:640px){ .about{padding-block:var(--sp-12)} }
+.about h2{font-size:clamp(20px,2.4vw,26px); margin-top:var(--sp-3)}
+.about-lead{margin-top:var(--sp-4); font-size:15px; line-height:1.95; color:var(--text-sub); max-width:38em}
+.notes{display:grid; gap:var(--sp-4); margin-top:var(--sp-10); grid-template-columns:repeat(4,1fr)}
+@media (max-width:1000px){ .notes{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:600px){ .notes{grid-template-columns:1fr} }
+.note{padding:var(--sp-5); border:1px solid var(--line); border-radius:var(--r-lg); background:var(--bg)}
+.note-no{font-size:11px; letter-spacing:.16em; color:var(--accent); font-weight:600}
+.note h3{margin-top:var(--sp-3); font-size:15px}
+.note p{margin-top:var(--sp-2); font-size:13px; line-height:1.9; color:var(--text-sub)}
+.scope{display:grid; margin-top:var(--sp-8); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--bg)}
+@media (min-width:760px){ .scope{grid-template-columns:1fr 1fr} }
+.scope > div{padding:var(--sp-5) var(--sp-6)}
+.scope > div:first-child{border-bottom:1px solid var(--line)}
+@media (min-width:760px){ .scope > div:first-child{border-bottom:0; border-right:1px solid var(--line)} }
+.scope h3{font-size:13px; letter-spacing:.06em; color:var(--text-sub)}
+.scope ul{list-style:none; padding:0; margin:var(--sp-3) 0 0; display:flex; flex-direction:column; gap:10px}
+.scope li{position:relative; padding-left:24px; font-size:13.5px; line-height:1.75}
+.scope li::before{content:""; position:absolute; left:0; top:6px; width:15px; height:15px; border-radius:999px; border:1.5px solid var(--disabled)}
+.scope .yes li::before{border-color:var(--accent); background:var(--accent-soft)}
+.scope .yes li::after{content:""; position:absolute; left:5px; top:9px; width:4px; height:8px; border:solid var(--accent); border-width:0 1.6px 1.6px 0; transform:rotate(42deg)}
+.site-footer{border-top:1px solid var(--line); padding-block:var(--sp-10)}
+.disclaimer{max-width:52em; padding:var(--sp-4); border:1px dashed var(--line); border-radius:var(--r-md); font-size:12px; line-height:1.9; color:var(--text-sub)}
+.footer-inner{display:flex; flex-wrap:wrap; gap:var(--sp-6); justify-content:space-between; align-items:flex-start; margin-top:var(--sp-6); font-size:12.5px; color:var(--text-sub)}
+
+/* ============================================================
+   12.5 アップロード導線・実行時生成
+   ============================================================ */
+.prop-upload{
+  grid-column:1/-1;
+  display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:var(--sp-5);
+  padding:var(--sp-5) var(--sp-6); text-align:left;
+  background:var(--card); border:1px dashed var(--disabled); border-radius:var(--r-lg);
+  color:var(--text-sub);
+  transition:border-color var(--fast) var(--ease), background var(--fast) var(--ease), transform var(--base) var(--ease);
+}
+.prop-upload:hover{border-color:var(--accent); background:var(--accent-soft); transform:translateY(-4px)}
+.prop-upload.is-drag{border-color:var(--accent); background:var(--accent-soft)}
+.prop-upload svg{width:26px; height:26px; flex:none; stroke:var(--accent); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
+.prop-upload b{display:block; font-size:15.5px; color:var(--text)}
+.prop-upload span{display:block; margin-top:2px; font-size:12.5px; line-height:1.8}
+.prop-upload .up-cta{margin-left:auto; flex:none; font-size:13px; color:var(--accent)}
+@media (max-width:640px){
+  .prop-upload{flex-direction:column; align-items:flex-start; gap:var(--sp-3)}
+  .prop-upload .up-cta{margin-left:0}
+}
+
+.room-tag.live{background:var(--accent); color:#fff}
+.room-tag.judging{background:rgba(43,40,35,.72); color:#fff}
+.room-tag.judging::before{
+  content:""; display:inline-block; width:9px; height:9px; margin-right:5px; vertical-align:-1px;
+  border-radius:999px; border:1.5px solid rgba(255,255,255,.45); border-top-color:#fff;
+  animation:spin .8s linear infinite;
+}
+.room.is-judging{opacity:.85}
+
+.gen-count{font-size:12.5px; color:var(--text-sub); font-variant-numeric:tabular-nums}
+.gen-live{
+  display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent); font-size:12px;
+}
+.errorbox{
+  margin-top:var(--sp-4); padding:var(--sp-4) var(--sp-5);
+  border:1px solid rgba(140,110,74,.35); background:var(--accent-soft); border-radius:var(--r-md);
+  font-size:13.5px; line-height:1.8;
+}
+.errorbox[hidden]{display:none}
+.errorbox b{display:block; font-size:14px; color:var(--text)}
+.errorbox p{margin-top:4px; color:var(--text-sub)}
+
+/* トースト */
+.toast{
+  position:fixed; left:50%; bottom:28px; transform:translate(-50%,14px); z-index:90;
+  display:flex; align-items:center; gap:9px; padding:12px 20px; border-radius:999px;
+  background:#2B2823; color:#fff; font-size:13px; box-shadow:var(--shadow-lg);
+  opacity:0; pointer-events:none; max-width:calc(100vw - 32px);
+  transition:opacity var(--base) var(--ease), transform var(--base) var(--ease);
+}
+.toast.is-on{opacity:1; transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  .pattern{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#8C6E4A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#8C6E4A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#8C6E4A"/>
+      </svg>
+      <b>MANJIRO</b>
+    </a>
+    <nav class="header-nav" aria-label="サイト内">
+      <span>買う</span><span>売る</span><span>AIに相談</span><span>お気に入り</span>
+    </nav>
+    <div class="header-right">
+      <button class="hist-btn" id="histBtn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.5V12l3 1.8"/><path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.5 4.5V9H8"/></svg>
+        生成履歴<b id="histCount">0</b>
+      </button>
+      <span class="chip chip-accent member-chip"><i class="dot"></i>会員限定機能</span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ① ヒーロー -->
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow"><i class="dot"></i>VIRTUAL STAGING</p>
+      <h1>バーチャルステージング</h1>
+      <p class="hero-lead">空室の物件写真に、AI が家具を配置します。<br>お部屋の広さに合わせた家具を選び、3つのパターンをご提案します。</p>
+      <p class="hero-note">※ 本機能は会員限定機能としての提供を想定しています。</p>
+    </div>
+  </section>
+
+  <!-- ステップインジケータ -->
+  <div class="steps">
+    <div class="container steps-inner" id="stepBar"></div>
+  </div>
+
+  <div class="container">
+    <div class="summary" id="summary" hidden></div>
+  </div>
+
+  <!-- ② 物件を選ぶ -->
+  <section class="panel" id="panelProps">
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2>物件を選択してください</h2>
+          <p class="panel-sub">ご担当の物件から、空室のお部屋がある3件を表示しています。</p>
+        </div>
+      </div>
+      <div class="panel-body props" id="propList" role="group" aria-label="物件一覧"></div>
+    </div>
+  </section>
+
+  <!-- ③ 部屋を選ぶ -->
+  <section class="panel" id="panelRooms" hidden>
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2>お部屋を選択してください</h2>
+          <p class="panel-sub">AI が写真を自動判定し、家具を配置できる部屋のみ選択できます。</p>
+        </div>
+      </div>
+      <div class="panel-body rooms" id="roomList" role="group" aria-label="お部屋の写真"></div>
+    </div>
+  </section>
+
+  <!-- ④ スタイルを選ぶ -->
+  <section class="panel" id="panelStyles" hidden>
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2>スタイルを選択してください</h2>
+          <p class="panel-sub">選んだスタイルで、このお部屋に合わせた家具を配置します。</p>
+        </div>
+      </div>
+      <div class="panel-body styles" id="styleList" role="group" aria-label="スタイル一覧"></div>
+      <div class="run-bar">
+        <button class="btn btn-primary" id="runBtn" type="button">この内容で家具を配置する</button>
+        <p class="run-note" id="runNote">1回のリクエストで3パターンを生成します。生成には30秒程度かかります。</p>
+      </div>
+      <div class="errorbox" id="errorBox" hidden></div>
+    </div>
+  </section>
+
+  <!-- ⑤ 生成中 -->
+  <section class="panel" id="panelGen" hidden>
+    <div class="container">
+      <div class="gen" role="status" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <p class="gen-text" id="genText">お部屋の構造を解析しています…</p>
+        <span class="gen-bar" aria-hidden="true"><i id="genBar"></i></span>
+        <p class="gen-note" id="genNote">通常30秒程度かかります</p>
+        <p class="gen-count" id="genCount" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑥ 3パターン -->
+  <section class="panel" id="panelPatterns" hidden>
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2>お好みのパターンをお選びください</h2>
+          <p class="panel-sub">1回のリクエストで3パターンを生成します。<br>気に入ったものが無い場合は、再生成することができます。</p>
+        </div>
+      </div>
+      <div class="panel-body patterns" id="patternList" role="group" aria-label="生成された3パターン"></div>
+      <div class="regen-bar">
+        <button class="btn btn-ghost btn-sm" id="regenBtn" type="button">再生成する</button>
+        <p class="run-note">同じスタイルのまま、別の家具の配置で作り直します。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦ Before / After -->
+  <section class="panel" id="panelResult" hidden>
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2 id="resultTitle">仕上がりを確認する</h2>
+          <p class="panel-sub">仕切り線を左右にドラッグすると、家具を置く前と後を見比べられます。</p>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="viewer" id="viewer">
+          <div class="ba" id="ba">
+            <img id="baBefore" alt="家具を配置する前のお部屋の写真">
+            <div class="ba-after" id="baAfterWrap"><img id="baAfter" alt="AI が家具を配置したお部屋のイメージ"></div>
+            <span class="ba-label left" id="baLabelL">Before</span>
+            <span class="ba-label right" id="baLabelR">After</span>
+            <input class="ba-range" id="baRange" type="range" min="0" max="100" step="0.1" value="50" aria-label="家具を配置する前と後の比較位置">
+            <div class="ba-line" id="baLine" style="left:50%"><span class="ba-knob"><i></i><i></i></span></div>
+            <div class="ba-hint" id="baHint"><span>左右にドラッグして見比べる</span></div>
+          </div>
+        </div>
+
+        <p class="viewer-note">※ 画像はAIが生成したイメージです。実際の物件とは異なります。家具は付属しません。
+          <span>保存・共有される画像には、この注記とロゴをサーバー側で焼き込んでいます。</span></p>
+
+        <div class="switcher" id="switcher">
+          <span class="switcher-label">パターンを切り替える</span>
+          <div class="switcher-list" id="switcherList" role="group" aria-label="パターンの切り替え"></div>
+        </div>
+
+        <div class="result-meta" id="resultMeta"></div>
+
+        <div class="result-actions">
+          <button class="btn btn-primary" id="saveBtn" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7.8 10.8 4.2 4.2 4.2-4.2"/><path d="M4.5 16v2.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V16"/></svg>
+            この画像を保存
+          </button>
+          <button class="btn btn-ghost" id="backToStyles" type="button">別のスタイルを試す</button>
+          <button class="btn btn-ghost" id="backToStart" type="button">最初から</button>
+        </div>
+
+        <p class="result-note">生成した画像は会員ご本人の検討用としてご利用いただけます。物件の掲載画像としては使用できません。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 生成履歴 -->
+  <section class="panel" id="panelHistory" hidden>
+    <div class="container">
+      <div class="panel-head">
+        <div>
+          <h2>生成履歴</h2>
+          <p class="panel-sub">この端末で生成したイメージの一覧です。選ぶと、そのときの比較画面に戻ります。</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="hist-list" id="histList"></div>
+        <p class="hist-empty" id="histEmpty" hidden>まだ生成した履歴はありません。</p>
+        <div class="hist-foot">
+          <button class="btn btn-ghost btn-sm" id="histClose" type="button">閉じる</button>
+          <button class="btn btn-ghost btn-sm" id="histClear" type="button">履歴をすべて削除</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 導入のメリット -->
+  <section class="merit">
+    <div class="container">
+      <p class="eyebrow"><i class="dot"></i>WHY THIS WORKS</p>
+      <h2>撮り直しも、家具の搬入もせずに、<br>空室を「住んでいる部屋」として見せる</h2>
+      <p class="merit-lead">お手持ちの物件写真をそのまま入力にします。ホームステージング（実際に家具を運び入れる方法）は<span class="nw">1部屋あたり十数万円</span>と数日が必要ですが、同じ役割を<span class="nw">1枚あたり数十円</span>・<span class="nw">1分以内</span>で用意できます。</p>
+
+      <div class="price">
+        <div class="price-head">
+          <b>約16<em>円 / 枚</em></b>
+          <span>1枚あたりの生成コスト。<br>実際に生成された枚数だけの従量です。</span>
+          <span class="fast"><i class="dot"></i>最短35秒で仕上がり</span>
+        </div>
+        <div class="bars">
+          <div class="bar-row ours">
+            <span class="bar-name">本提案</span>
+            <span class="bar-track"><span class="bar-fill num" style="width:27%">約16円</span></span>
+          </div>
+          <div class="bar-row other">
+            <span class="bar-name">他社サービス</span>
+            <span class="bar-track"><span class="bar-fill num" style="width:100%">約60円</span></span>
+          </div>
+        </div>
+        <p class="price-note">※ 単価は 2K 出力・<span class="nw">1枚あたりの生成コスト</span>（<span class="nw">$0.12前後</span>。為替レートにより<span class="nw">約16〜19円</span>）。比較対象は roomai.jp の公開価格（<span class="nw">60円／枚</span>・<span class="nw">2026年8月時点</span>）。ホームステージングの相場は<span class="nw">1部屋あたり10〜20万円</span>・搬入と撤去に数日。</p>
+      </div>
+
+      <div class="merits">
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8"/><path d="M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8"/><path d="M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16"/><path d="M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8.5 12h7M12 8.5v7"/></svg>
+          <h3>入力より高い解像度で書き出す</h3>
+          <p>出力は <span class="nw">2K</span>。古い物件写真や小さな画像でも、掲載に耐える精細さに仕上げます。撮り直しも、専用機材も要りません。</p>
+        </div>
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="12" height="12" rx="2"/><path d="M8 3.5h10A2.5 2.5 0 0 1 20.5 6v10"/></svg>
+          <h3>部屋とスタイルを選ぶだけ、1回で3パターン</h3>
+          <p>お部屋を選び、和モダン／ナチュラル／ホテルライクから選ぶだけ。家具構成の異なる<span class="nw">3案</span>を並列で生成するため、<span class="nw">3枚でも待ち時間は1枚分</span>です。</p>
+        </div>
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/><path d="M8.6 11.2l1.8 1.8 3.2-3.4"/></svg>
+          <h3>対象外の写真は AI が自動で弾く</h3>
+          <p>水回り・外観・すでに家具のある部屋を判定して除外します。仕上がってから「この写真は使えなかった」という手戻りが起きません。</p>
+        </div>
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 4l8.5 6.5"/><path d="M6 12.4v6.1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-6.1"/></svg>
+          <h3>間取りも視角も変えない</h3>
+          <p>壁・窓・扉・床材・カメラ位置をそのまま保ち、家具だけを足します。実在しない間取りを見せないための設計で、Before / After で誰でも確認できます。</p>
+        </div>
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 5 6.2v5c0 4.1 2.9 7.4 7 8.8 4.1-1.4 7-4.7 7-8.8v-5L12 3.5Z"/><path d="m9.2 11.6 1.9 1.9 3.7-3.9"/></svg>
+          <h3>法定表記は仕組みで焼き込む</h3>
+          <p>生成後にサーバー側で必ず合成します。法定表記バーとブランドロゴは別レイヤーなので、ロゴだけ御社のものに差し替えても表記は残ります。担当者の運用に依存しません。</p>
+        </div>
+        <div class="merit-card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5V10h-5.4"/></svg>
+          <h3>同じ組み合わせは二度生成しない</h3>
+          <p>一度つくった部屋とスタイルの組み合わせは保存して再利用します。よく見られる物件ほど、1枚あたりの費用は下がっていきます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 提案補足 -->
+  <section class="about">
+    <div class="container">
+      <p class="eyebrow">SCOPE &amp; DESIGN</p>
+      <h2>新しい仕組みではなく、<br>内見動画の基盤にもう一つの出力を足す</h2>
+      <p class="about-lead">バーチャルステージングは、すでにご提案している「物件写真を入力にした生成」の派生機能です。生成エンジンとワークフローは内見動画と共通で、追加になるのは出力の種類とキャッシュ層だけです。</p>
+
+      <div class="notes">
+        <div class="note"><span class="note-no">01</span><h3>会員向けの「体験」機能</h3><p>生成した画像は会員ご本人の検討用です。物件の掲載画像には使えません。保存は法定表記入りのみ、SNSシェアは設けません。拡散すると表示規約の適用対象になりうるためです。</p></div>
+        <div class="note"><span class="note-no">02</span><h3>オンデマンド生成＋保存</h3><p>全物件を事前生成せず、選ばれた組み合わせだけをつくって保存します。同じ組み合わせは二度生成しないため、見られた物件ほど費用が下がります。</p></div>
+        <div class="note"><span class="note-no">03</span><h3>回数上限で費用に天井</h3><p>会員1人あたりの月間生成回数に上限を設けます。費用は「物件数」ではなく「実際に生成された回数」に比例し、上限値は管理画面から変更できます。</p></div>
+        <div class="note"><span class="note-no">04</span><h3>お渡しするのは生成API</h3><p>MANJIRO の画面実装は御社Webチームの範囲です。当社は回数制限とキャッシュを含む生成APIをご提供します。データ参照APIと同じ形です。</p></div>
+      </div>
+
+      <div class="scope">
+        <div>
+          <h3>まず入れる範囲</h3>
+          <ul class="yes">
+            <li>空室の居室写真（リビング・洋室）</li>
+            <li>スタイル3種（和モダン／ナチュラル／ホテルライク）</li>
+            <li>1回のリクエストで3パターン生成</li>
+            <li>法定表記の焼き込みと Before / After 比較</li>
+            <li>法定表記入り画像の保存（会員本人の検討用）</li>
+          </ul>
+        </div>
+        <div>
+          <h3>今回は入れない範囲</h3>
+          <ul>
+            <li>家具のある部屋（家具の除去は失敗が目立つため）</li>
+            <li>水回り・玄関・外観</li>
+            <li>動画・360度・SNSシェア</li>
+            <li>掲載画像としての利用と、そのための確認フロー</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="disclaimer">本画面は UI デモです。サンプル物件（3件）の室内画像はすべて事前に生成したイメージで、実在の物件ではありません。お客様がアップロードした写真については、その場で AI が部屋タイプを判定し、画像を生成します（アップロードされた写真は生成のためだけに送信し、保存はしません）。生成画像には、法定表記バー（※AIによるバーチャルステージング画像です／実際の物件に家具・調度品は含まれません）とブランドロゴをサーバー側で焼き込んでいます。焼き込み前の画像が外部に出ることはありません。</p>
+    <div class="footer-inner">
+      <div>
+        <p style="font-weight:600; letter-spacing:.26em; font-size:14px; color:var(--text)">MANJIRO</p>
+        <p style="margin-top:6px">運営：株式会社KINAKO</p>
+      </div>
+      <p>生成基盤：Modellix ／ Aurora Mobile Japan</p>
+    </div>
+  </div>
+</footer>
+
+<input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+
+<div class="toast" id="toast" role="status"><i class="dot"></i><span id="toastText"></span></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     スタイル定義（tools/prompts.mjs の STYLES と key / label を揃えること）
+     ============================================================ */
+  var STYLES = [
+    { key: 'wa_modern', label: '和モダン',      description: '木の質感と落ち着いた色調で、和の空気感を残したスタイル' },
+    { key: 'natural',   label: 'ナチュラル',    description: '明るい木目とやわらかな色合いの、北欧テイストのスタイル' },
+    { key: 'hotel',     label: 'ホテルライク',  description: '低めの家具と落ち着いた色で、上質な印象にまとめたスタイル' }
+  ];
+
+  var STEP_NAMES = ['物件', 'お部屋', 'スタイル', '仕上がり'];
+
+  /* 生成中に順に切り替えるテキスト。待ち時間そのものをパイプラインの説明にする */
+  var GEN_STEPS = [
+    'お部屋の構造を解析しています…',
+    '広さに合わせた家具を選んでいます…',
+    '光と影を調整しています…'
+  ];
+  var GEN_STEP_MS = 800;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    stepBar: $('stepBar'), summary: $('summary'),
+    propList: $('propList'), roomList: $('roomList'), styleList: $('styleList'),
+    patternList: $('patternList'),
+    panels: {
+      props: $('panelProps'), rooms: $('panelRooms'), styles: $('panelStyles'),
+      gen: $('panelGen'), patterns: $('panelPatterns'), result: $('panelResult'),
+      history: $('panelHistory')
+    },
+    runBtn: $('runBtn'), regenBtn: $('regenBtn'),
+    runNote: $('runNote'), errorBox: $('errorBox'),
+    genNote: $('genNote'), genCount: $('genCount'), fileInput: $('fileInput'),
+    genText: $('genText'), genBar: $('genBar'),
+    viewer: $('viewer'), ba: $('ba'), baBefore: $('baBefore'), baAfter: $('baAfter'), baAfterWrap: $('baAfterWrap'),
+    baRange: $('baRange'), baLine: $('baLine'), baHint: $('baHint'),
+    baLabelL: $('baLabelL'), baLabelR: $('baLabelR'),
+    resultTitle: $('resultTitle'), resultMeta: $('resultMeta'),
+    switcher: $('switcher'), switcherList: $('switcherList'),
+    histBtn: $('histBtn'), histCount: $('histCount'), histList: $('histList'),
+    histEmpty: $('histEmpty'), histClose: $('histClose'), histClear: $('histClear'),
+    saveBtn: $('saveBtn'), backToStyles: $('backToStyles'), backToStart: $('backToStart'),
+    toast: $('toast'), toastText: $('toastText')
+  };
+
+  var DATA = null;      // manifest.json（事前生成のサンプル物件）
+  var PROMPTS = null;   // staging/prompts.json（生成スクリプトと共通の定義）
+  var UPLOAD = null;    // アップロード写真でできた擬似物件
+  var liveCache = {};   // "imageId|style" -> 生成済みURLの配列（同じセッション内で使い回す）
+  var history = [];     // 生成履歴。ページを開いている間だけ保持する（保存はしない）
+  var state = {
+    view: 'props',   // props | rooms | styles | gen | patterns | result
+    prop: null, image: null, style: STYLES[0].key,
+    batch: [],       // 表示中の3パターン（URLの配列）
+    variant: 0,
+    recordId: null,  // いま見ている履歴レコード
+  };
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------------------------------------------------------- 小物 */
+  function toast(msg) {
+    el.toastText.textContent = msg;
+    el.toast.classList.add('is-on');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.toast.classList.remove('is-on'); }, 3600);
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function styleOf(key) { return STYLES.filter(function (s) { return s.key === key; })[0]; }
+  function area(p) { return p.areaSqm + '㎡（約' + p.jou + '畳）'; }
+  function scrollToPanel(node) {
+    if (!node) return;
+    // 仕上がりは「画像1枚が注記ごと画面に収まる」ことを優先し、比較ビューを頭出しする
+    var target = state.view === 'result' ? el.viewer
+      : ((el.summary && !el.summary.hidden) ? el.summary : node);
+    var y = target.getBoundingClientRect().top + window.pageYOffset - (state.view === 'result' ? 118 : 132);
+    window.scrollTo({ top: Math.max(0, y), behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  function preload(urls) {
+    return Promise.all(urls.map(function (u) {
+      return new Promise(function (res) {
+        var i = new Image();
+        i.onload = i.onerror = function () { res(); };
+        i.src = u;
+      });
+    }));
+  }
+
+  /* ---------------------------------------------------------------- 描画 */
+
+  function renderSteps() {
+    var order = { props: 0, rooms: 1, styles: 2, gen: 3, patterns: 3, result: 3 };
+    var cur = state.view === 'history' ? order[beforeHistoryView] : order[state.view];
+    if (cur == null) cur = 0;
+    var html = '';
+    STEP_NAMES.forEach(function (name, i) {
+      var cls = i === cur ? 'is-current' : (i < cur ? 'is-done' : '');
+      html += (i ? '<span class="step-sep"></span>' : '') +
+        '<div class="step ' + cls + '"><span class="step-no">' + (i + 1) + '</span><span class="step-name">' + name + '</span></div>';
+    });
+    el.stepBar.innerHTML = html;
+  }
+
+  function renderSummary() {
+    var items = [];
+    if (state.prop && state.view !== 'props') {
+      items.push({
+        img: state.prop.thumbnail, label: '物件', value: state.prop.name,
+        go: function () { show('props'); }
+      });
+    }
+    if (state.image && (state.view === 'styles' || state.view === 'gen' || state.view === 'patterns' || state.view === 'result')) {
+      items.push({
+        img: state.image.original, label: 'お部屋', value: state.image.roomLabel,
+        go: function () { show('rooms'); }
+      });
+    }
+    if (state.view === 'patterns' || state.view === 'result') {
+      items.push({ label: 'スタイル', value: styleOf(state.style).label, go: function () { show('styles'); } });
+    }
+    el.summary.hidden = items.length === 0;
+    el.summary.innerHTML = '';
+    items.forEach(function (it) {
+      var d = document.createElement('div');
+      d.className = 'sum-item';
+      d.innerHTML = (it.img ? '<img src="' + esc(it.img) + '" alt="">' : '') +
+        '<span><span class="sum-label">' + esc(it.label) + '</span><br><span class="sum-value">' + esc(it.value) + '</span></span>' +
+        '<button type="button">変更</button>';
+      d.querySelector('button').addEventListener('click', it.go);
+      el.summary.appendChild(d);
+    });
+  }
+
+  function renderProps() {
+    el.propList.innerHTML = '';
+    DATA.properties.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'prop';
+      b.setAttribute('aria-pressed', String(state.prop && state.prop.id === p.id));
+      var stageableCount = p.images.filter(function (i) { return i.stageable; }).length;
+      b.innerHTML =
+        '<span class="prop-thumb"><img src="' + esc(p.thumbnail) + '" alt="" loading="lazy">' +
+          '<span class="prop-badge">空室・' + stageableCount + '部屋が対象</span>' +
+          '<span class="prop-check" aria-hidden="true"></span>' +
+        '</span>' +
+        '<span class="prop-body">' +
+          '<span class="prop-name">' + esc(p.name) + '</span>' +
+          '<span class="prop-meta">' +
+            '<span class="chip">' + esc(p.madori) + '</span>' +
+            '<span class="chip num">' + esc(area(p)) + '</span>' +
+            '<span class="chip">' + esc(p.built) + '</span>' +
+          '</span>' +
+          '<span class="prop-foot">' +
+            '<b class="prop-price num">' + esc(p.priceLabel) + '</b>' +
+            '<span class="prop-place"><i>' + esc(p.location) + '</i><i>' + esc(p.access) + '</i></span>' +
+          '</span>' +
+        '</span>';
+      b.addEventListener('click', function () { pickProp(p); });
+      el.propList.appendChild(b);
+    });
+
+    // 手持ちの写真で試す導線。ここから先は事前生成ではなく、その場で生成する。
+    var up = document.createElement('button');
+    up.type = 'button';
+    up.className = 'prop prop-upload';
+    up.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4.8"/><path d="m7.5 9.3 4.5-4.5 4.5 4.5"/>' +
+        '<path d="M4 15v3.2A1.8 1.8 0 0 0 5.8 20h12.4a1.8 1.8 0 0 0 1.8-1.8V15"/></svg>' +
+      '<span><b>お手持ちの写真で試す</b>' +
+        '<span>空室の写真をアップロードすると、AI が部屋タイプを判定し、その場で家具を配置します。（JPEG / PNG・最大8枚）</span></span>' +
+      '<span class="up-cta">写真を選ぶ →</span>';
+    up.addEventListener('click', function () { el.fileInput.click(); });
+    up.addEventListener('dragover', function (e) { e.preventDefault(); up.classList.add('is-drag'); });
+    up.addEventListener('dragleave', function () { up.classList.remove('is-drag'); });
+    up.addEventListener('drop', function (e) {
+      e.preventDefault(); up.classList.remove('is-drag');
+      if (e.dataTransfer && e.dataTransfer.files.length) intakeFiles(e.dataTransfer.files);
+    });
+    el.propList.appendChild(up);
+  }
+
+  function renderRooms() {
+    el.roomList.innerHTML = '';
+    if (!state.prop) return;
+    state.prop.images.forEach(function (im) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'room';
+      b.setAttribute('aria-pressed', String(state.image && state.image.id === im.id));
+      if (!im.stageable || im.judging) { b.disabled = true; b.setAttribute('aria-disabled', 'true'); }
+      var tag;
+      if (im.judging) tag = '<span class="room-tag judging">AI判定中</span>';
+      else if (!im.stageable) tag = '<span class="room-tag ng">対象外</span>';
+      else if (im.live) tag = '<span class="room-tag live">生成できます</span>';
+      else if (im.isPrimary) tag = '<span class="room-tag rec">おすすめ</span>';
+      else tag = '';
+      var why = (!im.judging && !im.stageable && im.rejectReason)
+        ? '<span class="room-why">' + esc(im.rejectReason) + '</span>' : '';
+      if (im.judging) b.classList.add('is-judging');
+      if (im.judging) { b.disabled = true; }
+      b.innerHTML =
+        '<span class="room-shot"><img src="' + esc(im.original) + '" alt="' + esc(im.roomLabel) + 'の写真" loading="lazy">' +
+          tag + why +
+        '</span>' +
+        '<span class="room-cap"><b>' + esc(im.roomLabel || '判定中…') + '</b><i>' + esc(im.sub || '') + '</i></span>';
+      if (im.stageable && !im.judging) b.addEventListener('click', function () { pickImage(im); });
+      el.roomList.appendChild(b);
+    });
+  }
+
+  /* スタイルカードのサムネイル。いま選んでいる部屋そのものを出すと結果が
+     先に見えてしまうので、必ず「別の部屋」の生成済み画像を例として使う。 */
+  function styleExample(key) {
+    var best = [];   // 同じ部屋タイプ・別物件
+    var same = [];   // 同じ部屋タイプ
+    var any = [];
+    DATA.properties.forEach(function (p) {
+      p.images.forEach(function (im) {
+        if (!im.stageable || !im.styles || !im.styles[key]) return;
+        var isCurrent = state.image && state.prop && im.id === state.image.id && p.id === state.prop.id;
+        if (isCurrent) return;                       // 選択中の部屋は使わない（ネタバレ防止）
+        var url = im.styles[key][0];
+        var sameType = state.image && im.roomType === state.image.roomType;
+        if (sameType && (!state.prop || p.id !== state.prop.id)) best.push(url);
+        else if (sameType) same.push(url);
+        else any.push(url);
+      });
+    });
+    return best[0] || same[0] || any[0] || '';
+  }
+
+  function renderStyles() {
+    el.styleList.innerHTML = '';
+    STYLES.forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'style';
+      b.setAttribute('aria-pressed', String(s.key === state.style));
+      b.innerHTML =
+        '<span class="style-check" aria-hidden="true"></span>' +
+        '<span class="style-thumb"><img src="' + esc(styleExample(s.key)) + '" alt="" loading="lazy"></span>' +
+        '<span class="style-body"><b>' + esc(s.label) + '</b>' +
+          '<span class="style-desc">' + esc(s.description) + '</span></span>';
+      b.addEventListener('click', function () {
+        state.style = s.key;
+        Array.prototype.forEach.call(el.styleList.children, function (c) { c.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+      });
+      el.styleList.appendChild(b);
+    });
+  }
+
+  function renderPatterns() {
+    el.patternList.innerHTML = '';
+    state.batch.forEach(function (url, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pattern';
+      b.setAttribute('aria-pressed', String(state.variant === i));
+      b.innerHTML =
+        '<span class="pattern-shot"><img src="' + esc(url) + '" alt="パターン ' + (i + 1) + '"></span>' +
+        '<span class="pattern-cap"><b>パターン ' + (i + 1) + '</b><span>選ぶ →</span></span>';
+      b.addEventListener('click', function () { pickPattern(i); });
+      el.patternList.appendChild(b);
+    });
+  }
+
+  /* ---------------------------------------------------------------- 遷移 */
+
+  var firstPaint = true;
+  function show(view) {
+    state.view = view;
+    Object.keys(el.panels).forEach(function (k) { el.panels[k].hidden = k !== view; });
+    renderSteps();
+    renderSummary();
+    if (view === 'props') renderProps();
+    if (view === 'rooms') renderRooms();
+    if (view === 'styles') {
+      renderStyles();
+      var live = state.image && state.image.live;
+      el.runNote.textContent = live
+        ? 'アップロードした写真から、その場で3パターンを生成します。40〜60秒ほどかかります。'
+        : '1回のリクエストで3パターンを生成します。生成には30秒程度かかります。';
+      el.errorBox.hidden = true;
+    }
+    if (view === 'patterns') renderPatterns();
+    if (view === 'history') renderHistory();
+    if (firstPaint) { firstPaint = false; return; }   // 起動時はヒーローを見せたまま
+    scrollToPanel(el.panels[view]);
+  }
+
+  function pickProp(p) {
+    state.prop = p;
+    state.image = null;
+    renderProps();
+    show('rooms');
+  }
+
+  function pickImage(im) {
+    state.image = im;
+    renderRooms();
+    show('styles');
+  }
+
+  function pickPattern(i) {
+    state.variant = i;
+    history.forEach(function (r) { if (r.id === state.recordId) r.variant = i; });
+    renderPatterns();
+    renderHistory();
+    openResult();
+  }
+
+  /* ================================================================
+     アップロード写真 — 判定と生成（ここだけが実行時に API を呼ぶ）
+
+     ブラウザは常に自分のオリジンだけを叩く。/api/* は同梱のプロキシが
+     受けてサーバー側の MODELLIX_KEY を差し込む。鍵をブラウザに出さないこと。
+       部屋タイプ判定  POST /api/llm/v1/chat/completions   google/gemini-3.6-flash
+       ステージング    POST /api/v1/google/nano-banana-pro-edit
+       進捗            GET  /api/v1/tasks/{task_id}
+     ================================================================ */
+
+  var MAX_FILES = 8;
+  var LONG_SIDE = 1600;          // 生成入力の長辺。Vercel のボディ上限(4.5MB)に対する安全側
+  var EDIT_MODEL = '/api/v1/google/nano-banana-pro-edit';
+  var LLM_MODEL = 'google/gemini-3.6-flash';
+
+  var ROOM_LABELS = {
+    living: 'リビング・ダイニング', bedroom: '洋室', kitchen: 'キッチン',
+    bathroom: '浴室', entrance: '玄関', exterior: '外観', other: 'その他'
+  };
+
+  /* 判定プロンプト。JSON だけを返させ、迷ったら other に倒す。 */
+  var CLASSIFY_PROMPT = [
+    'あなたは不動産ポータルの写真判定AIです。この写真を見て、次のJSONだけを返してください。',
+    '{"roomType":"living|bedroom|kitchen|bathroom|entrance|exterior|other","roomLabel":"日本語の部屋名","furnished":true,"note":"20文字以内の理由"}',
+    '- roomType は必ず列挙のいずれか1つ。判断できない場合は other。',
+    '- furnished は、ソファ・ベッド・ダイニングテーブルなどの大型家具がすでに置かれている場合に true。',
+    '- roomLabel は「リビング・ダイニング」「洋室」「キッチン」「浴室」「玄関」「外観」のような日本語の部屋名。',
+    '- JSON以外の文字（説明・コードブロック記号）を一切出力しないこと。'
+  ].join('\n');
+
+  /* 生成結果は必ず /api/stamped 経由で表示する。素の生成画像はブラウザに出さない
+     （法定表記とロゴはサーバー側で焼き込む。api/_stamp.js）。 */
+  function stampedUrl(u) {
+    try {
+      var x = new URL(u);
+      return x.host === 'file.modellix.ai' ? '/api/stamped' + x.pathname : u;
+    } catch (e) { return u; }
+  }
+
+  /* Modellix が返す絶対URLは同一オリジンのパスに戻す（CORS 回避） */
+  function toProxyPath(u) {
+    try { var x = new URL(u); return x.pathname + x.search; } catch (e) { return u; }
+  }
+
+  function apiError(status, body) {
+    if (status === 401 || status === 403) return 'APIキーが設定されていません。サーバー側の設定をご確認ください。';
+    if (status === 402) return 'Modellix の残高が不足しています。';
+    if (status === 429) return 'リクエストが集中しています。少し時間をおいてお試しください。';
+    if (status === 413) return '画像のサイズが大きすぎます。別の写真でお試しください。';
+    return '生成に失敗しました（' + status + '）。' + (body || '').slice(0, 120);
+  }
+
+  function postJson(path, body) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        var json = null;
+        try { json = JSON.parse(t); } catch (e) {}
+        if (!r.ok || !json || (json.code != null && json.code !== 0)) {
+          throw new Error(apiError(r.status, (json && json.message) || t));
+        }
+        return json;
+      });
+    });
+  }
+
+  /* 長辺 1600px の JPEG に落とす。API の入力制約とボディ上限の両方をここで吸収する。 */
+  function shrink(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, LONG_SIDE / Math.max(img.width, img.height));
+        var w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve({ dataUrl: cv.toDataURL('image/jpeg', 0.85), width: w, height: h });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('画像を読み込めませんでした')); };
+      img.src = url;
+    });
+  }
+
+  /* 出力比は入力に一番近いものを選ぶ。16:9 に決め打ちすると構図が切られ、
+     「構造を変えない」という前提そのものが崩れる。 */
+  var ASPECTS = [
+    ['21:9', 21 / 9], ['16:9', 16 / 9], ['3:2', 3 / 2], ['4:3', 4 / 3], ['5:4', 5 / 4],
+    ['1:1', 1], ['4:5', 4 / 5], ['3:4', 3 / 4], ['2:3', 2 / 3], ['9:16', 9 / 16]
+  ];
+  function pickAspect(w, h) {
+    var r = w / h, best = ASPECTS[1];
+    ASPECTS.forEach(function (a) { if (Math.abs(a[1] - r) < Math.abs(best[1] - r)) best = a; });
+    return best[0];
+  }
+
+  /* ---------- 部屋タイプの判定（LLM） ---------- */
+
+  function classify(dataUrl) {
+    return postJson('/api/llm/v1/chat/completions', {
+      model: LLM_MODEL,
+      temperature: 0,
+      // このモデルは推論トークンを先に消費する（実測で 250 前後）。
+      // 300 程度だと本文が出る前に打ち切られ、content が空で返ってくる。
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: CLASSIFY_PROMPT },
+          { type: 'image_url', image_url: { url: dataUrl } }
+        ]
+      }]
+    }).then(function (json) {
+      var text = ((json.choices || [])[0] || {}).message;
+      text = (text && text.content) || '';
+      if (Array.isArray(text)) text = text.map(function (c) { return c.text || ''; }).join('');
+      var m = String(text).match(/\{[\s\S]*\}/);       // ```json フェンスごと来ても拾える
+      if (!m) throw new Error('判定結果を解釈できませんでした');
+      return JSON.parse(m[0]);
+    });
+  }
+
+  /* 判定結果 → 画面の状態。対象にする部屋タイプは仕様どおり居室のみ。 */
+  function applyVerdict(im, v) {
+    var type = ROOM_LABELS[v.roomType] ? v.roomType : 'other';
+    im.roomType = type;
+    im.roomLabel = v.roomLabel || ROOM_LABELS[type];
+    im.stageable = (type === 'living' || type === 'bedroom') && !v.furnished;
+    im.sub = im.stageable ? 'AI判定' : '対象外';
+    if (!im.stageable) {
+      im.rejectReason = v.furnished ? '家具のあるお部屋は対象外です'
+        : (type === 'exterior' ? '屋外の写真は対象外です' : '対象外の部屋タイプです');
+    }
+    im.judging = false;
+  }
+
+  function intakeFiles(files) {
+    var list = Array.prototype.slice.call(files).filter(function (f) {
+      return /^image\/(jpeg|png|webp)$/.test(f.type);
+    }).slice(0, MAX_FILES);
+    if (!list.length) { toast('JPEG / PNG の画像を選んでください'); return; }
+
+    UPLOAD = {
+      id: 'upload', name: 'アップロードした写真', live: true,
+      madori: '—', areaSqm: 0, jou: 0, location: 'お手持ちの写真', priceLabel: '—',
+      built: '—', access: '—', thumbnail: '', images: []
+    };
+    state.prop = UPLOAD;
+    state.image = null;
+    show('rooms');
+
+    list.forEach(function (file, i) {
+      var im = { id: 'up-' + Date.now() + '-' + i, live: true, judging: true, stageable: false, original: '' };
+      UPLOAD.images.push(im);
+      shrink(file).then(function (r) {
+        im.original = r.dataUrl; im.width = r.width; im.height = r.height;
+        im.aspect = pickAspect(r.width, r.height);
+        if (!UPLOAD.thumbnail) UPLOAD.thumbnail = r.dataUrl;
+        renderRooms();
+        return classify(r.dataUrl);
+      }).then(function (v) {
+        applyVerdict(im, v);
+        renderRooms();
+      }).catch(function (e) {
+        // 判定できなかった写真は落とさず「対象外」に倒す。デモが止まる方が困る。
+        im.judging = false;
+        im.roomLabel = im.roomLabel || '判定できません';
+        im.stageable = false;
+        im.sub = '対象外';
+        im.rejectReason = e.message;
+        renderRooms();
+      });
+    });
+  }
+
+  el.fileInput.addEventListener('change', function () {
+    if (this.files && this.files.length) intakeFiles(this.files);
+    this.value = '';
+  });
+
+  /* ---------- ステージング（実行時生成） ---------- */
+
+  function stagingPrompt(styleKey, roomType, variantIndex) {
+    var st = PROMPTS.styles[styleKey];
+    var layouts = PROMPTS.layouts[roomType] || PROMPTS.layouts.living;
+    // RULES → STYLE → LAYOUT → QUALITY。順序も中身も生成スクリプトと共通。
+    // 透かし・法定表記はモデルに描かせない（サーバー側で合成する）。
+    return [PROMPTS.rules, st.material, layouts[variantIndex], PROMPTS.quality].filter(Boolean).join('\n\n');
+  }
+
+  function pollTask(path, onTick) {
+    var started = Date.now();
+    return new Promise(function (resolve, reject) {
+      (function step() {
+        if (Date.now() - started > 5 * 60 * 1000) { reject(new Error('生成がタイムアウトしました')); return; }
+        fetch(path, { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (json) {
+            var d = json.data || {};
+            if (d.status === 'success') { resolve(d); return; }
+            if (d.status === 'failed') {
+              var err = new Error('生成に失敗しました');
+              err.retryable = true;     // 失敗が確定しているので投げ直しても二重課金にならない
+              reject(err); return;
+            }
+            if (onTick) onTick(Math.round((Date.now() - started) / 1000));
+            setTimeout(step, 4000);
+          })
+          .catch(function () { setTimeout(step, 4000); });   // 一時的な失敗はポーリングを続ける
+      })();
+    });
+  }
+
+  function submitOne(im, styleKey, variantIndex, onTick) {
+    var roomType = im.roomType === 'bedroom' ? 'bedroom' : 'living';
+    return postJson(EDIT_MODEL, {
+      prompt: stagingPrompt(styleKey, roomType, variantIndex),
+      image: [im.original],
+      aspectRatio: im.aspect || '16:9',
+      imageSize: '2K'
+    }).then(function (json) {
+      var d = json.data || {};
+      var path = toProxyPath((d.get_result && d.get_result.url) || ('/api/v1/tasks/' + d.task_id));
+      return pollTask(path, onTick);
+    }).then(function (d) {
+      return stampedUrl(((d.result && d.result.resources) || [])[0].url);
+    });
+  }
+
+  /* Google 側の安全フィルタが、透かしを「入れる」指示を「消す」指示と誤判定して
+     弾くことがある（事前生成でも45枚中2枚で発生）。同じ内容でもう一度投げれば通る。
+     リトライするのは **タスクが failed で返ってきたときだけ**。ネットワークが
+     不明なまま投げ直すと二重課金になるので、そちらは対象にしない。 */
+  function generateOne(im, styleKey, variantIndex, onTick) {
+    return submitOne(im, styleKey, variantIndex, onTick).catch(function (e) {
+      if (!e || !e.retryable) throw e;
+      return submitOne(im, styleKey, variantIndex, onTick);
+    });
+  }
+
+  /* ---------------------------------------------------------------- 生成演出 */
+
+  function runGeneration(isRegen) {
+    var im = state.image;
+    if (im.live) { runLive(isRegen); return; }          // アップロード写真は実行時に生成する
+    var urls = (im.styles && im.styles[state.style]) || [];
+    if (!urls.length) { toast('この組み合わせの画像が見つかりませんでした'); return; }
+
+    show('gen');
+    el.genBar.style.width = '0%';
+    el.genText.textContent = GEN_STEPS[0];
+
+    // 表示する画像は先に読み込みきってから出す。待たせた末に読み込み中を見せない。
+    var loaded = preload(urls.concat([im.original]));
+
+    var i = 0;
+    var timer = setInterval(function () {
+      i++;
+      el.genBar.style.width = Math.round((i / GEN_STEPS.length) * 100) + '%';
+      if (i >= GEN_STEPS.length) { clearInterval(timer); return; }
+      el.genText.classList.add('is-out');
+      setTimeout(function () {
+        el.genText.textContent = GEN_STEPS[i];
+        el.genText.classList.remove('is-out');
+      }, 180);
+    }, GEN_STEP_MS);
+
+    var minWait = new Promise(function (r) { setTimeout(r, GEN_STEP_MS * GEN_STEPS.length + 250); });
+    Promise.all([loaded, minWait]).then(function () {
+      clearInterval(timer);
+      el.genBar.style.width = '100%';
+      // 再生成は「別の配置で作り直した」ように並び順を変える（デモ用の擬似動作）
+      state.batch = isRegen ? urls.slice(1).concat(urls.slice(0, 1)) : urls.slice();
+      state.variant = 0;
+      pushHistory();
+      show('patterns');
+      if (isRegen) toast('同じスタイルで、別の配置を生成しました');
+    });
+  }
+
+  /* 実行時生成。演出は同じだが、進捗は本物の経過を出す。 */
+  function runLive(isRegen) {
+    var im = state.image;
+    var style = state.style;
+    var ck = im.id + '|' + style;
+
+    if (!isRegen && liveCache[ck]) {                    // 同じ組み合わせは作り直さない
+      state.batch = liveCache[ck].slice();
+      state.variant = 0;
+      pushHistory();
+      show('patterns');
+      toast('生成済みのイメージを表示しました');
+      return;
+    }
+
+    show('gen');
+    el.errorBox.hidden = true;
+    el.genBar.style.width = '4%';
+    el.genText.textContent = GEN_STEPS[0];
+    el.genNote.textContent = '3パターンを同時に生成しています。40〜60秒ほどかかります';
+    el.genCount.hidden = false;
+
+    var done = 0, t0 = Date.now(), finished = false;
+    var tick = setInterval(function () {
+      var sec = Math.round((Date.now() - t0) / 1000);
+      el.genCount.textContent = '3件中 ' + done + '件完了 ・ 経過 ' + sec + '秒';
+      if (done === 0 && sec >= 4 && el.genText.textContent === GEN_STEPS[0]) el.genText.textContent = GEN_STEPS[1];
+      if (!finished) el.genBar.style.width = Math.min(92, 8 + sec * 1.6 + done * 22) + '%';
+    }, 1000);
+
+    var jobs = [0, 1, 2].map(function (v) {
+      return generateOne(im, style, v).then(function (url) {
+        done++;
+        if (done === 1) el.genText.textContent = GEN_STEPS[2];
+        return { ok: true, url: url };
+      }).catch(function (e) { return { ok: false, error: e }; });
+    });
+
+    Promise.all(jobs).then(function (results) {
+      finished = true;
+      clearInterval(tick);
+      el.genCount.hidden = true;
+      el.genNote.textContent = '通常30秒程度かかります';
+      var urls = results.filter(function (r) { return r.ok; }).map(function (r) { return r.url; });
+
+      if (!urls.length) {
+        var msg = (results[0] && results[0].error && results[0].error.message) || '生成に失敗しました';
+        show('styles');
+        el.errorBox.hidden = false;
+        el.errorBox.innerHTML = '<b>生成できませんでした</b><p>' + esc(msg) + '</p>';
+        return;
+      }
+
+      el.genBar.style.width = '100%';
+      // 生成結果は約7日で失効するURL。表示前に読み込んでから出す。
+      preload(urls).then(function () {
+        liveCache[ck] = urls.slice();
+        state.batch = urls;
+        state.variant = 0;
+        pushHistory();
+        show('patterns');
+        if (urls.length < 3) toast(urls.length + 'パターンのみ生成できました（再生成するとやり直せます）');
+        else if (isRegen) toast('同じスタイルで、もう一度生成しました');
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------------- Before / After */
+
+  function setSplit(v) {
+    el.baAfterWrap.style.clipPath = 'inset(0 0 0 ' + v + '%)';
+    el.baLine.style.left = v + '%';
+    el.baLabelL.style.opacity = v > 12 ? '1' : '0';
+    el.baLabelR.style.opacity = v < 88 ? '1' : '0';
+  }
+  el.baRange.addEventListener('input', function () {
+    setSplit(parseFloat(this.value));
+    el.baHint.classList.add('is-off');
+    el.baLine.classList.remove('is-nudge');
+  });
+
+  /* 仕上がり画面のパターン切り替え。戻らずにその場で差し替える。 */
+  function renderSwitcher() {
+    el.switcher.hidden = state.batch.length < 2;
+    el.switcherList.innerHTML = '';
+    state.batch.forEach(function (url, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swi';
+      b.setAttribute('aria-pressed', String(i === state.variant));
+      b.innerHTML = '<img src="' + esc(url) + '" alt=""><b>パターン ' + (i + 1) + '</b>';
+      b.addEventListener('click', function () { switchVariant(i); });
+      el.switcherList.appendChild(b);
+    });
+  }
+
+  function paintMeta() {
+    var im = state.image;
+    el.resultMeta.innerHTML =
+      '<span class="chip">' + esc(im.roomLabel) + '</span>' +
+      '<span class="chip chip-accent"><i class="dot"></i>' + esc(styleOf(state.style).label) + '</span>' +
+      '<span class="chip">パターン ' + (state.variant + 1) + '</span>' +
+      (state.prop.live ? '' : '<span class="chip num">' + esc(area(state.prop)) + '</span>');
+  }
+
+  /* 比較位置は保ったまま After だけ差し替える。見比べている最中に
+     スライダーが戻ると、何と何を比べていたのか分からなくなる。 */
+  function switchVariant(i) {
+    if (i === state.variant) return;
+    state.variant = i;
+    history.forEach(function (r) { if (r.id === state.recordId) r.variant = i; });
+    el.baAfter.src = state.batch[i];
+    paintMeta();
+    renderSwitcher();
+    renderPatterns();
+    renderHistory();
+  }
+
+  function openResult() {
+    var im = state.image;
+    el.ba.style.aspectRatio = (im.live && im.width && im.height) ? (im.width + ' / ' + im.height) : '16 / 9';
+    el.baBefore.src = im.original;
+    el.baAfter.src = state.batch[state.variant];
+    el.resultTitle.textContent = state.prop.name + '　' + im.roomLabel;
+    paintMeta();
+    renderSwitcher();
+    el.baRange.value = 50;
+    setSplit(50);
+    el.baHint.classList.remove('is-off');
+    show('result');
+    if (!reduceMotion) {
+      el.baLine.classList.remove('is-nudge');
+      void el.baLine.offsetWidth;
+      setTimeout(function () { el.baLine.classList.add('is-nudge'); }, 700);
+    }
+  }
+
+  /* ================================================================
+     生成履歴
+
+     1回の生成 = 1レコード。3パターンごと持つので、開き直すと同じ比較画面に戻る。
+     保存はしない（ページを閉じると消える）。アップロード写真の元画像は Data URL で
+     数百KBあり、localStorage に積むと商談の途中で容量エラーになりうるため。
+     ================================================================ */
+
+  function hhmm(d) {
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function pushHistory() {
+    var rec = {
+      id: 'h' + Date.now() + Math.random().toString(36).slice(2, 6),
+      prop: state.prop, image: state.image, style: state.style,
+      batch: state.batch.slice(), variant: state.variant,
+      live: !!state.image.live, at: hhmm(new Date())
+    };
+    history.unshift(rec);
+    state.recordId = rec.id;
+    renderHistory();
+    return rec;
+  }
+
+  function renderHistory() {
+    el.histCount.textContent = history.length;
+    el.histBtn.classList.toggle('is-on', history.length > 0);
+    el.histEmpty.hidden = history.length > 0;
+    el.histList.innerHTML = '';
+
+    history.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'hist-row';
+      row.innerHTML =
+        '<span class="hist-shots">' +
+          '<img src="' + esc(r.image.original) + '" alt="">' +
+          '<i>→</i>' +
+          '<img src="' + esc(r.batch[r.variant]) + '" alt="">' +
+        '</span>' +
+        '<span class="hist-body">' +
+          '<b>' + esc(r.prop.name) + '　' + esc(r.image.roomLabel) + '</b>' +
+          '<span class="hist-meta">' +
+            '<span class="chip chip-accent">' + esc(styleOf(r.style).label) + '</span>' +
+            '<span class="chip">パターン ' + (r.variant + 1) + '</span>' +
+            (r.live ? '<span class="chip">アップロード</span>' : '') +
+            '<span class="chip hist-time">' + r.at + '</span>' +
+          '</span>' +
+        '</span>' +
+        '<span class="hist-actions">' +
+          '<button class="btn btn-ghost btn-sm" type="button" data-act="open">この結果を開く</button>' +
+          '<button class="hist-del" type="button" data-act="del" aria-label="この履歴を削除">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>' +
+          '</button>' +
+        '</span>';
+      row.querySelector('[data-act="open"]').addEventListener('click', function () { openRecord(r); });
+      row.querySelector('[data-act="del"]').addEventListener('click', function () {
+        history = history.filter(function (x) { return x.id !== r.id; });
+        if (state.recordId === r.id) state.recordId = null;
+        renderHistory();
+        if (!history.length && state.view === 'history') show('props');
+      });
+      el.histList.appendChild(row);
+    });
+  }
+
+  function openRecord(r) {
+    state.prop = r.prop;
+    state.image = r.image;
+    state.style = r.style;
+    state.batch = r.batch.slice();
+    state.variant = r.variant;
+    state.recordId = r.id;
+    openResult();
+  }
+
+  var beforeHistoryView = 'props';
+  el.histBtn.addEventListener('click', function () {
+    if (state.view === 'history') { show(beforeHistoryView); return; }
+    beforeHistoryView = state.view;
+    renderHistory();
+    show('history');
+  });
+  el.histClose.addEventListener('click', function () { show(beforeHistoryView); });
+  el.histClear.addEventListener('click', function () {
+    history = [];
+    state.recordId = null;
+    renderHistory();
+    show(beforeHistoryView === 'history' ? 'props' : beforeHistoryView);
+    toast('生成履歴を削除しました');
+  });
+
+  /* ---------------------------------------------------------------- 画像の保存
+
+     透かし入りの生成画像だけを保存できる。掲載画像としての利用は不可（画面にも明記）。
+     生成結果のCDNは別ホストで CORS ヘッダが無いため、そのまま fetch すると落ちる。
+     同梱プロキシの読み取り経路（/api/file/*）に付け替えてから取りに行く。
+     ---------------------------------------------------------------- */
+
+  function saveUrl(u) {
+    if (u.indexOf('data:') === 0) return u;
+    try {
+      var x = new URL(u, location.href);
+      // 事前生成のサンプルも実行時生成（/api/stamped）も、この時点で同一オリジン。
+      return x.origin === location.origin ? x.href : null;
+    } catch (e) { return null; }
+  }
+
+  function saveName(mime) {
+    var im = state.image;
+    var base = state.prop.live ? 'upload' : (state.prop.id + '-' + im.id);
+    var ext = /png/.test(mime || '') ? 'png' : (/webp/.test(mime || '') ? 'webp' : 'jpg');
+    return 'manjiro-staging-' + base + '-' + state.style + '-pattern' + (state.variant + 1) + '.' + ext;
+  }
+
+  function download(blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  el.saveBtn.addEventListener('click', function () {
+    var src = state.batch[state.variant];
+    if (!src) return;
+    var url = saveUrl(src);
+    if (!url) { window.open(src, '_blank', 'noopener'); return; }
+
+    el.saveBtn.disabled = true;
+    fetch(url, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then(function (blob) {
+        download(blob, saveName(blob.type));
+        toast('画像を保存しました（透かし入り・検討用）');
+      })
+      .catch(function () {
+        // 取得に失敗しても行き止まりにしない。別タブで開いて手動保存してもらう。
+        window.open(src, '_blank', 'noopener');
+        toast('別のタブで開きました。そちらから保存してください');
+      })
+      .then(function () { el.saveBtn.disabled = false; });
+  });
+
+  /* ---------------------------------------------------------------- 操作 */
+
+  el.runBtn.addEventListener('click', function () { runGeneration(false); });
+  el.regenBtn.addEventListener('click', function () { runGeneration(true); });
+  // 事前生成のサンプルは並べ替えるだけの擬似動作、アップロード写真は本当に生成し直す
+  el.backToStyles.addEventListener('click', function () { show('styles'); });
+  el.backToStart.addEventListener('click', function () {
+    state.image = null;
+    show('props');
+  });
+
+  /* ---------------------------------------------------------------- 起動 */
+
+  Promise.all([
+    fetch('staging/manifest.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch('staging/prompts.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  ])
+    .then(function (res) {
+      DATA = res[0];
+      PROMPTS = res[1];
+      show('props');
+      // 最初の物件のサムネイルは先に温めておく
+      preload(DATA.properties.map(function (p) { return p.thumbnail; }));
+    })
+    .catch(function () {
+      el.propList.innerHTML = '<p class="panel-sub">物件データ（staging/manifest.json・staging/prompts.json）を読み込めませんでした。</p>';
+    });
+})();
+</script>
+</body>
+</html>

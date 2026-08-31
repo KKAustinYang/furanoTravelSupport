@@ -21,8 +21,24 @@ export default defineConfig(({ mode }) => {
       {
         // /api/mail/* はローカルでも本番と同じ関数（api/proxy.js）で処理する。
         // dev proxy は外部への中継しかできないため、ここだけ Vite 側で受ける。
-        name: 'local-mail-endpoint',
+        name: 'local-node-endpoints',
         configureServer(server) {
+          // /api/stamped/* は画像を合成して返すので、単なる中継では足りない。
+          // 本番と同じ関数（api/proxy.js）をローカルでも呼ぶ。
+          server.middlewares.use('/api/stamped', async (req, res) => {
+            const { default: handler } = await server.ssrLoadModule('/api/proxy.js')
+            const rel = (req.url || '/').replace(/^\//, '')
+            const shim = {
+              statusCode: 200,
+              status(c) { this.statusCode = c; return this },
+              setHeader(k, v) { res.setHeader(k, v); return this },
+              json(b) { res.statusCode = this.statusCode; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(b)) },
+              send(b) { res.statusCode = this.statusCode; res.end(b) },
+              end() { res.end() },
+            }
+            await handler({ method: req.method, url: '/api/proxy?__path=' + encodeURIComponent('stamped/' + rel), headers: req.headers }, shim)
+          })
+
           server.middlewares.use('/api/mail', async (req, res) => {
             let raw = ''
             req.on('data', (c) => (raw += c))

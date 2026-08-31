@@ -40,6 +40,13 @@ const MA_PREFIX = 'ma/'
 const LLM_PREFIX = 'llm/'
 const LLM_BASE = 'https://llm.modellix.ai'
 
+// 生成結果の画像は、**必ず法定表記とロゴを焼き込んでから**ブラウザに渡す。
+//   /api/stamped/aigc/image/xxx.png  ->  https://file.modellix.ai/... を取得 → 合成 → JPEG
+// 素の生成画像を返す経路は用意しない（外に出るのは合成後だけ、という前提を守る）。
+// ホストは固定・GET のみ・認証ヘッダは付けない（任意のURLを踏ませない）。
+const STAMP_PREFIX = 'stamped/'
+const FILE_BASE = 'https://file.modellix.ai'
+
 function maBase() {
   const v = (process.env.ENGAGELAB_MA_BASE_URL || '').trim().replace(/\/+$/, '')
   return v || 'https://ma-api.engagelab.com'
@@ -99,6 +106,36 @@ export default async function handler(req, res) {
       res.status(200).json({ ok: true, ...result })
     } catch (e) {
       res.status(500).json({ message: 'Mail error: ' + e.message })
+    }
+    return
+  }
+
+  // /api/stamped/* — 生成結果を取得し、法定表記バーとロゴを焼き込んで返す。
+  if (path.startsWith(STAMP_PREFIX)) {
+    if (req.method !== 'GET') {
+      res.status(405).json({ message: 'Method not allowed.' })
+      return
+    }
+    const rel = path.slice(STAMP_PREFIX.length).split('?')[0]
+    if (!/^[A-Za-z0-9._\-/]+$/.test(rel) || rel.includes('..')) {
+      res.status(400).json({ message: 'Invalid file path.' })
+      return
+    }
+    try {
+      const upstream = await fetch(`${FILE_BASE}/${rel}`)
+      if (!upstream.ok) {
+        res.status(upstream.status).json({ message: `Upstream ${upstream.status}` })
+        return
+      }
+      const { stamp } = await import('./_stamp.js')
+      const out = await stamp(Buffer.from(await upstream.arrayBuffer()))
+      res.status(200)
+      res.setHeader('Content-Type', 'image/jpeg')
+      // 同じ生成結果は何度も見られる。焼き込みは決定的なのでキャッシュしてよい。
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
+      res.send(out)
+    } catch (e) {
+      res.status(502).json({ message: `Stamp error: ${e.message}` })
     }
     return
   }

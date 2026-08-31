@@ -1,0 +1,238 @@
+{
+  "generatedAt": "2026-08-31",
+  "properties": [
+    {
+      "id": "prop-01",
+      "name": "白金台レジデンス 802号室",
+      "madori": "2LDK",
+      "areaSqm": 62.4,
+      "jou": 13,
+      "location": "東京都港区白金台",
+      "priceLabel": "8,980万円",
+      "built": "2019年築",
+      "access": "白金台駅 徒歩4分",
+      "thumbnail": "staging/prop-01/img-01/original.jpg",
+      "images": [
+        {
+          "id": "img-01",
+          "roomType": "living",
+          "roomLabel": "リビング・ダイニング",
+          "sub": "13.0畳",
+          "stageable": true,
+          "original": "staging/prop-01/img-01/original.jpg",
+          "isPrimary": true,
+          "styles": {
+            "wa_modern": [
+              "staging/prop-01/img-01/wa_modern-1.jpg",
+              "staging/prop-01/img-01/wa_modern-2.jpg",
+              "staging/prop-01/img-01/wa_modern-3.jpg"
+            ],
+            "natural": [
+              "staging/prop-01/img-01/natural-1.jpg",
+              "staging/prop-01/img-01/natural-2.jpg",
+              "staging/prop-01/img-01/natural-3.jpg"
+            ],
+            "hotel": [
+              "staging/prop-01/img-01/hotel-1.jpg",
+              "staging/prop-01/img-01/hotel-2.jpg",
+              "staging/prop-01/img-01/hotel-3.jpg"
+            ]
+          }
+        },
+        {
+          "id": "img-02",
+          "roomType": "bedroom",
+          "roomLabel": "洋室",
+          "sub": "6.2畳",
+          "stageable": true,
+          "original": "staging/prop-01/img-02/original.jpg",
+          "styles": {
+            "wa_modern": [
+              "staging/prop-01/img-02/wa_modern-1.jpg",
+              "staging/prop-01/img-02/wa_modern-2.jpg",
+              "staging/prop-01/img-02/wa_modern-3.jpg"
+            ],
+            "natural": [
+              "staging/prop-01/img-02/natural-1.jpg",
+              "staging/prop-01/img-02/natural-2.jpg",
+              "staging/prop-01/img-02/natural-3.jpg"
+            ],
+            "hotel": [
+              "staging/prop-01/img-02/hotel-1.jpg",
+              "staging/prop-01/img-02/hotel-2.jpg",
+              "staging/prop-01/img-02/hotel-3.jpg"
+            ]
+          }
+        },
+        {
+          "id": "img-03",
+          "roomType": "kitchen",
+          "roomLabel": "キッチン",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-01/img-03/original.jpg",
+          "rejectReason": "対象外の部屋タイプです"
+        },
+        {
+          "id": "img-04",
+          "roomType": "bathroom",
+          "roomLabel": "浴室",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-01/img-04/original.jpg",
+          "rejectReason": "対象外の部屋タイプです"
+        },
+        {
+          "id": "img-05",
+          "roomType": "exterior",
+          "roomLabel": "外観",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-01/img-05/original.jpg",
+          "rejectReason": "屋外の写真は対象外です"
+        }
+      ]
+    },
+    {
+      "id": "prop-02",
+      "name": "中目黒テラス 305号室",
+      "madori": "1LDK",
+      "areaSqm": 45.2,
+      "jou": 10.5,
+      "location": "東京都目黒区青葉台",
+      "priceLabel": "6,480万円",
+      "built": "2021年築",
+      "access": "中目黒駅 徒歩7分",
+      "thumbnail": "staging/prop-02/img-01/original.jpg",
+      "images": [
+        {
+          "id": "img-01",
+          "roomType": "living",
+          "roomLabel": "リビング・ダイニング",
+          "sub": "10.5畳",
+          "stageable": true,
+          "original": "staging/prop-02/img-01/original.jpg",
+          "isPrimary": true,
+          "styles": {
+            "wa_modern": [
+              "staging/prop-02/img-01/wa_modern-1.jpg",
+              "staging/prop-02/img-01/wa_modern-2.jpg",
+              "staging/prop-02/img-01/wa_modern-3.jpg"
+            ],
+            "natural": [
+              "staging/prop-02/img-01/natural-1.jpg",
+              "staging/prop-02/img-01/natural-2.jpg",
+              "staging/prop-02/img-01/natural-3.jpg"
+            ],
+            "hotel": [
+              "staging/prop-02/img-01/hotel-1.jpg",
+              "staging/prop-02/img-01/hotel-2.jpg",
+              "staging/prop-02/img-01/hotel-3.jpg"
+            ]
+          }
+        },
+        {
+          "id": "img-04",
+          "roomType": "bedroom",
+          "roomLabel": "洋室",
+          "sub": "6.0畳",
+          "stageable": true,
+          "original": "staging/prop-02/img-04/original.jpg",
+          "styles": {
+            "wa_modern": [
+              "staging/prop-02/img-04/wa_modern-1.jpg",
+              "staging/prop-02/img-04/wa_modern-2.jpg",
+              "staging/prop-02/img-04/wa_modern-3.jpg"
+            ],
+            "natural": [
+              "staging/prop-02/img-04/natural-1.jpg",
+              "staging/prop-02/img-04/natural-2.jpg",
+              "staging/prop-02/img-04/natural-3.jpg"
+            ],
+            "hotel": [
+              "staging/prop-02/img-04/hotel-1.jpg",
+              "staging/prop-02/img-04/hotel-2.jpg",
+              "staging/prop-02/img-04/hotel-3.jpg"
+            ]
+          }
+        },
+        {
+          "id": "img-02",
+          "roomType": "other",
+          "roomLabel": "洗面脱衣所",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-02/img-02/original.jpg",
+          "rejectReason": "対象外の部屋タイプです"
+        },
+        {
+          "id": "img-03",
+          "roomType": "exterior",
+          "roomLabel": "外観",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-02/img-03/original.jpg",
+          "rejectReason": "屋外の写真は対象外です"
+        }
+      ]
+    },
+    {
+      "id": "prop-03",
+      "name": "代々木パークフロント 1104号室",
+      "madori": "3LDK",
+      "areaSqm": 78.6,
+      "jou": 16,
+      "location": "東京都渋谷区代々木",
+      "priceLabel": "1億2,800万円",
+      "built": "2020年築",
+      "access": "代々木公園駅 徒歩5分",
+      "thumbnail": "staging/prop-03/img-01/original.jpg",
+      "images": [
+        {
+          "id": "img-01",
+          "roomType": "living",
+          "roomLabel": "リビング・ダイニング",
+          "sub": "16.0畳",
+          "stageable": true,
+          "original": "staging/prop-03/img-01/original.jpg",
+          "isPrimary": true,
+          "styles": {
+            "wa_modern": [
+              "staging/prop-03/img-01/wa_modern-1.jpg",
+              "staging/prop-03/img-01/wa_modern-2.jpg",
+              "staging/prop-03/img-01/wa_modern-3.jpg"
+            ],
+            "natural": [
+              "staging/prop-03/img-01/natural-1.jpg",
+              "staging/prop-03/img-01/natural-2.jpg",
+              "staging/prop-03/img-01/natural-3.jpg"
+            ],
+            "hotel": [
+              "staging/prop-03/img-01/hotel-1.jpg",
+              "staging/prop-03/img-01/hotel-2.jpg",
+              "staging/prop-03/img-01/hotel-3.jpg"
+            ]
+          }
+        },
+        {
+          "id": "img-02",
+          "roomType": "other",
+          "roomLabel": "和室",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-03/img-02/original.jpg",
+          "rejectReason": "対象外の部屋タイプです"
+        },
+        {
+          "id": "img-03",
+          "roomType": "exterior",
+          "roomLabel": "外観",
+          "sub": "対象外",
+          "stageable": false,
+          "original": "staging/prop-03/img-03/original.jpg",
+          "rejectReason": "屋外の写真は対象外です"
+        }
+      ]
+    }
+  ]
+}
