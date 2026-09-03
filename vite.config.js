@@ -23,6 +23,20 @@ export default defineConfig(({ mode }) => {
         // dev proxy は外部への中継しかできないため、ここだけ Vite 側で受ける。
         name: 'local-node-endpoints',
         configureServer(server) {
+          // X-Modellix-Byok: 1 は「お客様の鍵でしか動かさない」という宣言。
+          // 本番は api/proxy.js が弾くが、dev では /api/v1/* が下の proxy を通って
+          // しまうため、ここでも同じ条件で止める。dev と本番で挙動を変えない。
+          server.middlewares.use('/api', (req, res, next) => {
+            const byok = /^(1|true|yes)$/i.test(String(req.headers['x-modellix-byok'] || ''))
+            if (byok && !req.headers['x-modellix-key']) {
+              res.statusCode = 401
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ message: 'This demo requires your own Modellix API key.' }))
+              return
+            }
+            next()
+          })
+
           // /api/stamped/* は画像を合成して返すので、単なる中継では足りない。
           // 本番と同じ関数（api/proxy.js）をローカルでも呼ぶ。
           server.middlewares.use('/api/stamped', async (req, res) => {

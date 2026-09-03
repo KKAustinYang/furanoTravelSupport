@@ -600,6 +600,7 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
 .prop-upload b{display:block; font-size:15.5px; color:var(--text)}
 .prop-upload span{display:block; margin-top:2px; font-size:12.5px; line-height:1.8}
 .prop-upload .up-cta{margin-left:auto; flex:none; font-size:13px; color:var(--accent)}
+.prop-upload .up-cta.needkey{color:var(--text-sub)}
 @media (max-width:640px){
   .prop-upload{flex-direction:column; align-items:flex-start; gap:var(--sp-3)}
   .prop-upload .up-cta{margin-left:0}
@@ -955,7 +956,7 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
   <div class="modal-box">
     <h2 id="keyTitle">Modellix APIキー</h2>
     <p>アップロードした写真の判定と生成には Modellix の API を使います。<br>
-      お客様ご自身のキーを設定すると、<b>生成費用はお客様のアカウントに課金されます</b>。</p>
+      <b>ご自身のキーの設定が必要です</b>。生成費用はお客様のアカウントに課金されます。</p>
 
     <div class="key-state plain" id="keyState"></div>
 
@@ -972,6 +973,7 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
       キーは<b>このブラウザ（localStorage）にのみ</b>保存されます。当社のサーバーには保存も記録もしません。
       生成のたびに、同一オリジンのプロキシへヘッダで渡して中継するだけです。<br>
       サンプル物件3件は事前生成済みのため、キーが無くてもそのままご覧いただけます。
+      キーは <a href="https://modellix.ai/console/api-key" target="_blank" rel="noopener">Modellix コンソール</a> で発行できます。
     </p>
   </div>
 </div>
@@ -1157,12 +1159,15 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
         '<path d="M4 15v3.2A1.8 1.8 0 0 0 5.8 20h12.4a1.8 1.8 0 0 0 1.8-1.8V15"/></svg>' +
       '<span><b>お手持ちの写真で試す</b>' +
         '<span>空室の写真をアップロードすると、AI が部屋タイプを判定し、その場で家具を配置します。（JPEG / PNG・最大8枚）</span></span>' +
-      '<span class="up-cta">写真を選ぶ →</span>';
-    up.addEventListener('click', function () { el.fileInput.click(); });
+      (loadKey()
+        ? '<span class="up-cta">写真を選ぶ →</span>'
+        : '<span class="up-cta needkey">APIキーの設定が必要です →</span>');
+    up.addEventListener('click', function () { if (requireKey()) el.fileInput.click(); });
     up.addEventListener('dragover', function (e) { e.preventDefault(); up.classList.add('is-drag'); });
     up.addEventListener('dragleave', function () { up.classList.remove('is-drag'); });
     up.addEventListener('drop', function (e) {
       e.preventDefault(); up.classList.remove('is-drag');
+      if (!requireKey()) return;
       if (e.dataTransfer && e.dataTransfer.files.length) intakeFiles(e.dataTransfer.files);
     });
     el.propList.appendChild(up);
@@ -1332,6 +1337,9 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
   }
   function authHeaders(base) {
     var h = base || {};
+    // このデモはサーバー側のデモ用キーへフォールバックしない、という宣言。
+    // 画面側のガードだけだと、状態がずれたときに当社の残高で動いてしまう。
+    h['X-Modellix-Byok'] = '1';
     var k = loadKey();
     if (k) h['X-Modellix-Key'] = k;   // ヘッダのみ。ログにも残さない
     return h;
@@ -1344,7 +1352,8 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
     el.keyState.className = 'key-state' + (k ? '' : ' plain');
     el.keyState.textContent = k
       ? 'お客様のキーで生成します（' + maskKey(k) + '）'
-      : '未設定です。いまはデモ用のキーで動作しています。';
+      : '未設定です。写真のアップロードと生成にはキーが必要です。';
+    if (DATA && state.view === 'props') renderProps();   // 導線の見た目を更新する
   }
 
   el.keyBtn.addEventListener('click', function () {
@@ -1370,6 +1379,15 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
     renderKeyUi();
     toast('APIキーを削除しました。デモ用のキーで動作します');
   });
+
+  /* 鍵が無いまま API を呼ばせない。サンプル物件（事前生成）は鍵なしでも動く。 */
+  function requireKey() {
+    if (loadKey()) return true;
+    el.keyModal.classList.add('is-on');
+    el.keyInput.focus();
+    toast('先に Modellix APIキーを設定してください');
+    return false;
+  }
 
   var MAX_FILES = 8;
   var LONG_SIDE = 1600;          // 生成入力の長辺。Vercel のボディ上限(4.5MB)に対する安全側
@@ -1545,7 +1563,7 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
   }
 
   el.fileInput.addEventListener('change', function () {
-    if (this.files && this.files.length) intakeFiles(this.files);
+    if (this.files && this.files.length && requireKey()) intakeFiles(this.files);
     this.value = '';
   });
 
@@ -1651,6 +1669,7 @@ button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
 
   /* 実行時生成。演出は同じだが、進捗は本物の経過を出す。 */
   function runLive(isRegen) {
+    if (!requireKey()) return;
     var im = state.image;
     var style = state.style;
     var ck = im.id + '|' + style;

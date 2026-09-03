@@ -187,25 +187,46 @@ node demos/mangiro-staging/tools/restamp.mjs         # ② 给已有的 45 张�
 
 `original.jpg`（空房照片＝相当于客户原片）不在重贴范围内。
 
-## 4-4. 客户自带 key
+## 4-4. 客户自带 key（必填）
 
-页面右上「APIキー」可以让客户填自己的 Modellix key：
+页面右上「APIキー」让客户填自己的 Modellix key。**上传照片的判定和生成必须有 key**，
+不会退回用我们的 demo key。
 
 ```
-浏览器  →  /api/llm/... , /api/v1/...      →  api/proxy.js  →  Modellix
-           X-Modellix-Key: <客户的 key>        原样中继，不保存不记录
+浏览器  →  /api/llm/… , /api/v1/…            →  api/proxy.js  →  Modellix
+           X-Modellix-Key:  <客户的 key>        原样中继，不保存不记录
+           X-Modellix-Byok: 1                   ← 禁止回退到服务端 key
 ```
 
-规矩（和 `demos/property-video/CLAUDE.md` 一致）：
+### 为什么用一个声明 header
+
+`api/proxy.js` 默认是「有客户 key 就用，没有就用服务端 `MODELLIX_KEY`」。观光、
+product-studio 这些我们出钱的 demo 靠的就是这个回退，所以不能把它从代理里删掉。
+
+而这个 demo 要避免的是：**潜在客户没填 key 点两下，烧的是我们的额度**。所以只有这个
+demo 每个请求都带 `X-Modellix-Byok: 1`，代理看到这个 header 且没有 key 就直接 401。
+
+**只在前端拦是不够的**——状态错乱、或者有人从 devtools 直接打 `/api/v1/…`，就会用上
+我们的 key。必须在服务端也拦一道。
+
+`/api/llm/*` 和 `google/nano-banana-pro-edit` product-studio 也在用，所以**不能按路径或
+模型名一刀切**（那个是我们付钱的）。这就是选择声明式 header 的原因。
+
+### dev 和生产必须一致
+
+`npm run dev` 时 `/api/v1/*` 走的是 Vite 的 proxy，不经过 `api/proxy.js`。同样的判断在
+`vite.config.js` 的 middleware 里也放了一份。**不要只改一边**——否则本地会误以为
+「不填 key 也能用」（这个坑实际踩过）。
+
+### 规矩
 
 - **key 必须走 header，绝不能进 query string**（URL 会留在访问日志、浏览器历史、Referer 里）
-- 只存 `localStorage`，不上传服务端、不写日志
-- 界面上一律打码显示（`mdlx-…cdef`）
+- 只存 `localStorage`，不上传服务端、不写日志；界面上一律打码（`mdlx-…cdef`）
 - 401/403 不重试，提示重新输入（这类错误在扣费之前就被挡住）
 - 格式校验和代理端一致（可打印 ASCII、16–200 字符）
 
-**不填也能用**——回退到服务端的 `MODELLIX_KEY`（我们出钱的 demo key）。样板房源是
-事先生成的，本来就不调 API。填了之后，生成费用记在客户自己账上。
+**样板房源 3 套是事先生成的，没有 key 也照样能看。** 谈判主线走的是这条，所以客户
+当场没准备好 key，demo 也不会开天窗。
 
 ## 5. 页面结构（`index.html`）
 

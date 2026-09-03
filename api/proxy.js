@@ -80,6 +80,16 @@ export default async function handler(req, res) {
     return
   }
 
+  // X-Modellix-Byok: 1 — 「このデモはお客様の鍵でしか動かさない」という宣言。
+  // 付いていればサーバー側の MODELLIX_KEY へのフォールバックを禁じる。
+  // 鍵を設定していない見込み客が触っただけで当社の残高が減る、という事故を防ぐ。
+  // （当社負担で見せるデモはこのヘッダを付けないので、従来どおり動く）
+  const byok = /^(1|true|yes)$/i.test(String(req.headers['x-modellix-byok'] || ''))
+  if (byok && !clientKey) {
+    res.status(401).json({ message: 'This demo requires your own Modellix API key.' })
+    return
+  }
+
   const key = clientKey ? String(clientKey) : process.env.MODELLIX_KEY
 
   // Reconstruct the upstream path. The rewrite passes the captured segments as
