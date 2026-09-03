@@ -1,0 +1,4 @@
+# 生成物と実行環境はコミットしない（ソースと設定だけを残す）
+tools/.venv/
+tools/output/
+tools/reference.mp3

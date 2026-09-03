@@ -79,6 +79,13 @@ export default defineConfig(({ mode }) => {
             })
           },
         },
+        // 生成音声の読み取り中継（Web Audio で結合するため）。'/api' より先に置くこと。
+        '/api/audio': {
+          target: 'https://file.modellix.ai',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (p) => p.replace(/^\/api\/audio/, ''),
+        },
         // LLM ゲートウェイは別ホスト。'/api' より先に置くこと。
         '/api/llm': {
           target: 'https://llm.modellix.ai',

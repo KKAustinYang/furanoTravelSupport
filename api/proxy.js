@@ -47,6 +47,12 @@ const LLM_BASE = 'https://llm.modellix.ai'
 const STAMP_PREFIX = 'stamped/'
 const FILE_BASE = 'https://file.modellix.ai'
 
+// 生成した音声はブラウザ側で長さを測って結合する（Web Audio）。CDN は CORS ヘッダを
+// 返さないため、そのままでは fetch できない。音声だけ読み取り中継する。
+//   /api/audio/aigc/audio/xxx.mp3  ->  https://file.modellix.ai/aigc/audio/xxx.mp3
+// 画像は対象外（Content-Type で弾く）。画像は必ず /api/stamped を通す、という前提を崩さない。
+const AUDIO_PREFIX = 'audio/'
+
 function maBase() {
   const v = (process.env.ENGAGELAB_MA_BASE_URL || '').trim().replace(/\/+$/, '')
   return v || 'https://ma-api.engagelab.com'
@@ -106,6 +112,40 @@ export default async function handler(req, res) {
       res.status(200).json({ ok: true, ...result })
     } catch (e) {
       res.status(500).json({ message: 'Mail error: ' + e.message })
+    }
+    return
+  }
+
+  // /api/audio/* — 生成音声の読み取り中継。音声以外は返さない。
+  if (path.startsWith(AUDIO_PREFIX)) {
+    if (req.method !== 'GET') {
+      res.status(405).json({ message: 'Method not allowed.' })
+      return
+    }
+    const rel = path.slice(AUDIO_PREFIX.length).split('?')[0]
+    if (!/^[A-Za-z0-9._\-/]+$/.test(rel) || rel.includes('..')) {
+      res.status(400).json({ message: 'Invalid file path.' })
+      return
+    }
+    try {
+      const upstream = await fetch(`${FILE_BASE}/${rel}`)
+      const ct = upstream.headers.get('content-type') || ''
+      if (!upstream.ok) {
+        res.status(upstream.status).json({ message: `Upstream ${upstream.status}` })
+        return
+      }
+      if (!/^audio\//i.test(ct)) {
+        res.status(415).json({ message: 'この経路は音声のみ中継します。' })
+        return
+      }
+      res.status(200)
+      res.setHeader('Content-Type', ct)
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable')
+      const { Readable } = await import('node:stream')
+      if (upstream.body) Readable.fromWeb(upstream.body).pipe(res)
+      else res.end()
+    } catch (e) {
+      res.status(502).json({ message: `Proxy error (upstream: file.modellix.ai): ${e.message}` })
     }
     return
   }

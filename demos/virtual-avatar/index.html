@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ナレーション生成 ｜ バーチャルアバター</title>
+<meta name="description" content="台本と参照音声から、指定した秒数ちょうどのナレーション音声を生成します。分割合成・長さ検証・尺合わせまでブラウザ上で実行します。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#0F1115;
+  --panel:#161920;
+  --panel-2:#1D212A;
+  --line:#272C37;
+  --line-soft:#20242D;
+  --text:#E9EBEF;
+  --text-sub:#9AA1AF;
+  --accent:#6FD1C4;
+  --accent-dark:#4FB4A7;
+  --accent-soft:rgba(111,209,196,.12);
+  --warn:#E0B15E;
+  --bad:#E08A7A;
+  --disabled:#4A515F;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px; --sp-16:64px;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","BIZ UDPGothic","Noto Sans JP",system-ui,sans-serif;
+  font-size:15px; line-height:1.8; letter-spacing:.02em;
+  font-feature-settings:"palt" 1;
+  color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+:where(p,li,h1,h2,h3,td,th,span){line-break:strict; overflow-wrap:break-word; word-break:normal}
+h1,h2,h3{line-height:1.4; font-weight:600; text-wrap:balance}
+button,input,textarea,select{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-sm)}
+.num{font-variant-numeric:tabular-nums; font-family:var(--mono)}
+.nw{white-space:nowrap}
+
+.wrap{max-width:1180px; margin-inline:auto; padding:0 var(--sp-6) var(--sp-16)}
+@media (max-width:640px){ .wrap{padding-inline:var(--sp-4)} }
+
+header.top{border-bottom:1px solid var(--line); background:rgba(15,17,21,.86); backdrop-filter:blur(12px); position:sticky; top:0; z-index:20}
+.top-inner{display:flex; align-items:center; gap:var(--sp-4); height:60px; max-width:1180px; margin-inline:auto; padding-inline:var(--sp-6)}
+@media (max-width:640px){ .top-inner{padding-inline:var(--sp-4)} }
+.brand{display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:.14em; font-size:14.5px}
+.brand svg{width:22px; height:22px}
+.pill{margin-left:auto; font-size:12px; color:var(--accent); border:1px solid rgba(111,209,196,.3); background:var(--accent-soft); border-radius:999px; padding:4px 12px}
+
+.hero{padding-block:var(--sp-12) var(--sp-8)}
+.eyebrow{font-size:11.5px; letter-spacing:.18em; color:var(--accent); font-family:var(--mono)}
+.hero h1{margin-top:var(--sp-3); font-size:clamp(25px,3.4vw,36px)}
+.hero p{margin-top:var(--sp-4); color:var(--text-sub); max-width:44em; line-height:1.9}
+
+.grid{display:grid; gap:var(--sp-5); grid-template-columns:1fr}
+.grid > *{min-width:0}
+@media (min-width:960px){
+  .grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); align-items:start}
+  .card.input{position:sticky; top:76px}   /* 右カラムが長いので入力側を残す */
+}
+
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--sp-5) var(--sp-5) var(--sp-6)}
+.card h2{font-size:15px; display:flex; align-items:center; gap:9px}
+.card h2 i{font-style:normal; width:22px; height:22px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-size:11.5px; display:inline-flex; align-items:center; justify-content:center; font-family:var(--mono)}
+.card .hint{margin-top:var(--sp-2); font-size:12.5px; line-height:1.8; color:var(--text-sub)}
+
+label.f{display:block; margin-top:var(--sp-4); font-size:12.5px; color:var(--text-sub)}
+textarea,input[type=text],input[type=number],select{
+  width:100%; margin-top:6px; padding:11px 13px;
+  background:var(--panel-2); border:1px solid var(--line); border-radius:var(--r-md);
+  color:var(--text); line-height:1.9;
+}
+textarea{min-height:190px; resize:vertical; font-size:14px}
+input[type=text]{font-family:var(--mono); font-size:12.5px}
+.row{display:flex; gap:var(--sp-3); flex-wrap:wrap}
+.row > *{flex:1 1 150px}
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:46px; padding:0 var(--sp-5); border:1px solid transparent; border-radius:var(--r-md);
+  font-size:14.5px; font-weight:600; cursor:pointer; text-decoration:none;
+  transition:background 150ms var(--ease), border-color 150ms var(--ease), opacity 150ms var(--ease);
+}
+.btn-primary{background:var(--accent); color:#0C1114}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-ghost{background:transparent; border-color:var(--line); color:var(--text)}
+.btn-ghost:hover{border-color:var(--accent); color:var(--accent)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.actions{display:flex; gap:var(--sp-3); flex-wrap:wrap; margin-top:var(--sp-5)}
+
+.stat{display:flex; flex-wrap:wrap; gap:var(--sp-2) var(--sp-5); margin-top:var(--sp-4); font-size:12.5px; color:var(--text-sub)}
+.stat b{color:var(--text); font-family:var(--mono); font-weight:600}
+
+.chunks{margin-top:var(--sp-4); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden}
+.chunks[hidden]{display:none}
+.ck{padding:10px 13px; border-top:1px solid var(--line-soft)}
+.ck:first-child{border-top:0}
+.ck-head{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.ck-no{font-family:var(--mono); font-size:12px; color:var(--text-sub); min-width:1.6em}
+.ck-nums{margin-left:auto; display:flex; gap:12px; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:11.5px; color:var(--text-sub); white-space:nowrap}
+.ck-nums b{color:var(--text); font-weight:500}
+.ck-nums .dev.hi{color:var(--warn)}
+.ck-text{margin-top:5px; font-size:12.5px; color:var(--text-sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+@media (max-width:640px){ .ck-nums{width:100%; margin-left:0; flex-wrap:wrap; gap:8px} }
+.tag{display:inline-block; padding:1px 8px; border-radius:999px; font-size:11px; background:var(--panel-2); border:1px solid var(--line); color:var(--text-sub); white-space:nowrap}
+.tag.avatar{color:var(--accent); border-color:rgba(111,209,196,.3)}
+.st{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; white-space:nowrap}
+.st::before{content:""; width:7px; height:7px; border-radius:999px; background:var(--disabled)}
+.st.wait::before{background:var(--disabled)}
+.st.run::before{background:var(--accent); animation:blink 1s infinite}
+.st.ok::before{background:var(--accent)}
+.st.retry::before{background:var(--warn)}
+.st.suspect::before{background:var(--warn)}
+.st.failed::before{background:var(--bad)}
+@keyframes blink{50%{opacity:.25}}
+
+.result{margin-top:var(--sp-5); padding:var(--sp-5); border:1px solid var(--line); border-radius:var(--r-md); background:var(--panel-2)}
+.result[hidden]{display:none}
+.result audio{width:100%; margin-top:var(--sp-3)}
+.big{font-size:30px; font-family:var(--mono); font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+.big small{font-size:13px; color:var(--text-sub); margin-left:6px; font-family:inherit}
+.deltaok{color:var(--accent)} .deltnope{color:var(--warn)}
+
+.msg{margin-top:var(--sp-4); padding:12px 14px; border-radius:var(--r-md); font-size:13px; line-height:1.8; border:1px solid var(--line)}
+.msg[hidden]{display:none}
+.msg.warn{border-color:rgba(224,177,94,.35); background:rgba(224,177,94,.08); color:#F0D6A4}
+.msg.bad{border-color:rgba(224,138,122,.4); background:rgba(224,138,122,.08); color:#F2C0B5}
+
+.parts{display:flex; flex-direction:column; gap:8px; margin-top:var(--sp-3)}
+.part{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; font-size:12px; color:var(--text-sub)}
+.part audio{height:32px; width:100%}
+.part b{font-family:var(--mono); color:var(--text)}
+
+.notes{margin-top:var(--sp-12); display:grid; gap:var(--sp-4); grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){ .notes{grid-template-columns:1fr} }
+.note{padding:var(--sp-5); border:1px solid var(--line); border-radius:var(--r-md); background:var(--panel)}
+.note h3{font-size:14px}
+.note p{margin-top:8px; font-size:12.5px; line-height:1.9; color:var(--text-sub)}
+.note code{font-family:var(--mono); font-size:11.5px; color:var(--accent)}
+
+footer{margin-top:var(--sp-12); padding-top:var(--sp-5); border-top:1px solid var(--line); font-size:12px; color:var(--text-sub)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <span class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#6FD1C4" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 3.5v17M7.5 7v10M3.5 10v4M16.5 7v10M20.5 10v4"/>
+      </svg>
+      NARRATION STUDIO
+    </span>
+    <span class="pill">Modellix ／ cosyvoice-clone</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">VIRTUAL AVATAR — STEP 1 / VOICE</p>
+    <h1>台本から、指定した秒数ちょうどの<br>ナレーションをつくる</h1>
+    <p>台本を約5秒ずつのチャンクに分割して個別に合成し、長さを1つずつ検証してから、無音を配って尺を合わせます。長い文章を一度に投げると、モデルが途中を飛ばしたり同じ箇所を繰り返したりするためです。</p>
+  </section>
+
+  <div class="grid">
+
+    <!-- 入力 -->
+    <section class="card input">
+      <h2><i>1</i>台本と設定</h2>
+      <p class="hint">行頭の <code>[AVATAR]</code> / <code>[FOOTAGE:〇〇]</code> は任意のタグです。タグの境界をまたいでチャンクを結合しないので、後で動画と合わせるときの切り替え点になります。</p>
+
+      <label class="f">台本（日本語）
+        <textarea id="script" spellcheck="false"></textarea>
+      </label>
+
+      <div class="row">
+        <label class="f">目標秒数
+          <input type="number" id="target" value="30" min="5" max="180" step="1">
+        </label>
+        <label class="f">1チャンクの目標秒数
+          <input type="number" id="chunkSec" value="5" min="2" max="10" step="0.5">
+        </label>
+        <label class="f">話速
+          <input type="number" id="rate" value="1.0" min="0.5" max="2" step="0.05">
+        </label>
+      </div>
+
+      <label class="f">参照音声URL（この声をクローンします・公開アクセス可能なURL）
+        <input type="text" id="refUrl" spellcheck="false">
+      </label>
+      <p class="hint" id="refHint"></p>
+
+      <div class="actions">
+        <button class="btn btn-ghost" id="analyzeBtn" type="button">分割を確認（APIなし）</button>
+        <button class="btn btn-primary" id="runBtn" type="button">音声を生成する</button>
+      </div>
+      <div class="msg bad" id="err" hidden></div>
+    </section>
+
+    <!-- 結果 -->
+    <section class="card">
+      <h2><i>2</i>分割と生成</h2>
+      <p class="hint" id="planHint">「分割を確認」を押すと、APIを呼ばずに分割結果と予測秒数だけを表示します。</p>
+
+      <div class="stat" id="stat"></div>
+      <div class="chunks" id="chunks" hidden></div>
+
+      <div class="msg warn" id="warns" hidden></div>
+
+      <div class="result" id="result" hidden>
+        <div>
+          <span class="big" id="finalLen">--</span>
+          <span id="delta" class="num"></span>
+        </div>
+        <audio id="player" controls preload="metadata"></audio>
+        <div class="actions">
+          <a class="btn btn-ghost" id="dlAudio" download="narration.wav">音声をダウンロード</a>
+          <a class="btn btn-ghost" id="dlReport" download="report.json">レポート(JSON)</a>
+        </div>
+        <p class="hint" style="margin-top:var(--sp-4)">チャンク単位の音声（後工程でアバター動画と合わせる単位）</p>
+        <div class="parts" id="parts"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>なぜ分割するのか</h3>
+      <p>126文字を1回で投げたところ、中間の61文字が消えて 10.6秒（本来 約22秒）で返ってきました。短い入力ならスキップは起きにくく、長さの異常も1チャンク単位なら検出できます。</p>
+    </div>
+    <div class="note">
+      <h3>長さの検証とリトライ</h3>
+      <p>各チャンクを <code>decodeAudioData</code> で実測し、拍数からの予測と比べます。乖離が35%を超えたら <code>seed</code> を変えて引き直します。同じ seed なら結果は再現するので、引き直しは有効です。</p>
+    </div>
+    <div class="note">
+      <h3>instruction は使いません</h3>
+      <p>自由文の <code>instruction</code> を渡すと、モデルが指示文を読み上げたうえで本文を2回繰り返します（実測 3.5秒 → 7.8秒）。口調は参照音声そのもので決めます。</p>
+    </div>
+  </div>
+
+  <footer>
+    音声生成：Modellix <code>alibaba/cosyvoice-clone</code>（cosyvoice-v3.5-plus）。生成した音声はデモ用です。
+    同じ処理を行う CLI が <code>demos/virtual-avatar/tools/narrate.py</code> にあります（ffmpeg 版・キャッシュ付き）。
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     設定（tools/config.json と同じ値。CLI 版と挙動を揃えている）
+     ============================================================ */
+  var CFG = {
+    provider: '/api/v1/alibaba/cosyvoice-clone',
+    model: 'cosyvoice-v3.5-plus',
+    languageHint: 'ja',
+    sampleRate: 24000,
+    format: 'mp3',
+    volume: 50,
+    pitch: 1.0,
+    maxPromptAudioLength: 30,
+    enablePreprocess: true,
+    // instruction は渡さない。自由文を渡すとモデルが指示文を読み上げ、本文を2回繰り返す。
+    hotFix: { replace: [ { '代々木上原': 'よよぎうえはら' }, { '弘岡': 'ひろおか' }, { 'IREA': 'アイリア' } ] },
+    jaCharsPerSec: 5.75,
+    minChunkSeconds: 2.1,
+    maxChunkSeconds: 7.0,
+    tolerance: 0.35,
+    maxRetries: 3,
+    concurrency: 3,
+    minGap: 0.10,
+    maxGap: 1.20,
+    commaGapRatio: 0.4,
+    leadIn: 0.2,
+    tail: 0.4,
+    rateRange: [0.85, 1.25]
+  };
+
+  var SAMPLE = [
+    '[AVATAR] こんにちは、IREAの弘岡です。本日ご紹介するのは、代々木上原駅から徒歩7分のマンションです。',
+    '[FOOTAGE:リビング] 南向きのリビングは12畳。ルーフバルコニーまで見通せる、開放感のある間取りです。',
+    '[FOOTAGE:間取り] 専有面積は62平米の2LDK。',
+    '[FOOTAGE:周辺] 周辺にはスーパーも公園もあり、便利な立地です。',
+    '[AVATAR] 詳しくは、プロフィールのリンクからご覧ください。'
+  ].join('\n');
+
+  var SENTENCE_END = '。！？!?';
+  var CLAUSE_END = '、，,；;';
+  var ASCII_WEIGHT = 2.2;   // "2LDK" は4文字だが「ツーエルディーケー」で9拍
+  var PUNCT_WEIGHT = 0.4;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    script: $('script'), target: $('target'), chunkSec: $('chunkSec'), rate: $('rate'),
+    refUrl: $('refUrl'), refHint: $('refHint'),
+    analyze: $('analyzeBtn'), run: $('runBtn'), err: $('err'), warns: $('warns'),
+    stat: $('stat'), chunks: $('chunks'), planHint: $('planHint'),
+    result: $('result'), finalLen: $('finalLen'), delta: $('delta'), player: $('player'),
+    dlAudio: $('dlAudio'), dlReport: $('dlReport'), parts: $('parts')
+  };
+
+  /* ---------------------------------------------------------------- 分割 */
+
+  function weightedChars(text) {
+    var total = 0;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (/[0-9A-Za-z]/.test(ch)) total += ASCII_WEIGHT;
+      else if (/[\s、。，,．.！？!?・「」（）()：:；;〜~ー―–—]/.test(ch)) total += PUNCT_WEIGHT;
+      else total += 1;
+    }
+    return total;
+  }
+
+  function parseScript(raw) {
+    var out = [];
+    raw.split('\n').forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      var tag = null;
+      if (line[0] === '[') {
+        var close = line.indexOf(']');
+        if (close > 0) { tag = line.slice(1, close).trim(); line = line.slice(close + 1).trim(); }
+      }
+      if (line) out.push({ text: line, tag: tag });
+    });
+    return out;
+  }
+
+  function splitUnits(text, tag, maxChars) {
+    var sentences = [], buf = '';
+    for (var i = 0; i < text.length; i++) {
+      buf += text[i];
+      if (SENTENCE_END.indexOf(text[i]) >= 0) { sentences.push(buf); buf = ''; }
+    }
+    if (buf.trim()) sentences.push(buf);
+
+    var units = [];
+    sentences.forEach(function (s) {
+      if (weightedChars(s) <= maxChars) { units.push({ text: s, tag: tag }); return; }
+      var piece = '';
+      for (var i = 0; i < s.length; i++) {
+        piece += s[i];
+        if (CLAUSE_END.indexOf(s[i]) >= 0 && weightedChars(piece) >= maxChars / 2) {
+          units.push({ text: piece, tag: tag }); piece = '';
+        }
+      }
+      if (piece) units.push({ text: piece, tag: tag });
+    });
+    return units;
+  }
+
+  function buildChunks(raw, cfg) {
+    var cps = cfg.jaCharsPerSec;
+    var targetChars = Math.round(cfg.targetChunkSeconds * cps);
+    var minChars = Math.round(CFG.minChunkSeconds * cps);
+    var maxChars = Math.round(CFG.maxChunkSeconds * cps);
+
+    var units = [];
+    parseScript(raw).forEach(function (l) { units = units.concat(splitUnits(l.text, l.tag, maxChars)); });
+    if (!units.length) throw new Error('台本が空です。');
+
+    var packed = [];
+    units.forEach(function (u) {
+      var last = packed[packed.length - 1];
+      // タグの境界はまたがない（動画と合わせるときの切り替え点になるため）
+      if (last && last.tag === u.tag) {
+        var merged = last.text + u.text;
+        if (weightedChars(merged) <= maxChars && weightedChars(last.text) < targetChars) {
+          last.text = merged; return;
+        }
+      }
+      packed.push({ text: u.text, tag: u.tag });
+    });
+    if (packed.length >= 2 && weightedChars(packed[packed.length - 1].text) < minChars
+        && packed[packed.length - 2].tag === packed[packed.length - 1].tag) {
+      packed[packed.length - 2].text += packed[packed.length - 1].text;
+      packed.pop();
+    }
+
+    return packed.map(function (u, i) {
+      var text = u.text.trim();
+      return {
+        index: i + 1, text: text, tag: u.tag,
+        endsWith: text.slice(-1),
+        weight: weightedChars(text),
+        expected: weightedChars(text) / (cps * cfg.rate),
+        actual: 0, deviation: 0, gapAfter: 0, retries: 0, status: 'wait', seed: 0, buffer: null, url: ''
+      };
+    });
+  }
+
+  /* ---------------------------------------------------------------- 尺合わせ */
+
+  function planGaps(chunks, cfg) {
+    var warnings = [];
+    var speech = chunks.reduce(function (s, c) { return s + c.actual; }, 0);
+    var n = chunks.length - 1;
+    if (n <= 0) return { gaps: [], warnings: warnings, newRate: null };
+
+    var weights = chunks.slice(0, -1).map(function (c) {
+      return SENTENCE_END.indexOf(c.endsWith) >= 0 ? 1.0 : CFG.commaGapRatio;
+    });
+    var need = cfg.target - speech - CFG.leadIn - CFG.tail;
+    var floor = CFG.minGap * n;
+    var ceiling = weights.reduce(function (s, w) { return s + CFG.maxGap * w; }, 0);
+
+    if (need < floor) {
+      var denom = cfg.target - CFG.leadIn - CFG.tail - floor;
+      var newRate = denom > 0 ? cfg.rate * speech / denom : null;
+      return { gaps: weights.map(function () { return CFG.minGap; }), warnings: warnings, newRate: newRate };
+    }
+    if (need > ceiling) {
+      var shortSec = need - ceiling;
+      warnings.push('台本が約' + Math.round(shortSec * CFG.jaCharsPerSec * cfg.rate) +
+        '文字不足しています（無音を上限まで入れても' + shortSec.toFixed(1) + '秒余ります）。');
+      return { gaps: weights.map(function (w) { return CFG.maxGap * w; }), warnings: warnings, newRate: null };
+    }
+    var base = need / weights.reduce(function (s, w) { return s + w; }, 0);
+    return {
+      gaps: weights.map(function (w) { return Math.min(Math.max(base * w, CFG.minGap), CFG.maxGap * w); }),
+      warnings: warnings, newRate: null
+    };
+  }
+
+  /* ---------------------------------------------------------------- API */
+
+  function toAudioProxy(u) {
+    try {
+      var x = new URL(u);
+      return x.host === 'file.modellix.ai' ? '/api/audio' + x.pathname : u;
+    } catch (e) { return u; }
+  }
+
+  function postJson(path, body) {
+    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) {
+        return r.text().then(function (t) {
+          var j = null; try { j = JSON.parse(t); } catch (e) {}
+          if (!r.ok || !j || (j.code != null && j.code !== 0)) {
+            if (r.status === 401) throw new Error('APIキーが未設定です（サーバー側の MODELLIX_KEY を確認してください）。');
+            if (r.status === 429) throw new Error('リクエストが集中しています。少し待って再実行してください。');
+            throw new Error('生成に失敗しました（' + r.status + '）' + ((j && j.message) || t || '').slice(0, 140));
+          }
+          return j;
+        });
+      });
+  }
+
+  function pollTask(taskId) {
+    var started = Date.now();
+    return new Promise(function (resolve, reject) {
+      (function step() {
+        if (Date.now() - started > 120000) { reject(new Error('生成がタイムアウトしました。')); return; }
+        fetch('/api/v1/tasks/' + encodeURIComponent(taskId), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            var d = j.data || {};
+            if (d.status === 'success') { resolve(d); return; }
+            if (d.status === 'failed') { var e = new Error('タスクが失敗しました。'); e.retryable = true; reject(e); return; }
+            setTimeout(step, 2000);
+          })
+          .catch(function () { setTimeout(step, 2000); });
+      })();
+    });
+  }
+
+  var audioCtx = null;
+  function ctx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: CFG.sampleRate });
+    return audioCtx;
+  }
+
+  function synth(chunk, cfg) {
+    var body = {
+      model: CFG.model, url: cfg.refUrl, text: chunk.text,
+      language_hint: CFG.languageHint, max_prompt_audio_length: CFG.maxPromptAudioLength,
+      enable_preprocess: CFG.enablePreprocess, format: CFG.format, sample_rate: CFG.sampleRate,
+      rate: cfg.rate, pitch: CFG.pitch, volume: CFG.volume, seed: chunk.seed, hot_fix: CFG.hotFix
+    };
+    return postJson(CFG.provider, body)
+      .then(function (j) { return pollTask(j.data.task_id); })
+      .then(function (d) {
+        var res = ((d.result || {}).resources || [])[0];
+        if (!res || !res.url) throw new Error('音声URLが見つかりませんでした。');
+        chunk.url = res.url;
+        return fetch(toAudioProxy(res.url));
+      })
+      .then(function (r) { if (!r.ok) throw new Error('音声を取得できませんでした（' + r.status + '）'); return r.arrayBuffer(); })
+      .then(function (buf) { return ctx().decodeAudioData(buf); });
+  }
+
+  async function synthWithRetry(chunk, cfg, onUpdate) {
+    for (var attempt = 0; attempt <= CFG.maxRetries; attempt++) {
+      chunk.seed = attempt === 0 ? 0 : (attempt * 977) % 65536;
+      chunk.status = attempt === 0 ? 'run' : 'retry';
+      chunk.retries = attempt;
+      onUpdate();
+      try {
+        var buffer = await synth(chunk, cfg);
+        chunk.buffer = buffer;
+        chunk.actual = buffer.duration;
+        chunk.deviation = Math.abs(chunk.actual - chunk.expected) / Math.max(chunk.expected, 0.01);
+        if (chunk.deviation <= CFG.tolerance) { chunk.status = 'ok'; onUpdate(); return; }
+        // スキップ／リピートの疑い。seed を変えて引き直す。
+      } catch (e) {
+        if (attempt >= CFG.maxRetries) { chunk.status = 'failed'; chunk.error = e.message; onUpdate(); return; }
+      }
+      onUpdate();
+    }
+    chunk.status = chunk.buffer ? 'suspect' : 'failed';   // 1チャンクの不良で全体は止めない
+    onUpdate();
+  }
+
+  async function runPool(items, limit, worker) {
+    var i = 0;
+    await Promise.all(new Array(Math.min(limit, items.length)).fill(0).map(async function () {
+      while (i < items.length) { var item = items[i++]; await worker(item); }
+    }));
+  }
+
+  /* ---------------------------------------------------------------- 結合と書き出し */
+
+  function concatBuffers(chunks, gaps) {
+    var sr = CFG.sampleRate;
+    var frames = Math.round((CFG.leadIn + CFG.tail) * sr);
+    chunks.forEach(function (c, i) {
+      frames += c.buffer.length + (i < gaps.length ? Math.round(gaps[i] * sr) : 0);
+    });
+    var out = ctx().createBuffer(1, frames, sr);
+    var data = out.getChannelData(0);
+    var cursor = Math.round(CFG.leadIn * sr);
+    chunks.forEach(function (c, i) {
+      data.set(c.buffer.getChannelData(0).subarray(0, c.buffer.length), cursor);
+      cursor += c.buffer.length + (i < gaps.length ? Math.round(gaps[i] * sr) : 0);
+    });
+    return out;
+  }
+
+  function wavBlob(buffer) {
+    var pcm = buffer.getChannelData(0);
+    var view = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+    var write = function (off, s) { for (var i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+    write(0, 'RIFF'); view.setUint32(4, 36 + pcm.length * 2, true); write(8, 'WAVEfmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * 2, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    write(36, 'data'); view.setUint32(40, pcm.length * 2, true);
+    for (var i = 0; i < pcm.length; i++) {
+      var s = Math.max(-1, Math.min(1, pcm[i]));
+      view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+    return new Blob([view], { type: 'audio/wav' });
+  }
+
+  /* ---------------------------------------------------------------- 描画 */
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var STATUS_LABEL = { wait: '待機', run: '生成中', retry: '引き直し', ok: 'OK', suspect: '要確認', failed: '失敗' };
+
+  function renderTable(chunks) {
+    el.chunks.hidden = false;
+    el.chunks.innerHTML = chunks.map(function (c) {
+      var hi = c.actual && c.deviation > CFG.tolerance ? ' hi' : '';
+      return '<div class="ck">' +
+        '<div class="ck-head">' +
+          '<span class="ck-no">#' + c.index + '</span>' +
+          (c.tag ? '<span class="tag' + (c.tag === 'AVATAR' ? ' avatar' : '') + '">' + esc(c.tag) + '</span>' : '') +
+          '<span class="st ' + c.status + '">' + STATUS_LABEL[c.status] + (c.retries ? '(' + c.retries + ')' : '') + '</span>' +
+          '<span class="ck-nums">' +
+            '<span>予測 <b>' + c.expected.toFixed(2) + 's</b></span>' +
+            '<span>実測 <b>' + (c.actual ? c.actual.toFixed(2) + 's' : '—') + '</b></span>' +
+            '<span class="dev' + hi + '">乖離 <b>' + (c.actual ? Math.round(c.deviation * 100) + '%' : '—') + '</b></span>' +
+            '<span>無音 <b>' + (c.gapAfter ? c.gapAfter.toFixed(2) + 's' : '—') + '</b></span>' +
+          '</span>' +
+        '</div>' +
+        '<div class="ck-text" title="' + esc(c.text) + '">' + esc(c.text) + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function renderStat(chunks, cfg) {
+    var speech = chunks.reduce(function (s, c) { return s + (c.actual || c.expected); }, 0);
+    var n = Math.max(chunks.length - 1, 0);
+    var silence = cfg.target - speech - CFG.leadIn - CFG.tail;
+    el.stat.innerHTML =
+      '<span>台本 <b>' + chunks.reduce(function (s, c) { return s + c.text.length; }, 0) + '</b> 文字</span>' +
+      '<span>チャンク <b>' + chunks.length + '</b></span>' +
+      '<span>発話 <b>' + speech.toFixed(1) + '</b> 秒</span>' +
+      '<span>目標 <b>' + cfg.target.toFixed(1) + '</b> 秒</span>' +
+      '<span>無音に使える時間 <b>' + silence.toFixed(1) + '</b> 秒 / ' + n + 'ギャップ</span>';
+  }
+
+  function showError(msg) { el.err.hidden = !msg; el.err.textContent = msg || ''; }
+  function showWarn(list) {
+    el.warns.hidden = !list.length;
+    el.warns.innerHTML = list.map(function (w) { return '⚠ ' + esc(w); }).join('<br>');
+  }
+
+  function readCfg() {
+    return {
+      target: parseFloat(el.target.value) || 30,
+      rate: parseFloat(el.rate.value) || 1.0,
+      targetChunkSeconds: parseFloat(el.chunkSec.value) || 5.0,
+      jaCharsPerSec: CFG.jaCharsPerSec,
+      refUrl: el.refUrl.value.trim()
+    };
+  }
+
+  /* ---------------------------------------------------------------- 操作 */
+
+  el.analyze.addEventListener('click', function () {
+    showError(''); showWarn([]);
+    try {
+      var cfg = readCfg();
+      var chunks = buildChunks(el.script.value, cfg);
+      renderStat(chunks, cfg);
+      renderTable(chunks);
+      el.planHint.textContent = 'APIは呼んでいません。ここで台本の長さを調整してから生成すると、無駄な生成をしなくて済みます。';
+    } catch (e) { showError(e.message); }
+  });
+
+  el.run.addEventListener('click', async function () {
+    showError(''); showWarn([]);
+    var cfg = readCfg();
+    if (!cfg.refUrl) { showError('参照音声URLを入力してください（公開アクセス可能なURL）。'); return; }
+
+    var chunks;
+    try { chunks = buildChunks(el.script.value, cfg); } catch (e) { showError(e.message); return; }
+
+    el.run.disabled = true; el.analyze.disabled = true;
+    el.result.hidden = true;
+    renderStat(chunks, cfg);
+    renderTable(chunks);
+    el.planHint.textContent = '生成中です。チャンクごとに長さを検証し、乖離が大きいものは seed を変えて引き直します。';
+
+    var update = function () { renderTable(chunks); };
+    try {
+      await runPool(chunks, CFG.concurrency, function (c) { return synthWithRetry(c, cfg, update); });
+
+      var done = chunks.filter(function (c) { return c.buffer; });
+      if (!done.length) throw new Error('すべてのチャンクの生成に失敗しました。');
+
+      var plan = planGaps(done, cfg);
+      var warnings = plan.warnings.slice();
+
+      if (plan.newRate != null) {
+        var clamped = Math.min(Math.max(plan.newRate, CFG.rateRange[0]), CFG.rateRange[1]);
+        warnings.push('台本が長いため、話速を ' + cfg.rate.toFixed(2) + ' → ' + clamped.toFixed(2) + ' に上げて生成し直しました。');
+        if (clamped < plan.newRate - 1e-6) {
+          warnings.push('話速の上限に達しました。台本を約' +
+            Math.round((plan.newRate - clamped) * cfg.target * CFG.jaCharsPerSec) + '文字短くしてください。');
+        }
+        cfg.rate = Math.round(clamped * 1000) / 1000;
+        el.rate.value = cfg.rate;
+        chunks = buildChunks(el.script.value, cfg);
+        renderTable(chunks);
+        await runPool(chunks, CFG.concurrency, function (c) { return synthWithRetry(c, cfg, update); });
+        done = chunks.filter(function (c) { return c.buffer; });
+        plan = planGaps(done, cfg);
+        warnings = warnings.concat(plan.warnings);
+      }
+
+      done.forEach(function (c, i) { c.gapAfter = plan.gaps[i] || 0; });
+      renderStat(chunks, cfg);
+      renderTable(chunks);
+
+      var merged = concatBuffers(done, plan.gaps);
+      var blob = wavBlob(merged);
+      var url = URL.createObjectURL(blob);
+      el.player.src = url;
+      el.dlAudio.href = url;
+
+      var diff = merged.duration - cfg.target;
+      el.finalLen.textContent = merged.duration.toFixed(2) + 's';
+      el.delta.textContent = '（目標 ' + cfg.target.toFixed(1) + 's / 差 ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + 's）';
+      el.delta.className = 'num ' + (Math.abs(diff) <= 0.5 ? 'deltaok' : 'deltnope');
+
+      var measured = done.reduce(function (s, c) { return s + c.weight; }, 0) / done.reduce(function (s, c) { return s + c.actual; }, 0);
+      warnings.push('実測の読み上げ速度は ' + measured.toFixed(2) + ' 拍/秒でした（設定値 ' + CFG.jaCharsPerSec + '）。');
+      var suspects = chunks.filter(function (c) { return c.status !== 'ok'; });
+      if (suspects.length) warnings.push('要確認のチャンクが ' + suspects.length + ' 件あります（表の状態欄を確認してください）。');
+      showWarn(warnings);
+
+      el.parts.innerHTML = done.map(function (c) {
+        return '<div class="part"><b>#' + c.index + '</b>' +
+          '<audio controls preload="none" src="' + esc(toAudioProxy(c.url)) + '"></audio>' +
+          '<span>' + esc(c.tag || '—') + ' / ' + c.actual.toFixed(2) + 's</span></div>';
+      }).join('');
+
+      var report = {
+        generated_at: new Date().toISOString(),
+        model: CFG.model, target_seconds: cfg.target, actual_seconds: Number(merged.duration.toFixed(2)),
+        rate_used: cfg.rate, measured_chars_per_sec: Number(measured.toFixed(2)), warnings: warnings,
+        chunks: chunks.map(function (c) {
+          return { index: c.index, text: c.text, tag: c.tag, weight: Number(c.weight.toFixed(1)),
+            expected_sec: Number(c.expected.toFixed(2)), actual_sec: Number(c.actual.toFixed(2)),
+            deviation: Number(c.deviation.toFixed(3)), gap_after_sec: Number((c.gapAfter || 0).toFixed(3)),
+            retries: c.retries, status: c.status, seed: c.seed };
+        })
+      };
+      el.dlReport.href = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
+      el.result.hidden = false;
+      el.planHint.textContent = '完成しました。チャンク単位の音声も個別に確認できます。';
+    } catch (e) {
+      showError(e.message);
+    } finally {
+      el.run.disabled = false; el.analyze.disabled = false;
+    }
+  });
+
+  /* ---------------------------------------------------------------- 起動 */
+
+  el.script.value = SAMPLE;
+
+  // 参照音声：本番はこのデモに同梱した reference.mp3 を使う（API が取りに来るため公開URLが要る）。
+  // localhost では外から取得できないので、生成済みのサンプル音源URLを既定にしておく。
+  var local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  var bundled = new URL('reference.mp3', location.href).href;
+  var hosted = 'https://file.modellix.ai/aigc/audio/a120c6d7-eebc-49df-a0a5-eede7ecd7afc_6bdea43e8dff.mp3';
+  el.refUrl.value = local ? hosted : bundled;
+  el.refHint.textContent = local
+    ? 'ローカル実行中です。API 側から localhost は取得できないため、公開済みのサンプル音源URLを入れています（本番では同梱の reference.mp3 を使います）。'
+    : '同梱のサンプル音源です。実案件では、話者ご本人が静かな環境で10〜30秒読んだ音声のURLに差し替えてください。';
+})();
+</script>
+</body>
+</html>

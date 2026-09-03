@@ -1,0 +1,42 @@
+{
+  "model": "cosyvoice-v3.5-plus",
+  "provider_path": "alibaba/cosyvoice-clone",
+  "reference_audio_url": "",
+  "language_hint": "ja",
+  "target_seconds": 30.0,
+  "instruction": "",
+  "hot_fix": {
+    "replace": [
+      {
+        "代々木上原": "よよぎうえはら"
+      },
+      {
+        "弘岡": "ひろおか"
+      },
+      {
+        "IREA": "アイリア"
+      }
+    ]
+  },
+  "rate": 1.0,
+  "pitch": 1.0,
+  "volume": 50,
+  "sample_rate": 24000,
+  "format": "mp3",
+  "max_prompt_audio_length": 30,
+  "enable_preprocess": true,
+  "ja_chars_per_sec": 5.75,
+  "target_chunk_seconds": 5.0,
+  "min_chunk_seconds": 2.1,
+  "max_chunk_seconds": 7.0,
+  "tolerance": 0.35,
+  "max_retries": 3,
+  "concurrency": 3,
+  "min_gap": 0.1,
+  "max_gap": 1.2,
+  "comma_gap_ratio": 0.4,
+  "lead_in": 0.2,
+  "tail": 0.4,
+  "_note_instruction": "instruction は既定で空にしてある。cosyvoice-clone に自由文の指示を渡すと、モデルが指示文そのものを読み上げたうえで本文を2回繰り返す（実測：3.5秒→7.8秒、ASRで確認済み）。口調を変えたい場合は、参照音声そのものを目的の口調で録り直すこと。",
+  "_note_cps": "ja_chars_per_sec は『重み付き拍数 / 秒』。声質と話速で変わるので、実行後にコンソールへ出る『実測の読み上げ速度』に合わせて調整する。"
+}
