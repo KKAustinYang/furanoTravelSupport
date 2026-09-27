@@ -1,0 +1,1561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MANGIRO — AI-powered home search</title>
+<meta name="description" content="MANGIRO is an AI-powered home search service operated by KINAKO Inc.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://jp.gptbots.ai">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MANGIRO 物件サイト（運営：KINAKO）
+   レイアウトは Redfin を下敷きに、色・書体は MANGIRO のデザイン言語
+   （生成り地 × きなこ色のアクセント）に置き換えている。
+   ============================================================ */
+:root{
+  --bg:#FAF9F7;
+  --surface:#FFFFFF;
+  --muted:#F3F0EB;
+  --line:#E5E1DA;
+  --line-soft:#EFEBE4;
+  --text:#2B2823;
+  --text-sub:#6F685F;
+  --ink:#1F1C18;
+  --accent:#8C6E4A;
+  --accent-dark:#75593A;
+  --accent-soft:#F0E9E0;
+  --kinako:#C9A46A;
+
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px;
+  --shadow-sm:0 1px 2px rgba(43,40,35,.06);
+  --shadow-md:0 8px 28px rgba(43,40,35,.09);
+  --shadow-lg:0 24px 64px rgba(43,40,35,.16);
+  --ease:cubic-bezier(.16,1,.3,1);
+
+  --header-h:72px;
+  --container:1240px;
+  --gutter:24px;
+  --font:"Inter","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (max-width:640px){ :root{ --header-h:60px; --gutter:16px } }
+
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font); font-size:15px; line-height:1.6; letter-spacing:.005em;
+  color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+html[lang="ja"] body{font-size:15px; line-height:1.75; letter-spacing:.02em}
+:where(p,li,h1,h2,h3,h4,dd,dt,span,b,a,button){line-break:strict; overflow-wrap:break-word}
+h1,h2,h3,h4{font-weight:700; line-height:1.25; text-wrap:balance}
+html[lang="ja"] :is(h1,h2,h3,h4){line-height:1.4; letter-spacing:.01em; font-feature-settings:"palt" 1; word-break:auto-phrase}
+p{text-wrap:pretty}
+img{display:block; max-width:100%}
+a{color:inherit; text-decoration:none}
+button,input{font:inherit; color:inherit}
+input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none; appearance:none}
+button{background:none; border:0; cursor:pointer; padding:0}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:var(--r-sm)}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.num{font-variant-numeric:tabular-nums}
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--gutter)}
+.ico{width:20px; height:20px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+
+/* ---------- ボタン ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height:44px; padding:0 20px; border-radius:999px; font-weight:600; font-size:14.5px; white-space:nowrap;
+  transition:background .18s, color .18s, border-color .18s, transform .18s var(--ease);
+}
+.btn-ink{background:var(--ink); color:#fff}
+.btn-ink:hover{background:#3a352e}
+.btn-accent{background:var(--accent); color:#fff}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-line{border:1px solid var(--line); background:var(--surface)}
+.btn-line:hover{border-color:var(--text-sub)}
+.beta{
+  display:inline-flex; align-items:center; height:19px; padding:0 7px; border-radius:999px;
+  background:var(--ink); color:#fff; font-size:10.5px; font-weight:700; letter-spacing:.06em; line-height:1;
+}
+.spark{
+  display:inline-grid; place-items:center; flex:none;
+  width:28px; height:28px; border-radius:9px; color:#fff;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--kinako) 100%);
+}
+.spark svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+
+/* ============================================================
+   ヘッダー（ホームと AI 検索で共通）
+   ============================================================ */
+.site-header{
+  position:sticky; top:0; z-index:80; height:var(--header-h);
+  background:rgba(255,255,255,.94); backdrop-filter:blur(14px) saturate(160%);
+  border-bottom:1px solid var(--line);
+}
+.header-inner{height:100%; display:flex; align-items:center; gap:20px; max-width:none; padding-inline:clamp(16px,2vw,28px)}
+.brand{display:flex; align-items:center; gap:10px; flex:none}
+.brand-mark{width:30px; height:30px}
+.brand-text{display:flex; flex-direction:column; line-height:1}
+.brand-text b{font-size:19px; font-weight:700; letter-spacing:.22em; color:var(--text)}
+.brand-text small{margin-top:4px; font-size:10px; font-weight:500; letter-spacing:.08em; color:var(--text-sub)}
+.brand-text small em{font-style:normal; color:var(--accent); font-weight:600}
+
+.hsearch{
+  position:relative; flex:0 1 360px; min-width:0; display:flex; align-items:center;
+  height:44px; border:1px solid var(--line); border-radius:999px; background:var(--surface);
+  padding-left:16px; transition:border-color .18s, opacity .25s, transform .25s var(--ease);
+}
+.hsearch:focus-within{border-color:var(--accent)}
+.hsearch input{flex:1; min-width:0; border:0; outline:0; background:none; font-size:14px}
+.hsearch input::placeholder{color:#8E877D}
+.hsearch .go{width:36px; height:36px; margin:3px; border-radius:999px; display:grid; place-items:center; background:var(--accent); color:#fff}
+.hsearch .go:hover{background:var(--accent-dark)}
+.hsearch .go svg{width:17px; height:17px}
+/* ホームのファーストビューでは隠し、ヒーローを過ぎたら出す（Redfin と同じ） */
+body.at-hero .hsearch{opacity:0; transform:translateY(-6px); pointer-events:none; visibility:hidden}
+@media (max-width:760px){ .hsearch{display:none} }
+
+.mainnav{margin-left:auto; display:flex; align-items:center; gap:4px}
+.mainnav a{
+  display:inline-flex; align-items:center; gap:6px; height:40px; padding:0 12px; border-radius:999px;
+  font-size:14.5px; color:var(--text); white-space:nowrap; transition:background .15s;
+}
+.mainnav a:hover{background:var(--muted)}
+.mainnav a.ai-link{color:var(--accent); font-weight:600}
+.mainnav a.ai-link svg{width:16px; height:16px}
+.mainnav a[aria-current="page"]{background:var(--accent-soft)}
+@media (max-width:1180px){ .mainnav a.opt{display:none} }
+@media (max-width:1000px){ .mainnav{display:none} }
+
+.header-right{display:flex; align-items:center; gap:10px; flex:none}
+@media (max-width:1000px){ .header-right{margin-left:auto} }
+.lang{
+  display:inline-flex; align-items:center; height:36px; padding:3px; border-radius:999px;
+  background:var(--muted); border:1px solid var(--line-soft);
+}
+.lang button{height:28px; padding:0 11px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--text-sub); transition:background .18s,color .18s}
+.lang button[aria-pressed="true"]{background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm)}
+.signin{height:42px; padding:0 18px; font-size:14px}
+@media (max-width:640px){ .signin{display:none} }
+.menu-btn{display:none; width:40px; height:40px; border-radius:999px; place-items:center}
+.menu-btn:hover{background:var(--muted)}
+@media (max-width:1000px){ .menu-btn{display:grid} }
+
+.mobile-menu{
+  position:fixed; inset:var(--header-h) 0 auto 0; z-index:79;
+  background:var(--surface); border-bottom:1px solid var(--line); box-shadow:var(--shadow-md);
+  padding:8px var(--gutter) 20px;
+}
+.mobile-menu a{display:flex; align-items:center; gap:10px; padding:14px 4px; border-bottom:1px solid var(--line-soft); font-size:16px}
+.mobile-menu a.ai-link{color:var(--accent); font-weight:600}
+.mobile-menu .btn{margin-top:16px; width:100%}
+
+/* ============================================================
+   ヒーロー
+   ============================================================ */
+.hero{
+  position:relative; isolation:isolate;
+  min-height:clamp(470px,58vh,560px); display:flex; align-items:center;
+  background:#3a322a url("img/hero.jpg") center 62%/cover no-repeat;
+}
+.hero::before{
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:
+    linear-gradient(90deg,rgba(24,20,16,.62) 0%,rgba(24,20,16,.34) 45%,rgba(24,20,16,.08) 75%),
+    linear-gradient(180deg,rgba(24,20,16,.18) 0%,rgba(24,20,16,0) 40%,rgba(24,20,16,.22) 100%);
+}
+.hero-inner{padding-block:56px 64px}
+.hero h1{
+  color:#fff; font-size:clamp(34px,4.6vw,56px); line-height:1.12; letter-spacing:-.015em;
+  text-shadow:0 2px 24px rgba(0,0,0,.25); max-width:14em;
+}
+html[lang="ja"] .hero h1{font-size:clamp(30px,3.9vw,48px); line-height:1.36; letter-spacing:.02em}
+
+.search-panel{margin-top:40px; width:min(620px,100%)}
+.tabs{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{
+  height:44px; padding:0 18px; border-radius:10px 10px 0 0; flex:none;
+  background:rgba(255,255,255,.72); color:var(--text); font-size:14.5px; font-weight:500;
+  transition:background .18s;
+}
+.tabs button:hover{background:rgba(255,255,255,.9)}
+.tabs button[aria-selected="true"]{background:var(--surface); font-weight:700}
+
+.searchbox{position:relative}
+.search-field{
+  display:flex; align-items:center; gap:8px; height:68px; padding:0 8px 0 24px;
+  background:var(--surface); border-radius:0 12px 12px 12px;
+  box-shadow:0 12px 36px rgba(0,0,0,.22); border:2px solid transparent; transition:border-color .18s;
+}
+.search-field:focus-within{border-color:var(--accent)}
+.search-field input{flex:1; min-width:0; height:100%; border:0; outline:0; background:none; font-size:17px}
+.search-field input::placeholder{color:#8E877D}
+.search-field .go{
+  width:52px; height:52px; border-radius:999px; flex:none; display:grid; place-items:center;
+  background:var(--accent); color:#fff; transition:background .18s, transform .18s var(--ease);
+}
+.search-field .go:hover{background:var(--accent-dark); transform:scale(1.04)}
+.search-field .go svg{width:22px; height:22px}
+@media (max-width:640px){
+  .tabs button{height:40px; padding:0 13px; font-size:13.5px}
+  .search-field{height:60px; padding-left:16px}
+  .search-field input{font-size:15.5px}
+  .search-field .go{width:46px; height:46px}
+}
+
+.suggest{
+  position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:30;
+  background:var(--surface); border-radius:var(--r-md); box-shadow:var(--shadow-lg);
+  border:1px solid var(--line-soft); overflow:hidden; text-align:left;
+  animation:pop .22s var(--ease);
+}
+@keyframes pop{from{opacity:0; transform:translateY(-4px)}to{opacity:1; transform:none}}
+.sg-item{display:flex; align-items:center; gap:14px; width:100%; padding:14px 20px; text-align:left; transition:background .12s}
+.sg-item:hover,.sg-item.is-active{background:var(--muted)}
+.sg-item + .sg-item{border-top:1px solid var(--line-soft)}
+.sg-item .ico{color:var(--text-sub)}
+.sg-ai-title{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; color:var(--accent)}
+.sg-ai-desc{font-size:14px; color:var(--text); margin-top:2px}
+.sg-q{font-weight:600}
+.sg-head{padding:12px 20px 4px; font-size:12px; font-weight:600; color:var(--text-sub); letter-spacing:.04em; border-top:1px solid var(--line-soft)}
+.sg-pop{display:flex; flex-wrap:wrap; gap:8px; padding:6px 20px 16px}
+.sg-pop button{height:32px; padding:0 13px; border-radius:999px; border:1px solid var(--line); font-size:13px; background:var(--surface); transition:border-color .15s, background .15s}
+.sg-pop button:hover{border-color:var(--accent); background:var(--accent-soft)}
+
+.try{margin-top:16px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; color:#fff}
+.try > span{font-size:13px; opacity:.9}
+.try button{
+  display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 14px; border-radius:999px;
+  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.34); color:#fff; font-size:13px;
+  backdrop-filter:blur(6px); transition:background .18s;
+}
+.try button:hover{background:rgba(255,255,255,.26)}
+.try button svg{width:14px; height:14px}
+
+/* ============================================================
+   セクション共通
+   ============================================================ */
+.section{padding-block:72px 8px}
+.section:last-of-type{padding-bottom:0}
+@media (max-width:640px){ .section{padding-block:52px 4px} }
+.sec-head{display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px}
+.sec-head h2{font-size:clamp(24px,2.6vw,32px); letter-spacing:-.01em}
+html[lang="ja"] .sec-head h2{letter-spacing:.02em}
+.sec-head p{margin-top:6px; color:var(--text-sub); font-size:15.5px}
+.sec-link{display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--accent); white-space:nowrap}
+.sec-link:hover{color:var(--accent-dark)}
+.sec-link svg{width:16px; height:16px}
+
+.arrows{display:flex; gap:12px; flex:none}
+.arrow{
+  width:48px; height:48px; border-radius:999px; display:grid; place-items:center;
+  background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow-sm); color:var(--accent);
+  transition:opacity .18s, border-color .18s;
+}
+.arrow:hover{border-color:var(--accent)}
+.arrow:disabled{opacity:.4; cursor:default; color:var(--text-sub); background:var(--muted); box-shadow:none}
+@media (max-width:640px){ .arrows{display:none} }
+
+/* ---------- 物件カード ---------- */
+.track{
+  display:grid; grid-auto-flow:column; grid-auto-columns:calc((100% - 2*24px)/3); gap:24px;
+  overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none;
+  padding:4px; margin:-4px; scroll-padding-inline:4px;
+}
+.track::-webkit-scrollbar{display:none}
+.track > *{scroll-snap-align:start}
+@media (max-width:1000px){ .track{grid-auto-columns:calc((100% - 20px)/2); gap:20px} }
+@media (max-width:640px){ .track{grid-auto-columns:86%; gap:14px} }
+.dots{display:flex; justify-content:center; gap:8px; margin-top:22px}
+.dots button{width:8px; height:8px; border-radius:999px; background:#D6D0C7; transition:width .25s var(--ease), background .2s}
+.dots button[aria-current="true"]{width:22px; background:var(--accent)}
+
+.grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px}
+@media (max-width:1000px){ .grid{grid-template-columns:repeat(2,1fr); gap:20px} }
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
+
+.card{
+  position:relative; display:flex; flex-direction:column; min-width:0;
+  background:var(--surface); border-radius:var(--r-lg); overflow:hidden;
+  box-shadow:0 1px 3px rgba(43,40,35,.08),0 0 0 1px rgba(43,40,35,.04);
+  transition:box-shadow .25s var(--ease), transform .25s var(--ease); cursor:pointer;
+}
+.card:hover{box-shadow:var(--shadow-md),0 0 0 1px rgba(43,40,35,.05); transform:translateY(-2px)}
+.card-media{position:relative; aspect-ratio:3/2; overflow:hidden; background:var(--muted)}
+.card-media img{width:100%; height:100%; object-fit:cover; transition:transform .6s var(--ease)}
+.card:hover .card-media img{transform:scale(1.035)}
+.badges{position:absolute; top:12px; left:12px; right:12px; display:flex; flex-wrap:wrap; gap:6px}
+.badge{
+  display:inline-flex; align-items:center; height:24px; padding:0 9px; border-radius:6px;
+  font-size:11px; font-weight:700; letter-spacing:.05em; line-height:1; text-transform:uppercase; white-space:nowrap;
+  background:var(--surface); color:var(--text);
+}
+html[lang="ja"] .badge{letter-spacing:.04em; font-size:11.5px}
+.badge.b-early{background:var(--ink); color:#fff}
+.badge.b-excl{background:var(--accent); color:#fff}
+.badge.b-new{background:#fff; color:var(--accent-dark)}
+.photo-count{
+  position:absolute; right:12px; bottom:12px; display:inline-flex; align-items:center; gap:5px;
+  height:26px; padding:0 9px; border-radius:6px; background:rgba(24,20,16,.62); color:#fff; font-size:12px; font-weight:600;
+}
+.photo-count svg{width:14px; height:14px}
+.card-body{padding:16px 18px 18px; display:flex; flex-direction:column; flex:1}
+.card-top{display:flex; align-items:center; justify-content:space-between; gap:8px}
+.price{font-size:22px; font-weight:700; letter-spacing:-.01em}
+html[lang="ja"] .price{letter-spacing:0}
+.card-acts{display:flex; gap:2px; margin-right:-8px}
+.icon-btn{width:40px; height:40px; border-radius:999px; display:grid; place-items:center; color:var(--text); transition:background .15s, color .15s}
+.icon-btn:hover{background:var(--muted)}
+.icon-btn svg{width:22px; height:22px}
+.icon-btn.is-fav{color:#C0463A}
+.icon-btn.is-fav svg{fill:currentColor}
+.specs{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:15px}
+.specs b{font-weight:600}
+.addr{margin-top:4px; font-size:13.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.access{margin-top:2px; font-size:13px; color:var(--text-sub); display:flex; align-items:center; gap:5px}
+.access svg{width:14px; height:14px}
+.listed-by{margin-top:auto; padding-top:12px; font-size:11px; color:var(--text-sub)}
+
+/* ============================================================
+   AI 紹介帯
+   ============================================================ */
+.ai-band{
+  margin-top:72px; background:var(--ink); color:#fff; border-radius:28px; overflow:hidden;
+  display:grid; grid-template-columns:1.02fr 1fr; gap:0; position:relative; isolation:isolate;
+}
+.ai-band::before{
+  content:""; position:absolute; z-index:-1; width:620px; height:620px; right:-160px; top:-240px; border-radius:50%;
+  background:radial-gradient(closest-side,rgba(201,164,106,.30),rgba(201,164,106,0));
+}
+@media (max-width:900px){ .ai-band{grid-template-columns:1fr; border-radius:22px; margin-top:56px} }
+.ai-copy{padding:clamp(32px,5vw,64px)}
+.ai-eyebrow{display:inline-flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:#E6CFA6; letter-spacing:.04em}
+.ai-copy h2{margin-top:18px; font-size:clamp(28px,3.2vw,40px); line-height:1.18; letter-spacing:-.015em}
+html[lang="ja"] .ai-copy h2{line-height:1.42; letter-spacing:.02em}
+.ai-copy > p{margin-top:16px; color:rgba(255,255,255,.76); font-size:16px; max-width:34em}
+.ai-points{list-style:none; padding:0; margin-top:24px; display:grid; gap:12px}
+.ai-points li{display:flex; gap:12px; align-items:flex-start; font-size:15px; color:rgba(255,255,255,.92)}
+.ai-points li svg{width:20px; height:20px; color:var(--kinako); margin-top:2px}
+.ai-copy .btn{margin-top:32px; height:52px; padding:0 26px; font-size:15.5px}
+.ai-copy .btn-cream{background:#F4E9D6; color:var(--ink)}
+.ai-copy .btn-cream:hover{background:#fff}
+
+.ai-demo{padding:clamp(24px,4vw,48px); display:flex; align-items:center; justify-content:center}
+.chat-mock{
+  width:100%; max-width:470px; background:var(--bg); color:var(--text); border-radius:20px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45); overflow:hidden; cursor:pointer; text-align:left;
+  transition:transform .35s var(--ease);
+}
+.chat-mock:hover{transform:translateY(-3px)}
+.cm-head{display:flex; align-items:center; gap:10px; padding:14px 18px; background:var(--surface); border-bottom:1px solid var(--line)}
+.cm-head b{font-size:14px}
+.cm-head .live{margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--text-sub)}
+.cm-head .live i{width:7px; height:7px; border-radius:50%; background:#3C9A6A; box-shadow:0 0 0 3px rgba(60,154,106,.18)}
+.cm-body{padding:18px; display:grid; gap:12px}
+.bubble{max-width:88%; padding:11px 14px; border-radius:16px; font-size:13.5px; line-height:1.6}
+.bubble.me{justify-self:end; background:var(--accent); color:#fff; border-bottom-right-radius:5px}
+.bubble.bot{background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:5px}
+.cm-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.mini{background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+.mini img{aspect-ratio:4/3; width:100%; object-fit:cover}
+.mini div{padding:7px 8px 8px}
+.mini b{display:block; font-size:12.5px}
+.mini span{display:block; font-size:10.5px; color:var(--text-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.cm-input{margin:0 18px 18px; height:44px; border:1px solid var(--line); border-radius:999px; background:var(--surface); display:flex; align-items:center; padding:0 6px 0 16px; font-size:13px; color:#8E877D}
+.cm-input i{margin-left:auto; width:32px; height:32px; border-radius:999px; background:var(--accent); display:grid; place-items:center; color:#fff}
+.cm-input i svg{width:15px; height:15px}
+.typing{display:inline-flex; gap:4px; align-items:center; height:10px}
+.typing i{width:6px; height:6px; border-radius:50%; background:var(--text-sub); opacity:.4; animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:.9}}
+
+/* ---------- エリア ---------- */
+.areas{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+@media (max-width:900px){ .areas{grid-template-columns:repeat(2,1fr); gap:14px} }
+.area{
+  position:relative; aspect-ratio:4/3; border-radius:var(--r-lg); overflow:hidden; isolation:isolate;
+  display:flex; align-items:flex-end; color:#fff; text-align:left; background:var(--muted);
+}
+.area img{position:absolute; inset:0; z-index:-2; width:100%; height:100%; object-fit:cover; transition:transform .7s var(--ease)}
+.area::after{content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(18,14,10,.72) 100%)}
+.area:hover img{transform:scale(1.05)}
+.area-txt{padding:20px 22px; width:100%; display:flex; align-items:flex-end; justify-content:space-between; gap:12px}
+.area-txt b{display:block; font-size:22px; letter-spacing:-.005em}
+.area-txt .meta{display:block; font-size:13.5px; opacity:.88; margin-top:2px}
+.area-go{width:40px; height:40px; flex:none; border-radius:999px; display:grid; place-items:center; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4); backdrop-filter:blur(6px); transition:background .2s}
+.area:hover .area-go{background:rgba(255,255,255,.34)}
+.area-go svg{width:18px; height:18px}
+@media (max-width:640px){ .area-txt{padding:14px} .area-txt b{font-size:17px} .area-txt .meta{font-size:12px} .area-go{display:none} }
+
+/* ---------- サービス ---------- */
+.services{display:grid; grid-template-columns:repeat(3,1fr); gap:24px}
+@media (max-width:900px){ .services{grid-template-columns:1fr; gap:14px} }
+.svc{
+  display:flex; flex-direction:column; align-items:flex-start; text-align:left;
+  padding:32px 30px 28px; border-radius:var(--r-lg); background:var(--surface); border:1px solid var(--line);
+  transition:border-color .2s, box-shadow .25s var(--ease);
+}
+.svc:hover{border-color:#D5CCBF; box-shadow:var(--shadow-md)}
+.svc-ico{width:56px; height:56px; border-radius:16px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent)}
+.svc-ico svg{width:28px; height:28px; stroke-width:1.6}
+.svc h3{margin-top:22px; font-size:20px}
+.svc p{margin-top:8px; color:var(--text-sub); font-size:15px; flex:1}
+.svc .sec-link{margin-top:20px}
+
+/* ---------- 数字 ---------- */
+.stats{margin-top:72px; border-block:1px solid var(--line); padding-block:44px; display:grid; grid-template-columns:repeat(4,1fr); gap:24px}
+@media (max-width:900px){ .stats{grid-template-columns:repeat(2,1fr); gap:28px 16px; margin-top:56px} }
+.stat b{display:block; font-size:clamp(30px,3.4vw,42px); letter-spacing:-.02em; color:var(--text); line-height:1.1}
+.stat b small{font-size:.5em; margin-left:2px; letter-spacing:0; color:var(--accent)}
+.stat span{display:block; margin-top:8px; color:var(--text-sub); font-size:14px}
+
+/* ---------- フッター ---------- */
+.site-footer{margin-top:88px; background:var(--surface); border-top:1px solid var(--line)}
+.foot-top{display:grid; grid-template-columns:1.5fr repeat(3,1fr); gap:32px; padding-block:56px 40px}
+@media (max-width:900px){ .foot-top{grid-template-columns:1fr 1fr; gap:32px 20px} .foot-brand{grid-column:1/-1} }
+.foot-brand p{margin-top:16px; color:var(--text-sub); font-size:14px; max-width:26em}
+.foot-col h4{font-size:13px; letter-spacing:.06em; color:var(--text-sub); font-weight:600}
+.foot-col ul{list-style:none; padding:0; margin-top:14px; display:grid; gap:10px}
+.foot-col a{font-size:14.5px}
+.foot-col a:hover{color:var(--accent)}
+.foot-bottom{border-top:1px solid var(--line-soft); padding-block:22px 28px; display:flex; flex-wrap:wrap; gap:10px 28px; align-items:center; font-size:12.5px; color:var(--text-sub)}
+.foot-bottom .spacer{flex:1}
+.disclaimer{background:var(--muted); font-size:12.5px; color:var(--text-sub); padding-block:12px; text-align:center}
+
+/* ============================================================
+   AI 検索ビュー（Redfin と同じ構成）
+   サイトのヘッダー → 細いバー（戻る / AI検索 BETA / 操作）→ 白地にそのままチャット。
+   ウィジェット自身のヘッダー（名前・リセットボタン）は iframe を上にずらして隠し、
+   ブランド表記がヘッダーと二重にならないようにする。リセットはバー右の「新しい会話」で代替。
+   ============================================================ */
+body.is-ai{overflow:hidden}
+body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
+.ai-view{
+  --widget-head:66px;               /* GPTBots ウィジェットのヘッダー高さ（PC・スマホ共通） */
+  height:calc(100dvh - var(--header-h)); display:flex; flex-direction:column; background:var(--surface);
+}
+.ai-bar{
+  flex:none; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px;
+  height:56px; padding-inline:clamp(10px,2vw,28px); border-bottom:1px solid var(--line); background:var(--surface);
+}
+.back{display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 12px 0 8px; border-radius:999px; color:var(--accent); font-weight:600; font-size:14.5px; justify-self:start}
+.back:hover{background:var(--muted)}
+.ai-title{display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; white-space:nowrap}
+.ai-title .ico{width:18px; height:18px; color:var(--accent)}
+.ai-actions{justify-self:end; display:flex; align-items:center; gap:6px; min-width:0}
+.req{
+  display:inline-flex; align-items:center; gap:10px; min-width:0; max-width:min(380px,28vw);
+  height:36px; padding:0 4px 0 14px; border-radius:999px; background:var(--accent-soft); border:1px solid rgba(140,110,74,.22);
+  font-size:13px;
+}
+.req > span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+.req b{font-weight:600; color:var(--accent-dark); margin-right:6px}
+.req button{flex:none; height:28px; padding:0 11px; border-radius:999px; background:var(--surface); font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:5px}
+.req button:hover{color:var(--accent)}
+.req button svg{width:14px; height:14px}
+.ai-reset{width:38px; height:38px; border-radius:999px; display:grid; place-items:center; color:var(--text-sub); transition:background .15s,color .15s}
+.ai-reset:hover{background:var(--muted); color:var(--accent)}
+.ai-reset svg{width:19px; height:19px}
+
+.ai-stage{flex:1; min-height:0; display:flex; justify-content:center}
+.ai-frame{position:relative; width:100%; max-width:1040px; height:100%; overflow:hidden; background:var(--surface)}
+.ai-frame iframe{
+  position:absolute; left:0; top:calc(-1 * var(--widget-head));
+  width:100%; height:calc(100% + var(--widget-head)); border:0; display:block; background:var(--surface);
+}
+.ai-loading{
+  position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  background:var(--surface); color:var(--text-sub); font-size:14px; transition:opacity .4s;
+}
+.ai-loading.is-done{opacity:0; pointer-events:none}
+.ai-loading .spark{width:52px; height:52px; border-radius:16px; animation:breathe 1.8s ease-in-out infinite}
+.ai-loading .spark svg{width:26px; height:26px}
+@keyframes breathe{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(201,164,106,.35)}50%{transform:scale(1.05); box-shadow:0 0 0 14px rgba(201,164,106,0)}}
+@media (max-width:900px){ .req{max-width:none} .req > span{display:none} .req{padding:0 4px; background:none; border:0} }
+@media (max-width:640px){ .back span{display:none} .ai-bar{height:52px; gap:6px} .ai-title{font-size:16px} .req button{width:36px; height:36px; padding:0; justify-content:center} .req button span{display:none} .req button svg{width:18px; height:18px} }
+
+/* ============================================================
+   物件詳細モーダル
+   ============================================================ */
+.modal{position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:24px}
+.modal-backdrop{position:absolute; inset:0; background:rgba(24,20,16,.55); backdrop-filter:blur(2px); animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.modal-panel{
+  position:relative; width:min(1080px,100%); max-height:calc(100dvh - 48px); overflow:auto;
+  background:var(--surface); border-radius:22px; box-shadow:var(--shadow-lg);
+  animation:rise .35s var(--ease);
+}
+@keyframes rise{from{opacity:0; transform:translateY(16px) scale(.99)}}
+.modal-close{position:absolute; top:14px; right:14px; z-index:3; width:42px; height:42px; border-radius:999px; background:rgba(255,255,255,.94); display:grid; place-items:center; box-shadow:var(--shadow-sm)}
+.modal-close:hover{background:#fff}
+.gallery{display:grid; grid-template-columns:2fr 1fr; gap:6px; padding:6px}
+.gallery.single{grid-template-columns:1fr}
+.g-main{position:relative; aspect-ratio:16/10; border-radius:16px 6px 6px 6px; overflow:hidden; background:var(--muted)}
+.gallery.single .g-main{border-radius:16px 16px 6px 6px; aspect-ratio:21/9}
+.g-main img{width:100%; height:100%; object-fit:cover}
+.g-side{display:grid; gap:6px; grid-auto-rows:1fr}
+.g-thumb{position:relative; border-radius:6px; overflow:hidden; background:var(--muted); outline:2px solid transparent; outline-offset:-2px; transition:outline-color .15s}
+.g-thumb:first-child{border-top-right-radius:16px}
+.g-thumb img{width:100%; height:100%; object-fit:cover}
+.g-thumb[aria-current="true"]{outline-color:var(--accent)}
+@media (max-width:760px){ .gallery{grid-template-columns:1fr} .g-side{grid-auto-flow:column; grid-auto-columns:1fr; grid-auto-rows:auto} .g-thumb{aspect-ratio:4/3; border-radius:6px!important} .g-main{border-radius:16px 16px 6px 6px} }
+.m-body{display:grid; grid-template-columns:1fr 340px; gap:40px; padding:28px 36px 36px}
+@media (max-width:900px){ .m-body{grid-template-columns:1fr; gap:24px; padding:22px 20px 28px} }
+.m-badges{display:flex; flex-wrap:wrap; gap:6px}
+.m-badges .badge{border:1px solid var(--line)}
+.m-badges .badge.b-early,.m-badges .badge.b-excl{border-color:transparent}
+.m-price{margin-top:14px; font-size:34px; font-weight:700; letter-spacing:-.02em}
+html[lang="ja"] .m-price{letter-spacing:0}
+.m-name{margin-top:2px; font-size:18px; font-weight:600}
+.m-addr{margin-top:4px; color:var(--text-sub)}
+.m-facts{margin-top:22px; display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden}
+.m-facts div{padding:14px 16px; border-right:1px solid var(--line)}
+.m-facts div:last-child{border-right:0}
+.m-facts dt{font-size:12px; color:var(--text-sub)}
+.m-facts dd{margin-top:2px; font-size:16px; font-weight:600}
+@media (max-width:640px){ .m-facts{grid-template-columns:1fr 1fr} .m-facts div:nth-child(2){border-right:0} .m-facts div:nth-child(-n+2){border-bottom:1px solid var(--line)} }
+.m-desc{margin-top:22px; font-size:15.5px; line-height:1.8}
+.m-dl{margin-top:22px; display:grid; grid-template-columns:auto 1fr; gap:10px 24px; font-size:14.5px}
+.m-dl dt{color:var(--text-sub)}
+.m-side{align-self:start; position:sticky; top:20px; display:grid; gap:12px; padding:22px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--bg)}
+.m-side h4{font-size:16px}
+.m-side p{font-size:13.5px; color:var(--text-sub)}
+.m-side .btn{width:100%; height:50px}
+.m-agent{display:flex; align-items:center; gap:12px; padding-top:12px; border-top:1px solid var(--line)}
+.m-agent i{width:40px; height:40px; border-radius:999px; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; font-style:normal; font-weight:700}
+.m-agent b{display:block; font-size:14px}
+.m-agent span{display:block; font-size:12.5px; color:var(--text-sub)}
+
+/* ---------- トースト ---------- */
+.toast{
+  position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom,0px)); z-index:200;
+  transform:translate(-50%,12px); opacity:0; pointer-events:none;
+  display:inline-flex; align-items:center; gap:10px; max-width:calc(100vw - 32px);
+  padding:12px 18px; border-radius:999px; background:var(--ink); color:#fff; font-size:14px; box-shadow:var(--shadow-lg);
+  transition:opacity .25s, transform .35s var(--ease);
+}
+.toast.is-on{opacity:1; transform:translate(-50%,0)}
+.toast svg{width:18px; height:18px; color:var(--kinako)}
+
+/* ============================================================
+   AI の文字だけに、きなこ色の光が流れるアニメーション（Redfin の AI 表記に相当）
+   ハイライトが通る一瞬以外は濃い茶色なので、白地でも読める
+   ============================================================ */
+.ai-shine{
+  background:linear-gradient(100deg,#5E4128 0%,#8C6E4A 28%,#B0703A 40%,#F4D79E 50%,#B0703A 60%,#8C6E4A 72%,#5E4128 100%);
+  background-size:260% 100%; background-position:100% 0;
+  -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 6px rgba(201,164,106,.35));
+  animation:ai-shine 2.8s cubic-bezier(.45,.05,.35,1) infinite;
+}
+@keyframes ai-shine{0%{background-position:100% 0}55%,100%{background-position:0% 0}}
+.twinkle{transform-origin:50% 50%; animation:twinkle 2.8s ease-in-out infinite}
+@keyframes twinkle{0%,55%,100%{transform:scale(1) rotate(0); opacity:.9}28%{transform:scale(1.28) rotate(22deg); opacity:1; color:#C98A3E; filter:drop-shadow(0 0 4px rgba(232,199,137,.9))}}
+.spark-flow{position:relative; overflow:hidden; background:linear-gradient(135deg,#6B4F31 0%,#8C6E4A 30%,#D4A964 55%,#8C6E4A 80%,#6B4F31 100%); background-size:220% 220%; animation:spark-flow 2.8s ease-in-out infinite}
+.spark-flow::after{content:""; position:absolute; inset:-40%; background:linear-gradient(115deg,transparent 40%,rgba(255,244,220,.75) 50%,transparent 60%); transform:translateX(-70%); animation:spark-sweep 2.8s cubic-bezier(.45,.05,.35,1) infinite}
+.spark-flow svg{position:relative; z-index:1}
+@keyframes spark-flow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes spark-sweep{0%{transform:translateX(-70%)}45%,100%{transform:translateX(70%)}}
+.sg-item[data-sg="ai"]{background:linear-gradient(90deg,rgba(201,164,106,.16),rgba(201,164,106,.04) 70%,rgba(201,164,106,0))}
+.sg-item[data-sg="ai"]:hover,.sg-item[data-sg="ai"].is-active{background:linear-gradient(90deg,rgba(201,164,106,.26),rgba(201,164,106,.08) 70%,rgba(201,164,106,0))}
+.sg-ai-title .ai-shine{font-weight:700}
+.mainnav a.ai-link .ai-shine{font-weight:700}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body class="at-hero">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5c.5 3.6 1.9 5.9 5.9 6.6-4 .7-5.4 3-5.9 6.6-.5-3.6-1.9-5.9-5.9-6.6 4-.7 5.4-3 5.9-6.6Z" fill="currentColor" stroke="none"/><path d="M18.5 15.5c.2 1.5.8 2.3 2.2 2.6-1.4.3-2 1.1-2.2 2.6-.2-1.5-.8-2.3-2.2-2.6 1.4-.3 2-1.1 2.2-2.6Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-sparkq" viewBox="0 0 24 24"><circle cx="10.5" cy="11.5" r="6.5"/><path d="m15.5 16.5 4.5 4.5"/><path d="M18 2.8c.2 1.6.9 2.5 2.6 2.8-1.7.3-2.4 1.2-2.6 2.8-.2-1.6-.9-2.5-2.6-2.8 1.7-.3 2.4-1.2 2.6-2.8Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-loc" viewBox="0 0 24 24"><path d="m3.5 11 17-7.5-7.5 17-2-7.5-7.5-2Z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.6 12 20 12 20Z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M14 5.5 20 11l-6 5.5V13c-5 0-8 1.5-10 5 .5-5.5 3.5-9 10-9.5V5.5Z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-train" viewBox="0 0 24 24"><rect x="6" y="3.5" width="12" height="13" rx="3"/><path d="M6 11h12M9.5 20.5l1-3M14.5 20.5l-1-3"/><circle cx="9.3" cy="14" r=".6" fill="currentColor"/><circle cx="14.7" cy="14" r=".6" fill="currentColor"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-9Z"/><circle cx="12" cy="12.8" r="3.3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6a1.7 1.7 0 0 0 1.7 1.7h2.3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.8 12.6 11.4 5h7.1a.5.5 0 0 1 .5.5v7.1l-7.6 7.6a1.4 1.4 0 0 1-2 0l-5.6-5.6a1.4 1.4 0 0 1 0-2Z"/><circle cx="15.3" cy="8.7" r="1.3"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5M5 10v7.5M9.5 10v7.5M14.5 10v7.5M19 10v7.5M3.5 20h17"/></symbol>
+</svg>
+
+<!-- ============================================================ ヘッダー -->
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="#" data-go="home" aria-label="MANGIRO">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#8C6E4A"/>
+        <path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/>
+      </svg>
+      <span class="brand-text"><b>MANGIRO</b><small data-i18n-html="brand_by"></small></span>
+    </a>
+
+    <form class="hsearch" id="hsearch" role="search">
+      <input id="hsearchInput" type="search" autocomplete="off" data-i18n-ph="ph_header" aria-label="Search">
+      <button class="go" type="submit" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button>
+    </form>
+
+    <nav class="mainnav" aria-label="Main">
+      <a href="#" data-tab-go="buy" data-i18n="nav_buy"></a>
+      <a href="#" data-tab-go="rent" data-i18n="nav_rent"></a>
+      <a href="#" data-tab-go="sell" data-i18n="nav_sell"></a>
+      <a href="#" class="opt" data-scroll="services" data-i18n="nav_loan"></a>
+      <a href="#" class="opt" data-scroll="areas" data-i18n="nav_areas"></a>
+      <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
+    </nav>
+
+    <div class="header-right">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+      </div>
+      <button class="btn btn-ink signin" type="button" data-toast="toast_signin" data-i18n="signin"></button>
+      <button class="menu-btn" type="button" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="#" data-tab-go="buy" data-i18n="nav_buy"></a>
+  <a href="#" data-tab-go="rent" data-i18n="nav_rent"></a>
+  <a href="#" data-tab-go="sell" data-i18n="nav_sell"></a>
+  <a href="#" data-scroll="services" data-i18n="nav_loan"></a>
+  <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
+  <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
+  <button class="btn btn-ink" type="button" data-toast="toast_signin" data-i18n="signin"></button>
+</div>
+
+<!-- ============================================================ ホーム -->
+<main id="home">
+  <section class="hero" id="hero">
+    <div class="container hero-inner">
+      <h1 data-i18n-html="hero_title"></h1>
+
+      <div class="search-panel">
+        <div class="tabs" role="tablist" aria-label="Search type">
+          <button role="tab" data-tab="buy" aria-selected="true" data-i18n="tab_buy"></button>
+          <button role="tab" data-tab="rent" aria-selected="false" data-i18n="tab_rent"></button>
+          <button role="tab" data-tab="sell" aria-selected="false" data-i18n="tab_sell"></button>
+          <button role="tab" data-tab="loan" aria-selected="false" data-i18n="tab_loan"></button>
+          <button role="tab" data-tab="value" aria-selected="false" data-i18n="tab_value"></button>
+        </div>
+        <form class="searchbox" id="searchbox" role="search" autocomplete="off">
+          <div class="search-field">
+            <input id="q" type="search" aria-label="Search" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false">
+            <button class="go" type="submit" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button>
+          </div>
+          <div class="suggest" id="suggest" role="listbox" hidden>
+            <button type="button" class="sg-item" data-sg="ai" role="option">
+              <span class="spark spark-flow"><svg><use href="#i-sparkq"/></svg></span>
+              <span>
+                <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span><span class="beta">BETA</span></span>
+                <span class="sg-ai-desc" id="sgAiDesc"></span>
+              </span>
+            </button>
+            <button type="button" class="sg-item" data-sg="loc" role="option">
+              <svg class="ico"><use href="#i-loc"/></svg><span data-i18n="sg_loc"></span>
+            </button>
+            <div class="sg-head" data-i18n="sg_popular"></div>
+            <div class="sg-pop" id="sgPop"></div>
+          </div>
+        </form>
+        <div class="try" id="tryRow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 先行公開 -->
+  <section class="section" id="featured">
+    <div class="container">
+      <div class="sec-head">
+        <div><h2 data-i18n="feat_title"></h2><p data-i18n="feat_sub"></p></div>
+        <div class="arrows">
+          <button class="arrow" type="button" data-dir="-1" aria-label="Previous"><svg class="ico"><use href="#i-left"/></svg></button>
+          <button class="arrow" type="button" data-dir="1" aria-label="Next"><svg class="ico"><use href="#i-right"/></svg></button>
+        </div>
+      </div>
+      <div class="track" id="featTrack"></div>
+      <div class="dots" id="featDots"></div>
+    </div>
+  </section>
+
+  <!-- AI 紹介 -->
+  <section class="container">
+    <div class="ai-band">
+      <div class="ai-copy">
+        <span class="ai-eyebrow"><span class="spark"><svg><use href="#i-spark"/></svg></span><span data-i18n="ai_eyebrow"></span><span class="beta" style="background:#F4E9D6;color:var(--ink)">BETA</span></span>
+        <h2 data-i18n-html="ai_title"></h2>
+        <p data-i18n="ai_body"></p>
+        <ul class="ai-points">
+          <li><svg class="ico"><use href="#i-check"/></svg><span data-i18n="ai_p1"></span></li>
+          <li><svg class="ico"><use href="#i-check"/></svg><span data-i18n="ai_p2"></span></li>
+          <li><svg class="ico"><use href="#i-check"/></svg><span data-i18n="ai_p3"></span></li>
+        </ul>
+        <a href="#/ai" class="btn btn-cream" data-ai><svg class="ico" style="width:18px;height:18px"><use href="#i-spark"/></svg><span data-i18n="ai_cta"></span></a>
+      </div>
+      <div class="ai-demo">
+        <button type="button" class="chat-mock" id="chatMock" aria-label="Open AI Search">
+          <div class="cm-head"><span class="spark" style="width:26px;height:26px;border-radius:8px"><svg><use href="#i-spark"/></svg></span><b data-i18n="ai_name"></b><span class="live"><i></i><span data-i18n="cm_online"></span></span></div>
+          <div class="cm-body">
+            <div class="bubble me" data-i18n="cm_user"></div>
+            <div class="bubble bot" data-i18n="cm_bot"></div>
+            <div class="cm-cards" id="cmCards"></div>
+            <div class="bubble bot" style="width:max-content"><span class="typing"><i></i><i></i><i></i></span></div>
+          </div>
+          <div class="cm-input"><span data-i18n="cm_input"></span><i><svg class="ico"><use href="#i-send"/></svg></i></div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 新着 -->
+  <section class="section" id="new">
+    <div class="container">
+      <div class="sec-head">
+        <div><h2 data-i18n="new_title"></h2><p data-i18n="new_sub"></p></div>
+        <a href="#/ai" class="sec-link" data-ai data-ask="ask_all"><span data-i18n="new_more"></span><svg class="ico"><use href="#i-right"/></svg></a>
+      </div>
+      <div class="grid" id="newGrid"></div>
+    </div>
+  </section>
+
+  <!-- エリア -->
+  <section class="section" id="areas">
+    <div class="container">
+      <div class="sec-head"><div><h2 data-i18n="area_title"></h2><p data-i18n="area_sub"></p></div></div>
+      <div class="areas" id="areaGrid"></div>
+    </div>
+  </section>
+
+  <!-- サービス -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="sec-head"><div><h2 data-i18n="svc_title"></h2><p data-i18n="svc_sub"></p></div></div>
+      <div class="services">
+        <div class="svc">
+          <span class="svc-ico"><svg class="ico"><use href="#i-key"/></svg></span>
+          <h3 data-i18n="svc1_t"></h3><p data-i18n="svc1_d"></p>
+          <a href="#/ai" class="sec-link" data-ai data-ask="ask_agent"><span data-i18n="svc1_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+        </div>
+        <div class="svc">
+          <span class="svc-ico"><svg class="ico"><use href="#i-tag"/></svg></span>
+          <h3 data-i18n="svc2_t"></h3><p data-i18n="svc2_d"></p>
+          <a href="#/ai" class="sec-link" data-ai data-ask="ask_sell"><span data-i18n="svc2_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+        </div>
+        <div class="svc">
+          <span class="svc-ico"><svg class="ico"><use href="#i-bank"/></svg></span>
+          <h3 data-i18n="svc3_t"></h3><p data-i18n="svc3_d"></p>
+          <a href="#/ai" class="sec-link" data-ai data-ask="ask_loan"><span data-i18n="svc3_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><b class="num">18,400<small>+</small></b><span data-i18n="st1"></span></div>
+        <div class="stat"><b class="num" data-i18n-html="st2_v"></b><span data-i18n="st2"></span></div>
+        <div class="stat"><b class="num">24/7</b><span data-i18n="st3"></span></div>
+        <div class="stat"><b class="num">4.8<small>/5</small></b><span data-i18n="st4"></span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================ AI 検索 -->
+<section class="ai-view" id="aiView" hidden aria-labelledby="aiTitle">
+  <div class="ai-bar">
+    <a href="#" class="back" id="aiBack"><svg class="ico"><use href="#i-left"/></svg><span data-i18n="back"></span></a>
+    <h1 class="ai-title" id="aiTitle"><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span><span class="beta">BETA</span></h1>
+    <div class="ai-actions">
+      <div class="req" id="req" hidden>
+        <span><b data-i18n="req_label"></b><span id="reqText"></span></span>
+        <button type="button" id="reqCopy"><svg class="ico"><use href="#i-copy"/></svg><span data-i18n="copy"></span></button>
+      </div>
+      <button type="button" class="ai-reset" id="aiReset" data-i18n-title="new_chat"><svg class="ico"><use href="#i-refresh"/></svg></button>
+    </div>
+  </div>
+  <div class="ai-stage">
+    <div class="ai-frame" id="aiFrame">
+      <div class="ai-loading" id="aiLoading">
+        <span class="spark"><svg><use href="#i-spark"/></svg></span>
+        <span data-i18n="ai_loading"></span>
+      </div>
+      <!-- src は初回表示時に入れる（ホームの表示を遅くしないため）。一度読み込んだら会話を保つため外さない -->
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ フッター -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href="#" data-go="home" aria-label="MANGIRO">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#8C6E4A"/><path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/></svg>
+          <span class="brand-text"><b>MANGIRO</b><small data-i18n-html="brand_by"></small></span>
+        </a>
+        <p data-i18n="foot_desc"></p>
+      </div>
+      <div class="foot-col"><h4 data-i18n="fc1"></h4><ul>
+        <li><a href="#" data-tab-go="buy" data-i18n="nav_buy"></a></li>
+        <li><a href="#" data-tab-go="rent" data-i18n="nav_rent"></a></li>
+        <li><a href="#" data-scroll="new" data-i18n="fl_new"></a></li>
+        <li><a href="#/ai" data-ai data-i18n="nav_ai"></a></li>
+      </ul></div>
+      <div class="foot-col"><h4 data-i18n="fc2"></h4><ul>
+        <li><a href="#" data-tab-go="value" data-i18n="tab_value"></a></li>
+        <li><a href="#" data-tab-go="sell" data-i18n="fl_sell"></a></li>
+        <li><a href="#" data-scroll="services" data-i18n="nav_loan"></a></li>
+        <li><a href="#" data-scroll="areas" data-i18n="nav_areas"></a></li>
+      </ul></div>
+      <div class="foot-col"><h4 data-i18n="fc3"></h4><ul>
+        <li><a href="#" data-toast="toast_demo" data-i18n="fl_about"></a></li>
+        <li><a href="#" data-toast="toast_demo" data-i18n="fl_careers"></a></li>
+        <li><a href="#" data-toast="toast_demo" data-i18n="fl_contact"></a></li>
+        <li><a href="#" data-toast="toast_demo" data-i18n="fl_privacy"></a></li>
+      </ul></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 KINAKO Inc.</span>
+      <span data-i18n="license"></span>
+      <span class="spacer"></span>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer" data-i18n="disclaimer"></div>
+</footer>
+
+<!-- ============================================================ 物件詳細 -->
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mName">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" id="modalPanel"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="ico"><use href="#i-check"/></svg><span id="toastText"></span></div>
+
+<script>
+/* ============================================================
+   埋め込む AI 物件探しエージェント（GPTBots）
+   ============================================================ */
+const AGENT_SRC = 'https://jp.gptbots.ai/widget/ee0ufuivjyfpoldylcnyxfx/chat.html';
+
+/* ============================================================
+   文言（EN / JA）
+   ============================================================ */
+const I18N = {
+  en: {
+    doc_title:'MANGIRO — AI-powered home search',
+    brand_by:'by <em>KINAKO</em>',
+    nav_buy:'Buy', nav_rent:'Rent', nav_sell:'Sell', nav_loan:'Mortgage', nav_areas:'Areas', nav_ai:'AI Search',
+    signin:'Join / Sign in',
+    ph_header:'City, station, address, ZIP',
+    hero_title:'Find your next home<br>just by describing it.',
+    tab_buy:'Buy', tab_rent:'Rent', tab_sell:'Sell', tab_loan:'Mortgage', tab_value:'Home Value',
+    ph_buy:'City, station, address, school, ZIP',
+    ph_rent:'City, station or building name',
+    ph_sell:'Enter your address for a free estimate',
+    ph_loan:'Enter a home price or area',
+    ph_value:'Enter your address to see its value',
+    sg_ai_title:'Search smarter, powered by AI',
+    sg_ai_desc:'Describe your dream home, we’ll find it.',
+    sg_ai_q:'Ask AI: <span class="sg-q">“{q}”</span>',
+    sg_loc:'Current location',
+    sg_popular:'Popular searches',
+    pop:['Edogawa-ku','Arakawa-ku','Near Kasai Sta.','Under ¥50M','Pet-friendly condos'],
+    try_label:'Try asking',
+    try1:'2LDK in Edogawa under ¥50M',
+    try2:'Near a station in Arakawa, good for kids',
+    feat_title:'Early access',
+    feat_sub:'Get a first look at these homes before they’re listed on other sites.',
+    ai_eyebrow:'MANGIRO AI Search',
+    ai_title:'Search the way you’d<br>talk to an agent.',
+    ai_body:'No filters to fiddle with. Tell our AI your budget, your commute, the schools, even the morning light you want — it narrows thousands of listings down to the few that fit, and answers questions about each one.',
+    ai_p1:'Understands everyday language, in English or Japanese',
+    ai_p2:'Compares homes side by side and explains the trade-offs',
+    ai_p3:'Available 24/7, with a human agent whenever you want one',
+    ai_cta:'Start AI Search',
+    ai_name:'MANGIRO AI Search',
+    cm_online:'Online',
+    cm_user:'A 2LDK in Edogawa under ¥50M, close to a station. We have a toddler.',
+    cm_bot:'Here are three condos that fit — each within a 7-minute walk of the station, with a park nearby.',
+    cm_input:'Describe your dream home…',
+    new_title:'New in Greater Tokyo',
+    new_sub:'Fresh on MANGIRO this week.',
+    new_more:'Ask AI for more',
+    area_title:'Explore by area',
+    area_sub:'Neighborhoods our buyers love right now.',
+    area_homes:'{n} homes', area_avg:'avg. {p}',
+    svc_title:'Buy, sell and rent — all with MANGIRO',
+    svc_sub:'From the first search to the keys in your hand.',
+    svc1_t:'Buy with a MANGIRO agent', svc1_d:'Local experts who tour, negotiate and close alongside you, from the first viewing to the contract.', svc1_l:'Find an agent',
+    svc2_t:'Sell with confidence', svc2_d:'Get a free AI estimate in about 60 seconds, then list with a full marketing plan — virtual staging included.', svc2_l:'Get a free estimate',
+    svc3_t:'Mortgages made simple', svc3_d:'Compare rates from partner banks and know what you can afford before you tour.', svc3_l:'Compare rates',
+    st1:'active listings in Greater Tokyo', st2_v:'2<small> days</small>', st2:'earlier than other portals, on average', st3:'AI search & concierge', st4:'average rating from buyers',
+    foot_desc:'MANGIRO is an AI-powered home search service operated by KINAKO Inc.',
+    fc1:'Find a home', fc2:'Sell & finance', fc3:'Company',
+    fl_new:'New listings', fl_sell:'Sell with MANGIRO', fl_about:'About KINAKO', fl_careers:'Careers', fl_contact:'Contact', fl_privacy:'Privacy policy',
+    license:'Real estate license: Governor of Tokyo (1) No. 000000 (sample)',
+    disclaimer:'This is a demonstration site. All listings, prices and figures are fictional.',
+    back:'Back', req_label:'Your request', copy:'Copy',
+    ai_loading:'Connecting to MANGIRO AI…',
+    new_chat:'New chat',
+    toast_copied:'Copied — paste it into the chat to begin.',
+    toast_signin:'Sign-in is turned off in this demo.',
+    toast_demo:'This page isn’t part of the demo.',
+    toast_saved:'Saved to your favorites.', toast_unsaved:'Removed from favorites.',
+    toast_link:'Link copied.',
+    toast_loc:'Location search isn’t available in the demo — try AI Search.',
+    ask_all:'Show me more new listings in Greater Tokyo',
+    ask_agent:'I’d like to talk to a MANGIRO agent about buying',
+    ask_sell:'I’d like a free estimate for my home',
+    ask_loan:'How much can I borrow for a home around ¥80M?',
+    ask_area:'Show me homes in {a}',
+    ask_home:'Tell me more about {n}',
+    ask_tour:'I’d like to schedule a tour of {n}',
+    ask_tab_rent:'Rentals in {q}', ask_tab_sell:'What is my home at {q} worth?', ask_tab_loan:'Mortgage options for {q}', ask_tab_value:'What is my home at {q} worth?',
+    photos:'{n}',
+    listed_by:'Listing by {a} • KINAKO Realty',
+    f_layout:'Layout', f_area:'Floor area', f_built:'Built', f_walk:'Station',
+    d_type:'Type', d_access:'Access', d_addr:'Address', d_price_sqm:'Price per m²',
+    type_condo:'Condominium', type_house:'Single-family house',
+    walk_min:'{m} min walk',
+    m_ask_t:'Questions about this home?', m_ask_d:'Our AI knows the building, the area and the numbers. Ask anything, any time.',
+    m_ask:'Ask AI about this home', m_tour:'Request a tour',
+    agent_role:'MANGIRO agent',
+    close:'Close', save:'Save', share:'Share',
+    badge:{ early:'Early access', excl:'MANGIRO exclusive', soon:'Coming soon', new:'New · 2 hrs ago', open:'Open house Sat', drop:'Price cut' }
+  },
+  ja: {
+    doc_title:'MANGIRO（マンジロー）｜ AIで探す住まい',
+    brand_by:'運営：<em>KINAKO</em>',
+    nav_buy:'買う', nav_rent:'借りる', nav_sell:'売る', nav_loan:'住宅ローン', nav_areas:'エリア', nav_ai:'AI検索',
+    signin:'ログイン・会員登録',
+    ph_header:'エリア・駅名・住所',
+    hero_title:'話すだけで、<br>理想の住まいが見つかる',
+    tab_buy:'買う', tab_rent:'借りる', tab_sell:'売る', tab_loan:'住宅ローン', tab_value:'売却査定',
+    ph_buy:'エリア・駅名・住所・郵便番号',
+    ph_rent:'エリア・駅名・建物名',
+    ph_sell:'ご自宅の住所を入力（無料査定）',
+    ph_loan:'物件価格またはエリアを入力',
+    ph_value:'住所を入力して、いまの価格を確認',
+    sg_ai_title:'AIで、もっと賢く探す',
+    sg_ai_desc:'理想の住まいを言葉で伝えるだけ。AIが探します。',
+    sg_ai_q:'AIに聞く：<span class="sg-q">「{q}」</span>',
+    sg_loc:'現在地から探す',
+    sg_popular:'よく検索されている条件',
+    pop:['江戸川区','荒川区','葛西駅周辺','5,000万円以下','ペット可マンション'],
+    try_label:'こんな聞き方も',
+    try1:'江戸川区で5,000万円以内の2LDK',
+    try2:'荒川区の駅近で、子育てしやすい物件',
+    feat_title:'先行公開物件',
+    feat_sub:'他サイトに掲載される前の物件を、MANGIROで先にご覧いただけます。',
+    ai_eyebrow:'MANGIRO AI検索',
+    ai_title:'担当者に話すように、<br>住まいを探せる',
+    ai_body:'細かな条件を一つずつ選ぶ必要はありません。予算や通勤時間、学区、朝の日当たりまで、思いつくままに伝えてください。数千件の中から合う物件をAIが選び、1件ずつの質問にもお答えします。',
+    ai_p1:'ふだんの言葉で伝わる。日本語でも英語でも',
+    ai_p2:'候補を並べて比べ、違いをわかりやすく説明',
+    ai_p3:'24時間対応。必要なときはいつでも担当者へ',
+    ai_cta:'AI検索をはじめる',
+    ai_name:'MANGIRO AI検索',
+    cm_online:'対応中',
+    cm_user:'江戸川区で5,000万円以内の2LDK。駅から近くて、小さな子どもがいても暮らしやすいところがいいです。',
+    cm_bot:'条件に合うマンションを3件ご紹介します。どれも駅徒歩7分以内で、近くに公園があります。',
+    cm_input:'理想の住まいを教えてください…',
+    new_title:'首都圏の新着物件',
+    new_sub:'今週MANGIROに掲載された物件です。',
+    new_more:'AIにもっと探してもらう',
+    area_title:'エリアから探す',
+    area_sub:'いま購入検討者に人気のエリアです。',
+    area_homes:'{n}件', area_avg:'平均 {p}',
+    svc_title:'買う・売る・借りる。住まいのことは MANGIRO へ',
+    svc_sub:'最初の検索から、鍵をお渡しするまで。',
+    svc1_t:'担当エージェントと買う', svc1_d:'地域に詳しい担当者が、内見から価格交渉、ご契約まで伴走します。', svc1_l:'担当者を探す',
+    svc2_t:'納得して売る', svc2_d:'AIによる無料査定は約60秒。バーチャルステージング付きの販売プランで、物件の魅力をしっかり伝えます。', svc2_l:'無料で査定する',
+    svc3_t:'住宅ローンを、かんたんに', svc3_d:'提携銀行の金利を比べて、内見の前に借入可能額を確認できます。', svc3_l:'金利を比べる',
+    st1:'首都圏の掲載物件数', st2_v:'平均2<small>日</small>', st2:'他サイトより早く公開', st3:'AI検索・コンシェルジュ', st4:'購入者の平均評価',
+    foot_desc:'MANGIROは、株式会社KINAKOが運営するAI不動産ポータルです。',
+    fc1:'物件を探す', fc2:'売却・資金計画', fc3:'会社情報',
+    fl_new:'新着物件', fl_sell:'MANGIROで売却', fl_about:'株式会社KINAKOについて', fl_careers:'採用情報', fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
+    license:'宅地建物取引業免許 東京都知事(1)第000000号（サンプル）',
+    disclaimer:'本サイトはデモ用のサンプルです。掲載物件・価格・数値はすべて架空のものです。',
+    back:'戻る', req_label:'ご要望', copy:'コピー',
+    ai_loading:'MANGIRO AIに接続しています…',
+    new_chat:'新しい会話',
+    toast_copied:'コピーしました。チャット欄に貼り付けてはじめましょう。',
+    toast_signin:'このデモではログインは無効です。',
+    toast_demo:'このページはデモの対象外です。',
+    toast_saved:'お気に入りに保存しました。', toast_unsaved:'お気に入りから外しました。',
+    toast_link:'リンクをコピーしました。',
+    toast_loc:'デモでは現在地検索は使えません。AI検索をお試しください。',
+    ask_all:'首都圏の新着物件をもっと見せてください',
+    ask_agent:'購入について担当者に相談したいです',
+    ask_sell:'自宅の無料査定をお願いしたいです',
+    ask_loan:'8,000万円前後の物件だと、いくらまで借りられますか？',
+    ask_area:'{a}の物件を見せてください',
+    ask_home:'「{n}」について詳しく教えてください',
+    ask_tour:'「{n}」の内見を予約したいです',
+    ask_tab_rent:'{q}の賃貸物件', ask_tab_sell:'{q}の自宅を売ったらいくらになりますか？', ask_tab_loan:'{q}の住宅ローンについて', ask_tab_value:'{q}の自宅を売ったらいくらになりますか？',
+    photos:'{n}',
+    listed_by:'担当：{a}・KINAKO不動産',
+    f_layout:'間取り', f_area:'専有面積', f_built:'築年', f_walk:'駅まで',
+    d_type:'種別', d_access:'交通', d_addr:'所在地', d_price_sqm:'㎡単価',
+    type_condo:'マンション', type_house:'一戸建て',
+    walk_min:'徒歩{m}分',
+    m_ask_t:'この物件について気になることは？', m_ask_d:'建物や周辺環境、費用のことまで、AIがいつでもお答えします。',
+    m_ask:'この物件についてAIに聞く', m_tour:'内見を予約する',
+    agent_role:'MANGIRO 担当エージェント',
+    close:'閉じる', save:'保存', share:'共有',
+    badge:{ early:'先行公開', excl:'MANGIRO独占', soon:'近日公開', new:'新着・2時間前', open:'土曜 内覧会', drop:'価格改定' }
+  }
+};
+
+/* ============================================================
+   物件データ（すべて架空）
+   price は万円。area は建物面積（戸建）または専有面積（マンション）。
+   ============================================================ */
+const LISTINGS = [
+  { id:'l01', type:'condo', price:8980, layout:'2LDK', sqm:62.4, built:2019, walk:4, imgs:['l01-a','l01-b','l01-c','l01-d'], badges:['early','excl'],
+    name:{en:'Shirokanedai Residence #802', ja:'白金台レジデンス 802号室'},
+    addr:{en:'Shirokanedai, Minato-ku, Tokyo', ja:'東京都港区白金台'},
+    sta:{en:'Shirokanedai Sta.', ja:'白金台駅'}, agent:{en:'Aya Morita', ja:'森田 彩'},
+    desc:{en:'A calm, light-filled corner unit on the 8th floor, a short walk from the tree-lined Platinum Street. The 13-tatami living room opens onto a wide south-west balcony, and the kitchen was finished in 2019 with Miele appliances.',
+          ja:'プラチナ通りまで歩いてすぐ、8階の角住戸です。13畳のリビングは南西向きのワイドバルコニーに面し、一日を通して明るい光が入ります。キッチンはミーレの食洗機付き。'} },
+  { id:'l02', type:'condo', price:6480, layout:'1LDK', sqm:45.2, built:2021, walk:7, imgs:['l02-a','l02-b','l02-c','l02-d'], badges:['early','soon'],
+    name:{en:'Nakameguro Terrace #305', ja:'中目黒テラス 305号室'},
+    addr:{en:'Aobadai, Meguro-ku, Tokyo', ja:'東京都目黒区青葉台'},
+    sta:{en:'Nakameguro Sta.', ja:'中目黒駅'}, agent:{en:'Kenta Sato', ja:'佐藤 健太'},
+    desc:{en:'An exposed-concrete boutique building one street back from the Meguro River. The 1LDK has a deep, planted terrace and a grey accent wall, and there’s a bike room and delivery lockers downstairs.',
+          ja:'目黒川から一本入った、打ちっぱなしのデザイナーズマンション。植栽のある奥行きのあるテラスと、グレーのアクセントウォールが印象的な1LDKです。駐輪場・宅配ボックス完備。'} },
+  { id:'l03', type:'condo', price:12800, layout:'3LDK', sqm:78.6, built:2020, walk:5, imgs:['l03-a','l03-b','l03-c'], badges:['early','excl'],
+    name:{en:'Yoyogi Park Front #1104', ja:'代々木パークフロント 1104号室'},
+    addr:{en:'Yoyogi, Shibuya-ku, Tokyo', ja:'東京都渋谷区代々木'},
+    sta:{en:'Yoyogi-koen Sta.', ja:'代々木公園駅'}, agent:{en:'Aya Morita', ja:'森田 彩'},
+    desc:{en:'An 11th-floor family home facing the green of Yoyogi Park. The 16-tatami living room, a separate tatami room and generous storage make it easy to live with kids, and the building has a 24-hour concierge.',
+          ja:'代々木公園の緑を望む11階の3LDK。16畳のリビングに独立した和室、収納も充実していて、お子さまのいるご家族にも暮らしやすい間取りです。24時間有人管理。'} },
+  { id:'l04', type:'house', price:14500, layout:'4LDK', sqm:112.3, built:2022, walk:9, imgs:['l04'], badges:['new'],
+    name:{en:'Okusawa Garden House', ja:'奥沢ガーデンハウス'},
+    addr:{en:'Okusawa, Setagaya-ku, Tokyo', ja:'東京都世田谷区奥沢'},
+    sta:{en:'Jiyugaoka Sta.', ja:'自由が丘駅'}, agent:{en:'Yui Tanaka', ja:'田中 結衣'},
+    desc:{en:'A timber-clad family house on a quiet residential street between Jiyugaoka and Okusawa, with a small Japanese garden, parking for one car and a sunny second-floor living room.',
+          ja:'自由が丘と奥沢のあいだ、閑静な住宅街に建つ木の外壁の一戸建て。小さな和の庭と駐車場1台分、陽当たりの良い2階リビングを備えています。'} },
+  { id:'l05', type:'house', price:9780, layout:'3LDK', sqm:98.7, built:2018, walk:12, imgs:['l05'], badges:['open'],
+    name:{en:'Kichijoji Skylight House', ja:'吉祥寺 天窓のある家'},
+    addr:{en:'Kichijoji-minamicho, Musashino-shi, Tokyo', ja:'東京都武蔵野市吉祥寺南町'},
+    sta:{en:'Kichijoji Sta.', ja:'吉祥寺駅'}, agent:{en:'Kenta Sato', ja:'佐藤 健太'},
+    desc:{en:'A double-height living room with a skylight opens straight onto a garden deck. Inokashira Park is a 10-minute walk away.',
+          ja:'天窓のある吹き抜けのリビングから、そのまま庭のウッドデッキへ。井の頭公園まで徒歩10分の住環境です。'} },
+  { id:'l06', type:'condo', price:11200, layout:'2LDK', sqm:71.2, built:2017, walk:3, imgs:['l06'], badges:['early','soon'],
+    name:{en:'Minato Mirai Harbor View #3702', ja:'みなとみらい ハーバービュー 3702号室'},
+    addr:{en:'Minatomirai, Nishi-ku, Yokohama', ja:'神奈川県横浜市西区みなとみらい'},
+    sta:{en:'Minatomirai Sta.', ja:'みなとみらい駅'}, agent:{en:'Yui Tanaka', ja:'田中 結衣'},
+    desc:{en:'On the 37th floor, floor-to-ceiling windows frame Yokohama harbor and the Cosmo Clock wheel. The night view from the living room is the main event.',
+          ja:'37階、床から天井までの窓の向こうに横浜港と観覧車。リビングから眺める夜景が、この住まいのいちばんの魅力です。'} },
+  { id:'l07', type:'house', price:8480, layout:'3LDK', sqm:104.5, built:2015, walk:6, imgs:['l07'], badges:['drop'],
+    name:{en:'Hase Engawa House', ja:'長谷 縁側のある家'},
+    addr:{en:'Hase, Kamakura-shi, Kanagawa', ja:'神奈川県鎌倉市長谷'},
+    sta:{en:'Hase Sta.', ja:'長谷駅'}, agent:{en:'Daiki Ito', ja:'伊藤 大樹'},
+    desc:{en:'A single-storey wooden home with a long engawa veranda facing a moss garden. Renovated in 2024; the beach is a 9-minute walk.',
+          ja:'苔庭に面した長い縁側のある平屋。2024年にリノベーション済みで、由比ヶ浜までは徒歩9分です。'} },
+  { id:'l08', type:'condo', price:10980, layout:'3LDK', sqm:75.4, built:2020, walk:4, imgs:['l08'], badges:['new'],
+    name:{en:'Toyosu Bayfront Tower #2208', ja:'豊洲ベイフロントタワー 2208号室'},
+    addr:{en:'Toyosu, Koto-ku, Tokyo', ja:'東京都江東区豊洲'},
+    sta:{en:'Toyosu Sta.', ja:'豊洲駅'}, agent:{en:'Daiki Ito', ja:'伊藤 大樹'},
+    desc:{en:'A waterfront tower with a promenade at the door, kids’ room, gym and guest suites. This 22nd-floor 3LDK faces the canal.',
+          ja:'目の前が水辺のプロムナード。キッズルーム・ジム・ゲストルームを備えたタワーマンションの22階、運河に面した3LDKです。'} },
+  { id:'l09', type:'condo', price:36800, layout:'3LDK', sqm:128.9, built:2023, walk:6, imgs:['l09'], badges:['early','excl'],
+    name:{en:'Moto-Azabu The Residence #901', ja:'元麻布ザ・レジデンス 901号室'},
+    addr:{en:'Moto-Azabu, Minato-ku, Tokyo', ja:'東京都港区元麻布'},
+    sta:{en:'Azabu-juban Sta.', ja:'麻布十番駅'}, agent:{en:'Aya Morita', ja:'森田 彩'},
+    desc:{en:'Travertine, walnut and a framed view of Tokyo Tower. A 129 m² residence on the top floor of a 9-storey building with only 18 homes.',
+          ja:'トラバーチンとウォールナットに包まれ、窓の先には東京タワー。総戸数18戸・9階建ての最上階、約129㎡の住まいです。'} },
+  { id:'l10', type:'condo', price:5280, layout:'1LDK', sqm:38.6, built:2006, walk:5, imgs:['l10'], badges:['new'],
+    name:{en:'Shimokitazawa Renovated Flat #402', ja:'下北沢 リノベーション 402号室'},
+    addr:{en:'Kitazawa, Setagaya-ku, Tokyo', ja:'東京都世田谷区北沢'},
+    sta:{en:'Shimokitazawa Sta.', ja:'下北沢駅'}, agent:{en:'Kenta Sato', ja:'佐藤 健太'},
+    desc:{en:'Fully renovated in 2025 with herringbone oak floors and open shelving. A compact, sunny 1LDK in the middle of Shimokita’s cafes and theatres.',
+          ja:'2025年にフルリノベーション。ヘリンボーンの床とオープン棚のキッチンが映える、陽当たりの良い1LDK。カフェや劇場の多い下北沢の中心です。'} },
+  { id:'l11', type:'condo', price:13600, layout:'3LDK', sqm:88.1, built:2021, walk:8, imgs:['l11'], badges:['open'],
+    name:{en:'Futako-Tamagawa Riverside #203', ja:'二子玉川リバーサイド 203号室'},
+    addr:{en:'Tamagawa, Setagaya-ku, Tokyo', ja:'東京都世田谷区玉川'},
+    sta:{en:'Futako-tamagawa Sta.', ja:'二子玉川駅'}, agent:{en:'Yui Tanaka', ja:'田中 結衣'},
+    desc:{en:'A terraced low-rise beside the Tama River. This 3LDK has a 30 m² planted terrace looking over the riverside greenery.',
+          ja:'多摩川沿いに建つテラスハウス型の低層レジデンス。約30㎡の植栽テラスから、川辺の緑を一望できる3LDKです。'} },
+  { id:'l12', type:'house', price:15800, layout:'3LDK', sqm:96.3, built:2024, walk:3, imgs:['l12'], badges:['early','soon'],
+    name:{en:'Kagurazaka Lantern House', ja:'神楽坂 行灯の家'},
+    addr:{en:'Kagurazaka, Shinjuku-ku, Tokyo', ja:'東京都新宿区神楽坂'},
+    sta:{en:'Kagurazaka Sta.', ja:'神楽坂駅'}, agent:{en:'Daiki Ito', ja:'伊藤 大樹'},
+    desc:{en:'A new three-storey townhouse on a stone-paved lane in Kagurazaka, with charcoal timber louvers, a courtyard of bamboo and a rooftop terrace.',
+          ja:'神楽坂の石畳の路地に建つ、築浅の3階建て。墨色の木製ルーバー、竹を植えた坪庭、屋上テラスを備えています。'} },
+];
+// AI 紹介帯のチャット画面（イメージ）。エージェントのデータ範囲（江戸川区・荒川区）に合わせてある
+const MOCK_CARDS = [
+  { img:'l10',   price:4480, layout:'2LDK', sta:{en:'Kasai Sta.',    ja:'葛西駅'} },
+  { img:'l02-b', price:4980, layout:'2LDK', sta:{en:'Funabori Sta.', ja:'船堀駅'} },
+  { img:'l01-d', price:3980, layout:'2LDK', sta:{en:'Machiya Sta.',  ja:'町屋駅'} },
+];
+const FEATURED = ['l01','l09','l03','l12','l02','l06'];
+const NEWEST   = ['l04','l05','l08','l07','l10','l11'];
+
+const AREAS = [
+  { id:'edogawa',  img:'area-edogawa',  n:582,  avg:4780,  name:{en:'Edogawa',  ja:'江戸川区'} },
+  { id:'arakawa',  img:'area-arakawa',  n:362,  avg:5160,  name:{en:'Arakawa',  ja:'荒川区'} },
+  { id:'minato',   img:'area-minato',   n:1284, avg:14200, name:{en:'Minato',   ja:'港区'} },
+  { id:'setagaya', img:'area-setagaya', n:2031, avg:8600,  name:{en:'Setagaya', ja:'世田谷区'} },
+  { id:'meguro',   img:'area-meguro',   n:846,  avg:9400,  name:{en:'Meguro',   ja:'目黒区'} },
+  { id:'shibuya',  img:'area-shibuya',  n:932,  avg:11800, name:{en:'Shibuya',  ja:'渋谷区'} },
+];
+
+/* ============================================================
+   表示ユーティリティ
+   ============================================================ */
+let lang = 'en';
+const t = (k, vars) => {
+  let s = I18N[lang][k];
+  if (s === undefined) s = I18N.en[k] ?? k;
+  if (vars && typeof s === 'string') for (const [a, b] of Object.entries(vars)) s = s.split('{' + a + '}').join(b);
+  return s;
+};
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+// 価格: JA は「8,980万円」「1億2,800万円」、EN は「¥89.8M」
+function price(man) {
+  if (lang === 'ja') {
+    const oku = Math.floor(man / 10000), rest = man % 10000;
+    return oku ? `${oku}億${rest ? rest.toLocaleString('ja-JP') + '万' : ''}円` : `${man.toLocaleString('ja-JP')}万円`;
+  }
+  const m = man / 100;
+  return '¥' + (m >= 100 ? Math.round(m) : m.toFixed(1).replace(/\.0$/, '')) + 'M';
+}
+const area = (sqm) => lang === 'ja' ? `${sqm}㎡` : `${sqm} m²`;
+const areaLong = (sqm) => lang === 'ja' ? `${sqm}㎡（約${(sqm / 3.306).toFixed(1)}坪）` : `${sqm} m² (${Math.round(sqm * 10.7639).toLocaleString('en-US')} sq ft)`;
+const built = (y) => lang === 'ja' ? `${y}年築` : `Built ${y}`;
+const byId = (id) => LISTINGS.find((l) => l.id === id);
+const img = (id) => `img/${id}.jpg`;
+
+/* ============================================================
+   描画
+   ============================================================ */
+function cardHTML(l) {
+  const badges = l.badges.map((b) => `<span class="badge b-${b}">${esc(t('badge')[b])}</span>`).join('');
+  const favd = favs.has(l.id);
+  return `
+  <article class="card" data-id="${l.id}" tabindex="0" aria-label="${esc(l.name[lang])}">
+    <div class="card-media">
+      <img src="${img(l.imgs[0])}" alt="${esc(l.name[lang])}" loading="lazy" decoding="async"${l.id === 'l02' ? ' style="object-position:50% 30%"' : ''}>
+      <div class="badges">${badges}</div>
+      ${l.imgs.length > 1 ? `<span class="photo-count"><svg class="ico"><use href="#i-camera"/></svg>${l.imgs.length}</span>` : ''}
+    </div>
+    <div class="card-body">
+      <div class="card-top">
+        <span class="price num">${price(l.price)}</span>
+        <span class="card-acts">
+          <button class="icon-btn" type="button" data-share aria-label="${esc(t('share'))}"><svg class="ico"><use href="#i-share"/></svg></button>
+          <button class="icon-btn${favd ? ' is-fav' : ''}" type="button" data-fav aria-pressed="${favd}" aria-label="${esc(t('save'))}"><svg class="ico"><use href="#i-heart"/></svg></button>
+        </span>
+      </div>
+      <div class="specs num"><span><b>${l.layout}</b></span><span>${area(l.sqm)}</span><span>${built(l.built)}</span></div>
+      <div class="addr">${esc(l.name[lang])} · ${esc(l.addr[lang])}</div>
+      <div class="access"><svg class="ico"><use href="#i-train"/></svg>${esc(l.sta[lang])} ${esc(t('walk_min', { m: l.walk }))}</div>
+      <div class="listed-by">${esc(t('listed_by', { a: l.agent[lang] }))}</div>
+    </div>
+  </article>`;
+}
+
+function renderListings() {
+  $('#featTrack').innerHTML = FEATURED.map((id) => cardHTML(byId(id))).join('');
+  $('#newGrid').innerHTML = NEWEST.map((id) => cardHTML(byId(id))).join('');
+  $('#cmCards').innerHTML = MOCK_CARDS.map((m) =>
+    `<div class="mini"><img src="${img(m.img)}" alt="" loading="lazy"><div><b class="num">${price(m.price)}</b><span>${m.layout} · ${esc(m.sta[lang])}</span></div></div>`
+  ).join('');
+  $('#areaGrid').innerHTML = AREAS.map((a) => `
+    <button type="button" class="area" data-area="${a.id}">
+      <img src="${img(a.img)}" alt="" loading="lazy" decoding="async">
+      <span class="area-txt">
+        <span><b>${esc(a.name[lang])}</b><span class="meta num">${esc(t('area_homes', { n: a.n.toLocaleString() }))} · ${esc(t('area_avg', { p: price(a.avg) }))}</span></span>
+        <span class="area-go"><svg class="ico"><use href="#i-right"/></svg></span>
+      </span>
+    </button>`).join('');
+  buildDots();
+}
+
+function renderSuggest() {
+  const q = $('#q').value.trim();
+  $('#sgAiDesc').innerHTML = q ? t('sg_ai_q', { q: esc(q) }) : esc(t('sg_ai_desc'));
+  $('#sgPop').innerHTML = t('pop').map((p) => `<button type="button" data-pop="${esc(p)}">${esc(p)}</button>`).join('');
+}
+
+function renderTry() {
+  $('#tryRow').innerHTML = `<span>${esc(t('try_label'))}</span>` +
+    ['try1', 'try2'].map((k) => `<button type="button" data-try="${k}"><svg class="ico"><use href="#i-spark"/></svg>${esc(t(k))}</button>`).join('');
+}
+
+let tab = 'buy';
+function setTab(next) {
+  tab = next;
+  $$('.tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  $('#q').placeholder = t('ph_' + tab);
+}
+
+function applyLang(next, { push = true } = {}) {
+  lang = next === 'ja' ? 'ja' : 'en';
+  document.documentElement.lang = lang;
+  document.title = t('doc_title');
+  $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  $$('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  $$('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+  $$('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
+  $$('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  setTab(tab);
+  renderListings();
+  renderSuggest();
+  renderTry();
+  if (currentReq) setReq(currentReq.key, currentReq.vars, currentReq.raw);
+  if (openId) openListing(openId, { keepGallery: true });
+  if (push) syncLangParam();
+}
+function syncLangParam() {
+  const u = new URL(location.href);
+  if (lang === 'ja') u.searchParams.set('lang', 'ja'); else u.searchParams.delete('lang');
+  if (u.href !== location.href) history.replaceState(history.state, '', u);
+}
+
+/* ============================================================
+   カルーセル
+   ============================================================ */
+const track = () => $('#featTrack');
+function pageCount() {
+  const tr = track();
+  const perView = Math.max(1, Math.round(tr.clientWidth / (tr.firstElementChild?.getBoundingClientRect().width || tr.clientWidth)));
+  return Math.max(1, Math.ceil(FEATURED.length / perView));
+}
+function buildDots() {
+  const n = pageCount();
+  $('#featDots').innerHTML = Array.from({ length: n }, (_, i) => `<button type="button" aria-label="${i + 1} / ${n}" data-page="${i}"></button>`).join('');
+  $('#featDots').hidden = n < 2;
+  syncCarousel();
+}
+function syncCarousel() {
+  const tr = track();
+  const max = tr.scrollWidth - tr.clientWidth;
+  const n = pageCount();
+  const page = max <= 0 ? 0 : Math.round((tr.scrollLeft / max) * (n - 1));
+  $$('#featDots button').forEach((b, i) => b.setAttribute('aria-current', String(i === page)));
+  $('.arrow[data-dir="-1"]').disabled = tr.scrollLeft <= 2;
+  $('.arrow[data-dir="1"]').disabled = tr.scrollLeft >= max - 2;
+}
+function scrollPage(dir) {
+  const tr = track();
+  tr.scrollBy({ left: dir * tr.clientWidth, behavior: 'smooth' });
+}
+
+/* ============================================================
+   AI 検索ビュー（#/ai）
+   ============================================================ */
+let currentReq = null;        // { key, vars, raw } — 言語切替で文言を作り直せるよう key で持つ
+let returnScroll = 0;
+
+function setReq(key, vars, raw) {
+  currentReq = key || raw ? { key, vars, raw } : null;
+  const resolved = vars && Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, typeof v === 'object' ? v[lang] : v]));
+  const text = raw || (key ? t(key, resolved) : '');
+  $('#req').hidden = !text;
+  $('#reqText').textContent = text;
+}
+
+function ensureFrame() {
+  if ($('#aiFrame iframe')) return;
+  const f = document.createElement('iframe');
+  f.title = 'MANGIRO AI Search';
+  f.width = '100%'; f.height = '100%';
+  f.allow = 'microphone *; camera *; display-capture *';
+  f.addEventListener('load', () => $('#aiLoading').classList.add('is-done'));
+  f.src = AGENT_SRC;
+  $('#aiFrame').appendChild(f);
+  // 読み込みイベントが来ない環境でも、ローディングを出しっぱなしにしない
+  setTimeout(() => $('#aiLoading').classList.add('is-done'), 8000);
+}
+
+function openAI(req) {
+  if (req) setReq(req.key, req.vars, req.raw); else setReq(null);
+  closeListing();
+  closeMenu();
+  if (location.hash !== '#/ai') {
+    returnScroll = window.scrollY;
+    location.hash = '/ai';
+  } else route();
+}
+
+let routedAI = null;
+function route() {
+  const ai = location.hash === '#/ai';
+  if (ai === routedAI) return;       // hashchange と popstate の両方が来ても一度だけ処理する
+  routedAI = ai;
+  document.body.classList.toggle('is-ai', ai);
+  $('#aiView').hidden = !ai;
+  $$('.mainnav .ai-link').forEach((a) => ai ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  if (ai) {
+    ensureFrame();
+    window.scrollTo(0, 0);
+    updateHeroState();
+  } else {
+    requestAnimationFrame(() => { window.scrollTo(0, returnScroll); updateHeroState(); syncCarousel(); });
+  }
+}
+
+/* ============================================================
+   物件詳細モーダル
+   ============================================================ */
+let openId = null, galleryIdx = 0, lastFocus = null;
+
+function openListing(id, { keepGallery = false } = {}) {
+  const l = byId(id); if (!l) return;
+  if (!keepGallery) { galleryIdx = 0; lastFocus = document.activeElement; }
+  openId = id;
+  const multi = l.imgs.length > 1;
+  const pricePerSqm = lang === 'ja'
+    ? `${(l.price / l.sqm).toFixed(1)}万円/㎡`
+    : `¥${Math.round(l.price * 10000 / l.sqm).toLocaleString('en-US')}/m²`;
+  const badges = l.badges.map((b) => `<span class="badge b-${b}">${esc(t('badge')[b])}</span>`).join('');
+  $('#modalPanel').innerHTML = `
+    <button class="modal-close" type="button" data-close aria-label="${esc(t('close'))}"><svg class="ico"><use href="#i-close"/></svg></button>
+    <div class="gallery${multi ? '' : ' single'}">
+      <div class="g-main"><img id="gMain" src="${img(l.imgs[galleryIdx])}" alt="${esc(l.name[lang])}"></div>
+      ${multi ? `<div class="g-side">${l.imgs.slice(0, 4).map((im, i) => `<button type="button" class="g-thumb" data-g="${i}" aria-current="${i === galleryIdx}" aria-label="${i + 1}"><img src="${img(im)}" alt=""></button>`).join('')}</div>` : ''}
+    </div>
+    <div class="m-body">
+      <div>
+        <div class="m-badges">${badges}</div>
+        <div class="m-price num">${price(l.price)}</div>
+        <h2 class="m-name" id="mName">${esc(l.name[lang])}</h2>
+        <p class="m-addr">${esc(l.addr[lang])}</p>
+        <dl class="m-facts num">
+          <div><dt>${esc(t('f_layout'))}</dt><dd>${l.layout}</dd></div>
+          <div><dt>${esc(t('f_area'))}</dt><dd>${area(l.sqm)}</dd></div>
+          <div><dt>${esc(t('f_built'))}</dt><dd>${l.built}</dd></div>
+          <div><dt>${esc(t('f_walk'))}</dt><dd>${esc(t('walk_min', { m: l.walk }))}</dd></div>
+        </dl>
+        <p class="m-desc">${esc(l.desc[lang])}</p>
+        <dl class="m-dl num">
+          <dt>${esc(t('d_type'))}</dt><dd>${esc(t('type_' + l.type))}</dd>
+          <dt>${esc(t('d_access'))}</dt><dd>${esc(l.sta[lang])} ${esc(t('walk_min', { m: l.walk }))}</dd>
+          <dt>${esc(t('f_area'))}</dt><dd>${areaLong(l.sqm)}</dd>
+          <dt>${esc(t('d_price_sqm'))}</dt><dd>${pricePerSqm}</dd>
+          <dt>${esc(t('d_addr'))}</dt><dd>${esc(l.addr[lang])}</dd>
+        </dl>
+      </div>
+      <aside class="m-side">
+        <h4>${esc(t('m_ask_t'))}</h4>
+        <p>${esc(t('m_ask_d'))}</p>
+        <button class="btn btn-accent" type="button" data-ask-home="${l.id}"><svg class="ico" style="width:18px;height:18px"><use href="#i-spark"/></svg>${esc(t('m_ask'))}</button>
+        <button class="btn btn-line" type="button" data-tour="${l.id}">${esc(t('m_tour'))}</button>
+        <div class="m-agent"><i>${esc(lang === 'ja' ? l.agent.ja[0] : l.agent.en.split(' ').map((w) => w[0]).join(''))}</i><div><b>${esc(l.agent[lang])}</b><span>${esc(t('agent_role'))}</span></div></div>
+      </aside>
+    </div>`;
+  if ($('#modal').hidden) {
+    $('#modal').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    $('#modalPanel').scrollTop = 0;
+    $('.modal-close').focus();
+  }
+}
+function closeListing() {
+  if ($('#modal').hidden) return;
+  $('#modal').hidden = true;
+  openId = null;
+  document.documentElement.style.overflow = '';
+  lastFocus?.focus?.({ preventScroll: true });
+}
+
+/* ============================================================
+   お気に入り・トースト・メニュー
+   ============================================================ */
+const favs = new Set();
+let toastTimer;
+function toast(key) {
+  $('#toastText').textContent = t(key);
+  $('#toast').classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('is-on'), 2600);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch {}
+    ta.remove(); return ok;
+  }
+}
+function closeMenu() { $('#mobileMenu').hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); }
+
+/* ============================================================
+   検索ボックス
+   ============================================================ */
+function showSuggest(on) {
+  $('#suggest').hidden = !on;
+  $('#q').setAttribute('aria-expanded', String(on));
+  if (on) renderSuggest();
+}
+// 通常検索もすべて AI 検索に渡す（このサイトは AI ファーストの検索体験を見せるため）
+function searchToAI(raw) {
+  const q = raw.trim();
+  showSuggest(false);
+  if (!q) return openAI();
+  if (tab === 'buy') return openAI({ raw: q });
+  openAI({ key: 'ask_tab_' + tab, vars: { q } });
+}
+
+/* ============================================================
+   イベント
+   ============================================================ */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('a,button,[data-id],[data-close]');
+  if (!el) {
+    if (!e.target.closest('#searchbox')) showSuggest(false);
+    return;
+  }
+  if (!el.closest('#searchbox')) showSuggest(false);
+
+  if (el.matches('[data-lang]')) return applyLang(el.dataset.lang);
+  if (el.matches('[data-close]')) return closeListing();
+  if (el.matches('[data-toast]')) { e.preventDefault(); closeMenu(); return toast(el.dataset.toast); }
+  if (el.matches('[data-go="home"]')) {
+    e.preventDefault(); closeMenu(); closeListing();
+    if (location.hash === '#/ai') { returnScroll = 0; location.hash = ''; }
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  if (el.matches('[data-ai]')) {
+    e.preventDefault();
+    return openAI(el.dataset.ask ? { key: el.dataset.ask } : null);
+  }
+  if (el.matches('[data-tab-go]')) {
+    e.preventDefault(); closeMenu();
+    const go = () => { setTab(el.dataset.tabGo); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => $('#q').focus({ preventScroll: true }), 350); };
+    if (location.hash === '#/ai') { returnScroll = 0; location.hash = ''; setTimeout(go, 30); } else go();
+    return;
+  }
+  if (el.matches('[data-scroll]')) {
+    e.preventDefault(); closeMenu();
+    const go = () => document.getElementById(el.dataset.scroll)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (location.hash === '#/ai') { location.hash = ''; setTimeout(go, 60); } else go();
+    return;
+  }
+  if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
+  if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
+  if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
+  if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
+  if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
+  if (el.matches('[data-area]')) {
+    const a = AREAS.find((x) => x.id === el.dataset.area);
+    return openAI({ key: 'ask_area', vars: { a: a.name } });
+  }
+  if (el.matches('.arrow')) return scrollPage(Number(el.dataset.dir));
+  if (el.matches('#featDots [data-page]')) {
+    const tr = track(); const n = pageCount();
+    return tr.scrollTo({ left: (tr.scrollWidth - tr.clientWidth) * (Number(el.dataset.page) / Math.max(1, n - 1)), behavior: 'smooth' });
+  }
+  if (el.matches('[data-fav]')) {
+    const id = el.closest('[data-id]').dataset.id;
+    const on = !favs.has(id);
+    on ? favs.add(id) : favs.delete(id);
+    $$(`[data-id="${id}"] [data-fav]`).forEach((b) => { b.classList.toggle('is-fav', on); b.setAttribute('aria-pressed', String(on)); });
+    return toast(on ? 'toast_saved' : 'toast_unsaved');
+  }
+  if (el.matches('[data-share]')) {
+    copyText(location.href.split('#')[0]).then(() => toast('toast_link'));
+    return;
+  }
+  if (el.matches('[data-g]')) {
+    galleryIdx = Number(el.dataset.g);
+    $('#gMain').src = img(byId(openId).imgs[galleryIdx]);
+    $$('.g-thumb').forEach((b, i) => b.setAttribute('aria-current', String(i === galleryIdx)));
+    return;
+  }
+  if (el.matches('[data-ask-home]')) { const l = byId(el.dataset.askHome); return openAI({ key: 'ask_home', vars: { n: l.name } }); }
+  if (el.matches('[data-tour]')) { const l = byId(el.dataset.tour); return openAI({ key: 'ask_tour', vars: { n: l.name } }); }
+  if (el.matches('#chatMock')) return openAI({ key: 'cm_user' });
+  if (el.matches('#aiBack')) { e.preventDefault(); return history.state?.fromHome ? history.back() : (location.hash = ''); }
+  if (el.matches('#aiReset')) {
+    const f = $('#aiFrame iframe'); if (!f) return;
+    $('#aiLoading').classList.remove('is-done');
+    f.src = AGENT_SRC;                       // 同じ URL を入れ直すと再読み込みされ、会話が最初からになる
+    setTimeout(() => $('#aiLoading').classList.add('is-done'), 8000);
+    return;
+  }
+  if (el.matches('#reqCopy')) { copyText($('#reqText').textContent).then((ok) => ok && toast('toast_copied')); return; }
+  if (el.matches('#menuBtn')) {
+    const open = $('#mobileMenu').hidden;
+    $('#mobileMenu').hidden = !open; el.setAttribute('aria-expanded', String(open));
+    return;
+  }
+  if (el.matches('.card[data-id]')) return openListing(el.dataset.id);
+});
+
+// カードはキーボードでも開けるようにする
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeListing(); showSuggest(false); closeMenu(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('.card[data-id]')) { e.preventDefault(); openListing(e.target.dataset.id); }
+});
+
+$('#q').addEventListener('focus', () => showSuggest(true));
+$('#q').addEventListener('input', () => { showSuggest(true); });
+$('#searchbox').addEventListener('submit', (e) => { e.preventDefault(); searchToAI($('#q').value); });
+$('#hsearch').addEventListener('submit', (e) => { e.preventDefault(); const q = $('#hsearchInput').value.trim(); $('#hsearchInput').blur(); q ? openAI({ raw: q }) : openAI(); });
+track().addEventListener('scroll', () => requestAnimationFrame(syncCarousel), { passive: true });
+
+let rT;
+window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(buildDots, 120); });
+
+// ヒーローが見えている間はヘッダーの小さな検索欄を隠す
+function updateHeroState() {
+  const heroBottom = $('#hero').getBoundingClientRect().bottom;
+  document.body.classList.toggle('at-hero', !document.body.classList.contains('is-ai') && heroBottom > 120);
+}
+window.addEventListener('scroll', updateHeroState, { passive: true });
+
+// AI ビューに入ったことを履歴に印しておき、「戻る」でホームのスクロール位置へ戻す
+window.addEventListener('hashchange', (e) => {
+  if (location.hash === '#/ai' && !(history.state && history.state.fromHome)) {
+    history.replaceState({ fromHome: new URL(e.oldURL).hash !== '#/ai' }, '');
+  }
+  route();
+});
+// 言語切替で URL のクエリを書き換えた後の「戻る」は hashchange が来ないことがあるので popstate でも拾う
+window.addEventListener('popstate', () => { route(); syncLangParam(); });
+
+/* ============================================================
+   起動
+   ============================================================ */
+applyLang(new URLSearchParams(location.search).get('lang') === 'ja' ? 'ja' : 'en', { push: false });
+route();
+updateHeroState();
+</script>
+</body>
+</html>
