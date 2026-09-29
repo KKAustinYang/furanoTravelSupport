@@ -438,7 +438,6 @@ html[lang="ja"] .ai-copy h2{line-height:1.42; letter-spacing:.02em}
 body.is-ai{overflow:hidden}
 body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 .ai-view{
-  --widget-head:66px;               /* GPTBots ウィジェットのヘッダー高さ（PC・スマホ共通） */
   height:calc(100dvh - var(--header-h)); display:flex; flex-direction:column; background:var(--surface);
 }
 .ai-bar{
@@ -466,10 +465,7 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 
 .ai-stage{flex:1; min-height:0; display:flex; justify-content:center}
 .ai-frame{position:relative; width:100%; max-width:1040px; height:100%; overflow:hidden; background:var(--surface)}
-.ai-frame iframe{
-  position:absolute; left:0; top:calc(-1 * var(--widget-head));
-  width:100%; height:calc(100% + var(--widget-head)); border:0; display:block; background:var(--surface);
-}
+.ai-frame iframe{position:absolute; left:0; width:100%; border:0; display:block; background:var(--surface)}  /* top / height は窓口ごとの切り取り量に合わせて JS で入れる */
 .ai-loading{
   position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
   background:var(--surface); color:var(--text-sub); font-size:14px; transition:opacity .4s;
@@ -566,6 +562,9 @@ html[lang="ja"] .m-price{letter-spacing:0}
 .sg-item[data-sg="ai"]{background:linear-gradient(90deg,rgba(201,164,106,.16),rgba(201,164,106,.04) 70%,rgba(201,164,106,0))}
 .sg-item[data-sg="ai"]:hover,.sg-item[data-sg="ai"].is-active{background:linear-gradient(90deg,rgba(201,164,106,.26),rgba(201,164,106,.08) 70%,rgba(201,164,106,0))}
 .sg-ai-title .ai-shine{font-weight:700}
+.sg-chat-ico{width:28px; height:28px; flex:none; border-radius:9px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent)}
+.sg-chat-ico .ico{width:17px; height:17px; color:var(--accent)}
+.sg-chat-title{display:block; font-weight:600}
 .mainnav a.ai-link .ai-shine{font-weight:700}
 
 @media (prefers-reduced-motion:reduce){
@@ -590,6 +589,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M8 10h8M8 13h5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6a1.7 1.7 0 0 0 1.7 1.7h2.3"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
@@ -671,6 +671,10 @@ html[lang="ja"] .m-price{letter-spacing:0}
                 <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span><span class="beta">BETA</span></span>
                 <span class="sg-ai-desc" id="sgAiDesc"></span>
               </span>
+            </button>
+            <button type="button" class="sg-item" data-sg="chat" role="option">
+              <span class="sg-chat-ico"><svg class="ico"><use href="#i-chat"/></svg></span>
+              <span><span class="sg-chat-title" data-i18n="sg_chat_title"></span><span class="sg-ai-desc" data-i18n="sg_chat_desc"></span></span>
             </button>
             <button type="button" class="sg-item" data-sg="loc" role="option">
               <svg class="ico"><use href="#i-loc"/></svg><span data-i18n="sg_loc"></span>
@@ -755,7 +759,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <div class="svc">
           <span class="svc-ico"><svg class="ico"><use href="#i-key"/></svg></span>
           <h3 data-i18n="svc1_t"></h3><p data-i18n="svc1_d"></p>
-          <a href="#/ai" class="sec-link" data-ai data-ask="ask_agent"><span data-i18n="svc1_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+          <a href="#/chat" class="sec-link" data-chat data-ask="ask_agent"><span data-i18n="svc1_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
         </div>
         <div class="svc">
           <span class="svc-ico"><svg class="ico"><use href="#i-tag"/></svg></span>
@@ -783,7 +787,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
 <section class="ai-view" id="aiView" hidden aria-labelledby="aiTitle">
   <div class="ai-bar">
     <a href="#" class="back" id="aiBack"><svg class="ico"><use href="#i-left"/></svg><span data-i18n="back"></span></a>
-    <h1 class="ai-title" id="aiTitle"><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span><span class="beta">BETA</span></h1>
+    <h1 class="ai-title" id="aiTitle"><svg class="ico" id="aiTitleIco"><use href="#i-spark"/></svg><span id="aiTitleText"></span><span class="beta" id="aiBeta">BETA</span></h1>
     <div class="ai-actions">
       <div class="req" id="req" hidden>
         <span><b data-i18n="req_label"></b><span id="reqText"></span></span>
@@ -796,7 +800,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
     <div class="ai-frame" id="aiFrame">
       <div class="ai-loading" id="aiLoading">
         <span class="spark"><svg><use href="#i-spark"/></svg></span>
-        <span data-i18n="ai_loading"></span>
+        <span id="aiLoadingText"></span>
       </div>
       <!-- src は初回表示時に入れる（ホームの表示を遅くしないため）。一度読み込んだら会話を保つため外さない -->
     </div>
@@ -860,6 +864,25 @@ html[lang="ja"] .m-price{letter-spacing:0}
    ============================================================ */
 const AGENT_SRC = 'https://jp.gptbots.ai/widget/ee0ufuivjyfpoldylcnyxfx/chat.html';
 
+/* 有人チャット窓口（EngageLab LiveDesk の Website チャネル）
+   - mode=standalone は付けない。付けるとウィジェットが「iframe の中ではない」扱いになり、
+     action=autoStart（初期画面を飛ばして会話を開く）が効かなくなる
+   - first_message=… を付けると、その文面が最初のメッセージとして自動送信される（ドキュメント未記載）。
+     ただし「新しい会話を始めるとき」だけ。進行中の会話がある（再訪・2回目以降）と無視されるうえ、
+     送れたかどうかは親ページに通知されないので、ご要望チップ（コピー）も常に出しておく
+   - 言語は URL では変わらない（受信箱の設定が優先）。読み込み完了の "loaded" を受けてから
+     postMessage の set-locale で合わせる */
+const LIVEDESK_ORIGIN = 'https://livedesk.engagelab.com';
+const LIVEDESK_SRC = LIVEDESK_ORIGIN + '/console/livedesk/widget/?website_token=KyYNaBb3YkGgi2tAnKg5RPfw&action=autoStart';
+const LIVEDESK_PREFIX = 'livedesk-widget:';
+
+// crop はウィジェット自身のヘッダーの高さ。iframe をその分だけ上にずらして隠す
+const CHANNELS = {
+  ai:   { hash:'#/ai',   crop:66, title:'nav_ai',     icon:'i-spark', fancy:true,  loading:'ai_loading',   allow:'microphone *; camera *; display-capture *' },
+  chat: { hash:'#/chat', crop:56, title:'chat_title', icon:'i-spark', fancy:true,  loading:'chat_loading', allow:'camera; microphone' },
+};
+const viewOf = (hash = location.hash) => Object.keys(CHANNELS).find((k) => CHANNELS[k].hash === hash) || null;
+
 /* ============================================================
    文言（EN / JA）
    ============================================================ */
@@ -919,6 +942,8 @@ const I18N = {
     back:'Back', req_label:'Your request', copy:'Copy',
     ai_loading:'Connecting to MANGIRO AI…',
     new_chat:'New chat',
+    chat_title:'Live Chat', chat_loading:'Connecting you to a MANGIRO agent…',
+    sg_chat_title:'Chat with a MANGIRO agent', sg_chat_desc:'Our team answers in real time.',
     toast_copied:'Copied — paste it into the chat to begin.',
     toast_signin:'Sign-in is turned off in this demo.',
     toast_demo:'This page isn’t part of the demo.',
@@ -1000,6 +1025,8 @@ const I18N = {
     back:'戻る', req_label:'ご要望', copy:'コピー',
     ai_loading:'MANGIRO AIに接続しています…',
     new_chat:'新しい会話',
+    chat_title:'チャット相談', chat_loading:'担当者におつなぎしています…',
+    sg_chat_title:'担当者にチャットで相談', sg_chat_desc:'スタッフがリアルタイムでお答えします。',
     toast_copied:'コピーしました。チャット欄に貼り付けてはじめましょう。',
     toast_signin:'このデモではログインは無効です。',
     toast_demo:'このページはデモの対象外です。',
@@ -1232,6 +1259,8 @@ function applyLang(next, { push = true } = {}) {
   renderTry();
   if (currentReq) setReq(currentReq.key, currentReq.vars, currentReq.raw);
   if (openId) openListing(openId, { keepGallery: true });
+  if (routedView) renderBar(routedView);
+  sendLiveDeskLocale();
   if (push) syncLangParam();
 }
 function syncLangParam() {
@@ -1274,48 +1303,95 @@ function scrollPage(dir) {
    ============================================================ */
 let currentReq = null;        // { key, vars, raw } — 言語切替で文言を作り直せるよう key で持つ
 let returnScroll = 0;
+let pendingFirst = null;      // 有人チャットに最初に送る文面
+const frames = {}, loaded = {};
 
+const reqText = (key, vars, raw) => {
+  const resolved = vars && Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, typeof v === 'object' ? v[lang] : v]));
+  return raw || (key ? t(key, resolved) : '');
+};
 function setReq(key, vars, raw) {
   currentReq = key || raw ? { key, vars, raw } : null;
-  const resolved = vars && Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, typeof v === 'object' ? v[lang] : v]));
-  const text = raw || (key ? t(key, resolved) : '');
+  const text = reqText(key, vars, raw);
   $('#req').hidden = !text;
   $('#reqText').textContent = text;
 }
 
-function ensureFrame() {
-  if ($('#aiFrame iframe')) return;
-  const f = document.createElement('iframe');
-  f.title = 'MANGIRO AI Search';
-  f.width = '100%'; f.height = '100%';
-  f.allow = 'microphone *; camera *; display-capture *';
-  f.addEventListener('load', () => $('#aiLoading').classList.add('is-done'));
-  f.src = AGENT_SRC;
-  $('#aiFrame').appendChild(f);
+const hideLoading = () => $('#aiLoading').classList.add('is-done');
+function showLoading(ch) {
+  $('#aiLoadingText').textContent = t(CHANNELS[ch].loading);
+  $('#aiLoading').classList.remove('is-done');
   // 読み込みイベントが来ない環境でも、ローディングを出しっぱなしにしない
-  setTimeout(() => $('#aiLoading').classList.add('is-done'), 8000);
+  setTimeout(() => { if (routedView === ch) hideLoading(); }, 8000);
 }
 
-function openAI(req) {
-  if (req) setReq(req.key, req.vars, req.raw); else setReq(null);
+function ensureFrame(ch, first) {
+  const c = CHANNELS[ch];
+  let f = frames[ch];
+  const isNew = !f;
+  if (isNew) {
+    f = document.createElement('iframe');
+    f.title = t(c.title);
+    f.allow = c.allow;
+    f.style.top = `-${c.crop}px`;
+    f.style.height = `calc(100% + ${c.crop}px)`;
+    f.addEventListener('load', () => { loaded[ch] = true; if (routedView === ch) hideLoading(); });
+    // src は DOM に入れる前に決める（入れた後に変えると、ブラウザの履歴が1つ増えてしまう）
+    f.src = ch === 'chat' ? LIVEDESK_SRC + (first ? '&first_message=' + encodeURIComponent(first) : '') : AGENT_SRC;
+    loaded[ch] = false;
+    frames[ch] = f;
+    $('#aiFrame').appendChild(f);
+  }
+  // 窓口ごとに iframe を持ち、切り替えても会話が消えないよう非表示にするだけにする
+  Object.entries(frames).forEach(([k, el]) => { el.hidden = k !== ch; });
+  loaded[ch] ? hideLoading() : showLoading(ch);
+}
+
+function renderBar(ch) {
+  const c = CHANNELS[ch];
+  $('#aiTitleIco use').setAttribute('href', '#' + c.icon);
+  $('#aiTitleIco').classList.toggle('twinkle', c.fancy);
+  $('#aiTitleText').textContent = t(c.title);
+  $('#aiTitleText').classList.toggle('ai-shine', c.fancy);
+  $('#aiBeta').hidden = !c.fancy;
+  $('#aiReset').hidden = ch !== 'ai';
+}
+
+function sendLiveDeskLocale() {
+  const w = frames.chat?.contentWindow;
+  if (w) w.postMessage(LIVEDESK_PREFIX + JSON.stringify({ event: 'set-locale', locale: lang }), LIVEDESK_ORIGIN);
+}
+window.addEventListener('message', (e) => {
+  if (e.origin !== LIVEDESK_ORIGIN || typeof e.data !== 'string' || !e.data.startsWith(LIVEDESK_PREFIX)) return;
+  let m; try { m = JSON.parse(e.data.slice(LIVEDESK_PREFIX.length)); } catch { return; }
+  if (m.event === 'loaded') sendLiveDeskLocale();
+});
+
+function openView(ch, req) {
+  req ? setReq(req.key, req.vars, req.raw) : setReq(null);
+  // 有人チャットの iframe がまだ無いときだけ、ご要望を最初のメッセージとして自動送信する
+  if (ch === 'chat') pendingFirst = req && !frames.chat ? reqText(req.key, req.vars, req.raw) : null;
   closeListing();
   closeMenu();
-  if (location.hash !== '#/ai') {
-    returnScroll = window.scrollY;
-    location.hash = '/ai';
-  } else route();
+  if (location.hash !== CHANNELS[ch].hash) {
+    if (!viewOf()) returnScroll = window.scrollY;
+    location.hash = CHANNELS[ch].hash.slice(1);
+  } else route(true);
 }
+const openAI = (req) => openView('ai', req);
 
-let routedAI = null;
-function route() {
-  const ai = location.hash === '#/ai';
-  if (ai === routedAI) return;       // hashchange と popstate の両方が来ても一度だけ処理する
-  routedAI = ai;
-  document.body.classList.toggle('is-ai', ai);
-  $('#aiView').hidden = !ai;
-  $$('.mainnav .ai-link').forEach((a) => ai ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
-  if (ai) {
-    ensureFrame();
+let routedView;
+function route(force) {
+  const ch = viewOf();
+  if (ch === routedView && !force) return;   // hashchange と popstate の両方が来ても一度だけ処理する
+  routedView = ch;
+  document.body.classList.toggle('is-ai', !!ch);
+  $('#aiView').hidden = !ch;
+  $$('.mainnav .ai-link').forEach((a) => ch === 'ai' ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  if (ch) {
+    renderBar(ch);
+    ensureFrame(ch, ch === 'chat' ? pendingFirst : null);
+    pendingFirst = null;
     window.scrollTo(0, 0);
     updateHeroState();
   } else {
@@ -1443,7 +1519,7 @@ document.addEventListener('click', (e) => {
   if (el.matches('[data-toast]')) { e.preventDefault(); closeMenu(); return toast(el.dataset.toast); }
   if (el.matches('[data-go="home"]')) {
     e.preventDefault(); closeMenu(); closeListing();
-    if (location.hash === '#/ai') { returnScroll = 0; location.hash = ''; }
+    if (viewOf()) { returnScroll = 0; location.hash = ''; }
     else window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
@@ -1454,17 +1530,19 @@ document.addEventListener('click', (e) => {
   if (el.matches('[data-tab-go]')) {
     e.preventDefault(); closeMenu();
     const go = () => { setTab(el.dataset.tabGo); window.scrollTo({ top: 0, behavior: 'smooth' }); setTimeout(() => $('#q').focus({ preventScroll: true }), 350); };
-    if (location.hash === '#/ai') { returnScroll = 0; location.hash = ''; setTimeout(go, 30); } else go();
+    if (viewOf()) { returnScroll = 0; location.hash = ''; setTimeout(go, 30); } else go();
     return;
   }
   if (el.matches('[data-scroll]')) {
     e.preventDefault(); closeMenu();
     const go = () => document.getElementById(el.dataset.scroll)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (location.hash === '#/ai') { location.hash = ''; setTimeout(go, 60); } else go();
+    if (viewOf()) { location.hash = ''; setTimeout(go, 60); } else go();
     return;
   }
   if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
+  if (el.matches('[data-sg="chat"]')) { const q = $('#q').value.trim(); showSuggest(false); return openView('chat', q ? { raw: q } : null); }
+  if (el.matches('[data-chat]')) { e.preventDefault(); return openView('chat', el.dataset.ask ? { key: el.dataset.ask } : null); }
   if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
   if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
@@ -1495,11 +1573,17 @@ document.addEventListener('click', (e) => {
     return;
   }
   if (el.matches('[data-ask-home]')) { const l = byId(el.dataset.askHome); return openAI({ key: 'ask_home', vars: { n: l.name } }); }
-  if (el.matches('[data-tour]')) { const l = byId(el.dataset.tour); return openAI({ key: 'ask_tour', vars: { n: l.name } }); }
+  if (el.matches('[data-tour]')) { const l = byId(el.dataset.tour); return openView('chat', { key: 'ask_tour', vars: { n: l.name } }); }
   if (el.matches('#chatMock')) return openAI({ key: 'cm_user' });
-  if (el.matches('#aiBack')) { e.preventDefault(); return history.state?.fromHome ? history.back() : (location.hash = ''); }
+  if (el.matches('#aiBack')) {
+    // history.back() は使わない。ウィジェット（特に LiveDesk）が iframe 内で履歴を積むため、
+    // 親ページではなく iframe の中が戻ってしまう。URL をホームに書き換えて、その場で切り替える
+    e.preventDefault();
+    history.replaceState(null, '', location.pathname + location.search);
+    return route();
+  }
   if (el.matches('#aiReset')) {
-    const f = $('#aiFrame iframe'); if (!f) return;
+    const f = frames.ai; if (!f) return;
     $('#aiLoading').classList.remove('is-done');
     f.src = AGENT_SRC;                       // 同じ URL を入れ直すと再読み込みされ、会話が最初からになる
     setTimeout(() => $('#aiLoading').classList.add('is-done'), 8000);
@@ -1538,8 +1622,8 @@ window.addEventListener('scroll', updateHeroState, { passive: true });
 
 // AI ビューに入ったことを履歴に印しておき、「戻る」でホームのスクロール位置へ戻す
 window.addEventListener('hashchange', (e) => {
-  if (location.hash === '#/ai' && !(history.state && history.state.fromHome)) {
-    history.replaceState({ fromHome: new URL(e.oldURL).hash !== '#/ai' }, '');
+  if (viewOf() && !(history.state && history.state.fromHome)) {
+    history.replaceState({ fromHome: !viewOf(new URL(e.oldURL).hash) }, '');
   }
   route();
 });
