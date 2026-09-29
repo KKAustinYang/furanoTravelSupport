@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MANGIRO — AI-powered home search</title>
-<meta name="description" content="MANGIRO is an AI-powered home search service operated by KINAKO Inc.">
+<meta name="description" content="MANGIRO is an AI-powered home search service.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://jp.gptbots.ai">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   MANGIRO 物件サイト（運営：KINAKO）
+   MANGIRO 物件サイト
    レイアウトは Redfin を下敷きに、色・書体は MANGIRO のデザイン言語
    （生成り地 × きなこ色のアクセント）に置き換えている。
    ============================================================ */
@@ -105,8 +105,6 @@ button{background:none; border:0; cursor:pointer; padding:0}
 .brand-mark{width:30px; height:30px}
 .brand-text{display:flex; flex-direction:column; line-height:1}
 .brand-text b{font-size:19px; font-weight:700; letter-spacing:.22em; color:var(--text)}
-.brand-text small{margin-top:4px; font-size:10px; font-weight:500; letter-spacing:.08em; color:var(--text-sub)}
-.brand-text small em{font-style:normal; color:var(--accent); font-weight:600}
 
 .hsearch{
   position:relative; flex:0 1 360px; min-width:0; display:flex; align-items:center;
@@ -609,7 +607,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         <rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/>
       </svg>
-      <span class="brand-text"><b>MANGIRO</b><small data-i18n-html="brand_by"></small></span>
+      <span class="brand-text"><b>MANGIRO</b></span>
     </a>
 
     <form class="hsearch" id="hsearch" role="search">
@@ -812,7 +810,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
       <div class="foot-brand">
         <a class="brand" href="#" data-go="home" aria-label="MANGIRO">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#8C6E4A"/><path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/></svg>
-          <span class="brand-text"><b>MANGIRO</b><small data-i18n-html="brand_by"></small></span>
+          <span class="brand-text"><b>MANGIRO</b></span>
         </a>
         <p data-i18n="foot_desc"></p>
       </div>
@@ -836,7 +834,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
       </ul></div>
     </div>
     <div class="foot-bottom">
-      <span>© 2026 KINAKO Inc.</span>
+      <span>© 2026 MANGIRO</span>
       <span data-i18n="license"></span>
       <span class="spacer"></span>
       <div class="lang" role="group" aria-label="Language">
@@ -868,7 +866,6 @@ const AGENT_SRC = 'https://jp.gptbots.ai/widget/ee0ufuivjyfpoldylcnyxfx/chat.htm
 const I18N = {
   en: {
     doc_title:'MANGIRO — AI-powered home search',
-    brand_by:'by <em>KINAKO</em>',
     nav_buy:'Buy', nav_rent:'Rent', nav_sell:'Sell', nav_loan:'Mortgage', nav_areas:'Areas', nav_ai:'AI Search',
     signin:'Join / Sign in',
     ph_header:'City, station, address, ZIP',
@@ -914,9 +911,9 @@ const I18N = {
     svc2_t:'Sell with confidence', svc2_d:'Get a free AI estimate in about 60 seconds, then list with a full marketing plan — virtual staging included.', svc2_l:'Get a free estimate',
     svc3_t:'Mortgages made simple', svc3_d:'Compare rates from partner banks and know what you can afford before you tour.', svc3_l:'Compare rates',
     st1:'active listings in Greater Tokyo', st2_v:'2<small> days</small>', st2:'earlier than other portals, on average', st3:'AI search & concierge', st4:'average rating from buyers',
-    foot_desc:'MANGIRO is an AI-powered home search service operated by KINAKO Inc.',
+    foot_desc:'MANGIRO is an AI-powered home search service for Greater Tokyo.',
     fc1:'Find a home', fc2:'Sell & finance', fc3:'Company',
-    fl_new:'New listings', fl_sell:'Sell with MANGIRO', fl_about:'About KINAKO', fl_careers:'Careers', fl_contact:'Contact', fl_privacy:'Privacy policy',
+    fl_new:'New listings', fl_sell:'Sell with MANGIRO', fl_about:'About MANGIRO', fl_careers:'Careers', fl_contact:'Contact', fl_privacy:'Privacy policy',
     license:'Real estate license: Governor of Tokyo (1) No. 000000 (sample)',
     disclaimer:'This is a demonstration site. All listings, prices and figures are fictional.',
     back:'Back', req_label:'Your request', copy:'Copy',
@@ -937,7 +934,7 @@ const I18N = {
     ask_tour:'I’d like to schedule a tour of {n}',
     ask_tab_rent:'Rentals in {q}', ask_tab_sell:'What is my home at {q} worth?', ask_tab_loan:'Mortgage options for {q}', ask_tab_value:'What is my home at {q} worth?',
     photos:'{n}',
-    listed_by:'Listing by {a} • KINAKO Realty',
+    listed_by:'Listing by {a} • MANGIRO agent',
     f_layout:'Layout', f_area:'Floor area', f_built:'Built', f_walk:'Station',
     d_type:'Type', d_access:'Access', d_addr:'Address', d_price_sqm:'Price per m²',
     type_condo:'Condominium', type_house:'Single-family house',
@@ -950,7 +947,6 @@ const I18N = {
   },
   ja: {
     doc_title:'MANGIRO（マンジロー）｜ AIで探す住まい',
-    brand_by:'運営：<em>KINAKO</em>',
     nav_buy:'買う', nav_rent:'借りる', nav_sell:'売る', nav_loan:'住宅ローン', nav_areas:'エリア', nav_ai:'AI検索',
     signin:'ログイン・会員登録',
     ph_header:'エリア・駅名・住所',
@@ -996,9 +992,9 @@ const I18N = {
     svc2_t:'納得して売る', svc2_d:'AIによる無料査定は約60秒。バーチャルステージング付きの販売プランで、物件の魅力をしっかり伝えます。', svc2_l:'無料で査定する',
     svc3_t:'住宅ローンを、かんたんに', svc3_d:'提携銀行の金利を比べて、内見の前に借入可能額を確認できます。', svc3_l:'金利を比べる',
     st1:'首都圏の掲載物件数', st2_v:'平均2<small>日</small>', st2:'他サイトより早く公開', st3:'AI検索・コンシェルジュ', st4:'購入者の平均評価',
-    foot_desc:'MANGIROは、株式会社KINAKOが運営するAI不動産ポータルです。',
+    foot_desc:'MANGIROは、首都圏の住まい探しをAIでサポートする不動産ポータルです。',
     fc1:'物件を探す', fc2:'売却・資金計画', fc3:'会社情報',
-    fl_new:'新着物件', fl_sell:'MANGIROで売却', fl_about:'株式会社KINAKOについて', fl_careers:'採用情報', fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
+    fl_new:'新着物件', fl_sell:'MANGIROで売却', fl_about:'MANGIROについて', fl_careers:'採用情報', fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
     license:'宅地建物取引業免許 東京都知事(1)第000000号（サンプル）',
     disclaimer:'本サイトはデモ用のサンプルです。掲載物件・価格・数値はすべて架空のものです。',
     back:'戻る', req_label:'ご要望', copy:'コピー',
@@ -1019,7 +1015,7 @@ const I18N = {
     ask_tour:'「{n}」の内見を予約したいです',
     ask_tab_rent:'{q}の賃貸物件', ask_tab_sell:'{q}の自宅を売ったらいくらになりますか？', ask_tab_loan:'{q}の住宅ローンについて', ask_tab_value:'{q}の自宅を売ったらいくらになりますか？',
     photos:'{n}',
-    listed_by:'担当：{a}・KINAKO不動産',
+    listed_by:'担当：{a}・MANGIRO',
     f_layout:'間取り', f_area:'専有面積', f_built:'築年', f_walk:'駅まで',
     d_type:'種別', d_access:'交通', d_addr:'所在地', d_price_sqm:'㎡単価',
     type_condo:'マンション', type_house:'一戸建て',
