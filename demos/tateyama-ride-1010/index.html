@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>立山黒部 × 白馬 × 美ヶ原 ツーリング｜2026.10.10–10.12</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%231e4d54%22/%3E%3Cpath d=%22m5 24 8-13 5 8 3-4 6 9Z%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ============================================================
+   立山黒部 × 白馬 × 美ヶ原 3日間ツーリング（2026/10/10–10/12）
+   個人用の旅程ページ。ショーケースのトップには載せず、URL を知っている人だけが開く。
+   配色は前回の「信州＋日本海ツーリング」と同じ（深い松葉色 × 錆色 × 生成り）。
+   ============================================================ */
+:root{
+  --bg:#faf9f7; --card:#fff; --muted:#f0eeea; --line:#dfdbd4; --line-soft:#ebe8e2;
+  --text:#1a1d21; --sub:#5c6169;
+  --primary:#1e4d54; --primary-soft:#e3eeee;
+  --accent:#a8471a; --accent-soft:#f6e9e1;
+  --gold:#b98a2e;
+  --d1:#1e6e75; --d2:#b4532a; --d3:#b98a2e;
+  --r-sm:8px; --r-md:12px; --r-lg:18px;
+  --shadow-sm:0 1px 2px rgba(26,29,33,.06);
+  --shadow-md:0 8px 28px rgba(26,29,33,.10);
+  --ease:cubic-bezier(.16,1,.3,1);
+  --container:1080px; --gutter:24px;
+  --sans:"Inter","Noto Sans JP","Hiragino Sans","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
+  --serif:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  color-scheme:light;
+}
+@media (max-width:640px){ :root{ --gutter:18px } }
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth; scroll-padding-top:72px}
+body{font-family:var(--sans); font-size:16px; line-height:1.8; letter-spacing:.02em; color:var(--text); background:var(--bg); -webkit-font-smoothing:antialiased; overflow-x:hidden}
+:where(p,li,h1,h2,h3,h4,dd,dt,td,th,span){line-break:strict; overflow-wrap:break-word}
+h1,h2,h3,h4{line-height:1.4; font-weight:700; letter-spacing:.02em; font-feature-settings:"palt" 1; word-break:auto-phrase; text-wrap:balance}
+img{display:block; max-width:100%}
+a{color:inherit}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0}
+:focus-visible{outline:2px solid var(--primary); outline-offset:2px; border-radius:6px}
+.num{font-variant-numeric:tabular-nums; letter-spacing:0}
+.nw{white-space:nowrap}
+.container{width:100%; max-width:var(--container); margin-inline:auto; padding-inline:var(--gutter)}
+.ico{width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+
+/* ---------------- ヒーロー ---------------- */
+.hero{position:relative; min-height:min(92vh,860px); display:flex; align-items:flex-end; color:#fff; isolation:isolate; background:#2a2620}
+.hero img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 55%; z-index:-2}
+.hero::after{content:""; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg,rgba(14,16,18,.38) 0%,rgba(14,16,18,0) 26%,rgba(14,16,18,0) 45%,rgba(14,16,18,.78) 100%)}
+.hero-inner{padding-block:120px 44px; width:100%}
+.eyebrow{display:inline-flex; align-items:center; gap:10px; font-size:12.5px; font-weight:600; letter-spacing:.22em; text-transform:uppercase}
+.eyebrow::before{content:""; width:28px; height:1px; background:currentColor; opacity:.7}
+.hero h1{margin-top:18px; font-family:var(--serif); font-weight:800; font-size:clamp(38px,6.6vw,84px); line-height:1.18; letter-spacing:.04em; text-shadow:0 2px 30px rgba(0,0,0,.25)}
+.hero h1 .u{display:inline-block}
+.hero h1 .x{font-family:var(--sans); font-weight:300; opacity:.75; margin-inline:.12em}
+.hero-lead{margin-top:16px; font-size:clamp(15px,1.6vw,18px); opacity:.92; max-width:36em}
+.hero-meta{margin-top:24px; display:flex; flex-wrap:wrap; gap:8px 10px}
+.pill{display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 14px; border-radius:999px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); backdrop-filter:blur(8px); font-size:13px}
+.pill .ico{width:16px; height:16px}
+.stats{margin-top:34px; display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(255,255,255,.22); border-radius:var(--r-lg); overflow:hidden; backdrop-filter:blur(12px)}
+.stat{padding:18px 20px; background:rgba(20,22,24,.42)}
+.stat span{display:block; font-size:12px; opacity:.8; letter-spacing:.06em}
+.stat b{display:block; margin-top:4px; font-size:clamp(22px,2.6vw,30px); font-weight:700; letter-spacing:-.01em}
+.stat b small{font-size:.5em; font-weight:500; margin-left:3px; opacity:.85}
+@media (max-width:760px){ .stats{grid-template-columns:repeat(2,1fr)} }
+.credit{position:absolute; right:12px; bottom:10px; font-size:10.5px; opacity:.6}
+
+/* ---------------- 目次（追従） ---------------- */
+.toc{position:sticky; top:0; z-index:500; background:rgba(250,249,247,.9); backdrop-filter:blur(14px) saturate(160%); border-bottom:1px solid var(--line)}
+.toc-inner{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none; padding-block:10px}
+.toc-inner::-webkit-scrollbar{display:none}
+.toc a{flex:none; display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 14px; border-radius:999px; text-decoration:none; font-size:14px; color:var(--sub); transition:background .2s,color .2s}
+.toc a:hover{background:var(--muted); color:var(--text)}
+.toc a.is-on{background:var(--primary); color:#fff}
+.toc a i{width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.9}
+.toc a small{font-size:12px; opacity:.75}
+
+/* ---------------- 共通セクション ---------------- */
+.section{padding-block:80px 0}
+@media (max-width:640px){ .section{padding-block:56px 0} }
+.kicker{font-size:12.5px; font-weight:700; letter-spacing:.2em; color:var(--accent); text-transform:uppercase}
+.h2{margin-top:8px; font-family:var(--serif); font-weight:800; font-size:clamp(28px,3.4vw,40px); letter-spacing:.04em}
+.lead{margin-top:12px; color:var(--sub); max-width:40em}
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm)}
+.note{margin-top:24px; padding:18px 22px; border-radius:var(--r-md); background:var(--accent-soft); border-left:3px solid var(--accent); font-size:15px}
+.note b{color:var(--accent)}
+.note.teal{background:var(--primary-soft); border-left-color:var(--primary)}
+.note.teal b{color:var(--primary)}
+
+/* ---------------- 地図 ---------------- */
+.map{height:460px; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--line); background:#e9eef0; z-index:0}
+.map .leaflet-tile-pane{filter:saturate(.72) contrast(.96) brightness(1.03)}   /* 地図をページの色調になじませる */
+@media (max-width:640px){ .map{height:340px} }
+.map.tall{height:520px}
+@media (max-width:640px){ .map.tall{height:380px} }
+.legend{margin-top:12px; display:flex; flex-wrap:wrap; gap:8px 20px; font-size:13px; color:var(--sub)}
+.legend span{display:inline-flex; align-items:center; gap:8px}
+.legend i{width:22px; height:4px; border-radius:4px}
+.legend i.dash{background:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 9px)!important; height:3px}
+.pin{display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:#fff; font:700 12.5px/1 var(--sans); border:2.5px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.pin.sm{width:20px; height:20px; font-size:10.5px; border-width:2px}
+.pin.home{border-radius:8px}
+.pin.fuel{background:#2b2f35!important}
+.leaflet-tooltip.lbl{background:#fff; border:0; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,.18); font:600 12px/1.4 var(--sans); padding:4px 8px; color:var(--text)}
+.leaflet-tooltip.lbl::before{display:none}
+.leaflet-popup-content{font:13px/1.6 var(--sans); margin:12px 14px}
+.leaflet-popup-content b{display:block; font-size:14px}
+.leaflet-popup-content a{color:var(--primary); font-weight:600}
+
+/* ---------------- 全体ルートの日別まとめ ---------------- */
+.overview{margin-top:28px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+@media (max-width:900px){ .overview{grid-template-columns:1fr} }
+.ov{display:flex; flex-direction:column; text-decoration:none; overflow:hidden; transition:box-shadow .25s var(--ease), transform .25s var(--ease)}
+.ov:hover{box-shadow:var(--shadow-md); transform:translateY(-2px)}
+.ov img{aspect-ratio:16/9; width:100%; object-fit:cover}
+.ov-body{padding:16px 18px 18px}
+.ov-day{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--sub)}
+.ov-day b{display:inline-grid; place-items:center; height:24px; padding:0 9px; border-radius:999px; color:#fff; font-size:12px; letter-spacing:.04em}
+.ov h3{margin-top:8px; font-size:17px}
+.ov p{margin-top:6px; font-size:14px; color:var(--sub); line-height:1.7}
+.ov .km{margin-top:auto; padding-top:10px; font-size:13px; color:var(--sub)}
+.ov .km b{color:var(--text); font-size:15px}
+
+/* ---------------- Day の扉 ---------------- */
+.day-cover{position:relative; margin-top:80px; min-height:min(68vh,620px); display:flex; align-items:flex-end; color:#fff; isolation:isolate; overflow:hidden; background:#2a2620}
+@media (max-width:640px){ .day-cover{margin-top:56px; min-height:440px} }
+.day-cover img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2}
+.day-cover::after{content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(180deg,rgba(14,16,18,0) 30%,rgba(14,16,18,.8) 100%)}
+.day-cover .container{padding-block:40px}
+.day-no{display:inline-flex; align-items:center; gap:12px; font-size:13px; font-weight:600; letter-spacing:.2em}
+.day-no b{display:inline-grid; place-items:center; height:30px; padding:0 12px; border-radius:999px; font-size:13px; letter-spacing:.08em}
+.day-cover h2{margin-top:14px; font-family:var(--serif); font-weight:800; font-size:clamp(30px,4.6vw,56px); letter-spacing:.04em; line-height:1.25; text-shadow:0 2px 24px rgba(0,0,0,.3)}
+.day-cover .route{margin-top:12px; font-size:clamp(14px,1.5vw,16.5px); opacity:.92}
+.day-cover .credit{opacity:.55}
+
+.chips{margin-top:26px; display:flex; flex-wrap:wrap; gap:10px}
+.chip{display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line); font-size:14px}
+.chip .ico{color:var(--primary)}
+.chip b{font-weight:700}
+
+.day-grid{margin-top:30px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:28px; align-items:start}
+@media (max-width:960px){ .day-grid{grid-template-columns:1fr} }
+.day-grid .map{position:sticky; top:84px}
+@media (max-width:960px){ .day-grid .map{position:static} }
+
+/* タイムライン */
+.tl{list-style:none; padding:0; position:relative}
+.tl::before{content:""; position:absolute; left:63px; top:8px; bottom:8px; width:2px; background:var(--line)}
+.tl li{position:relative; display:grid; grid-template-columns:52px 1fr; gap:22px; padding:9px 0}
+.tl time{font-size:13px; font-weight:600; color:var(--sub); text-align:right; padding-top:2px; line-height:1.4}
+.tl time small{display:block; font-weight:500; font-size:11.5px; opacity:.8}
+.tl li::before{content:""; position:absolute; left:58px; top:15px; width:12px; height:12px; border-radius:50%; background:var(--card); border:2.5px solid var(--dc,var(--primary))}
+.tl li.key::before{background:var(--dc,var(--primary))}
+.tl b{display:block; font-size:15.5px; line-height:1.55}
+.tl p{font-size:14px; color:var(--sub); line-height:1.65; margin-top:2px}
+.tag{display:inline-block; margin-left:6px; padding:1px 8px; border-radius:6px; font-size:11.5px; font-weight:700; vertical-align:2px; letter-spacing:.04em}
+.tag.fuel{background:#2b2f35; color:#fff}
+.tag.must{background:var(--accent); color:#fff}
+.tag.opt{background:var(--muted); color:var(--sub)}
+
+/* 見どころカード */
+.spots{margin-top:40px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+.spots.two{grid-template-columns:repeat(2,1fr)}
+@media (max-width:900px){ .spots,.spots.two{grid-template-columns:1fr 1fr} }
+@media (max-width:600px){ .spots,.spots.two{grid-template-columns:1fr} }
+.spot{overflow:hidden; display:flex; flex-direction:column}
+.spot figure{position:relative; aspect-ratio:4/3; overflow:hidden; background:var(--muted)}
+.spot figure img{width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease)}
+.spot:hover figure img{transform:scale(1.04)}
+.spot figcaption{position:absolute; left:12px; top:12px; display:inline-flex; gap:6px}
+.spot figcaption span{padding:3px 9px; border-radius:6px; background:rgba(255,255,255,.92); color:var(--text); font-size:11.5px; font-weight:700}
+.spot-body{padding:16px 18px 18px}
+.spot h3{font-size:17.5px}
+.spot h3 small{display:block; font-size:12px; color:var(--sub); font-weight:500; letter-spacing:.06em}
+.spot ul{margin-top:8px; padding-left:1.1em; font-size:14px; color:var(--sub); line-height:1.75}
+.spot .gm{display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-size:13px; font-weight:600; color:var(--primary); text-decoration:none}
+.spot .gm:hover{text-decoration:underline}
+
+/* アルペンルート乗り継ぎ */
+.alpine{margin-top:36px; padding:26px 26px 22px}
+.alpine h3{font-size:19px}
+.alpine .sub{font-size:14px; color:var(--sub); margin-top:4px}
+.swipe{display:none; margin-top:4px; font-size:12px; color:var(--accent)}
+@media (max-width:700px){ .swipe{display:block} }
+.profile-wrap{margin-top:18px; overflow-x:auto; scrollbar-width:thin}
+.profile{display:block; width:100%; min-width:640px; height:auto; overflow:visible}   /* スマホでは横スクロール（文字を潰さない） */
+.profile text{font-family:var(--sans)}
+.legs{margin-top:8px; display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+@media (max-width:760px){ .legs{grid-template-columns:1fr 1fr} }
+.leg{padding:12px 14px; border-radius:var(--r-md); background:var(--muted); font-size:13.5px; line-height:1.55}
+.leg b{display:block; font-size:14px}
+.leg span{color:var(--sub); font-size:12.5px}
+.leg.walk{background:var(--accent-soft)}
+
+.hikes{margin-top:22px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+@media (max-width:900px){ .hikes{grid-template-columns:1fr} }
+.hike{padding:18px 18px 16px; border-top:4px solid var(--hc)}
+.hike .lv{display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--hc); letter-spacing:.06em}
+.hike .lv b{display:inline-grid; place-items:center; width:26px; height:26px; border-radius:8px; background:var(--hc); color:#fff; font-size:14px}
+.hike h4{margin-top:10px; font-size:15.5px; line-height:1.6}
+.hike p{margin-top:6px; font-size:13.5px; color:var(--sub); line-height:1.7}
+
+/* 表 */
+.table-wrap{margin-top:24px; overflow-x:auto; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--card)}
+table{width:100%; border-collapse:collapse; font-size:14.5px; min-width:640px}
+th,td{padding:13px 16px; text-align:left; border-bottom:1px solid var(--line-soft); vertical-align:top}
+th{font-size:12.5px; color:var(--sub); font-weight:600; background:var(--muted); letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td b{font-weight:700}
+
+/* 給油ゲージ */
+.tanks{margin-top:26px; display:grid; gap:14px}
+.tank{padding:16px 20px; display:grid; grid-template-columns:150px 1fr 96px; gap:18px; align-items:center}
+@media (max-width:760px){ .tank{grid-template-columns:1fr; gap:8px} }
+.tank h4{font-size:14.5px; line-height:1.5}
+.tank h4 small{display:block; font-size:12px; color:var(--sub); font-weight:500}
+.bar{position:relative; height:14px; border-radius:999px; background:var(--muted); overflow:visible}
+.bar i{position:absolute; left:0; top:0; bottom:0; border-radius:999px; background:var(--primary)}
+.bar i.warn{background:var(--accent)}
+.bar .zone{position:absolute; top:-6px; bottom:-6px; left:calc(250/360*100%); width:calc(30/360*100%); border-radius:4px; background:repeating-linear-gradient(135deg,rgba(185,138,46,.28) 0 4px,transparent 4px 8px); border:1px dashed rgba(185,138,46,.7)}
+.bar .max{position:absolute; right:0; top:-22px; font-size:11px; color:var(--sub)}
+.tank .km{font-size:20px; font-weight:700; text-align:right}
+.tank .km small{font-size:12px; color:var(--sub); font-weight:500}
+.tank p{grid-column:1/-1; font-size:13.5px; color:var(--sub); line-height:1.7; margin-top:-4px}
+.tank p b{color:var(--text)}
+@media (max-width:760px){ .tank .km{text-align:left} }
+.scale{display:flex; justify-content:space-between; font-size:11.5px; color:var(--sub); padding-inline:170px 116px; margin-top:4px}
+@media (max-width:760px){ .scale{display:none} }
+
+/* ETC なし */
+.lanes{margin-top:26px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+@media (max-width:760px){ .lanes{grid-template-columns:1fr 1fr} }
+.lane{padding:18px 16px 16px; text-align:center}
+.lane .sign{display:inline-grid; place-items:center; min-width:110px; height:46px; padding:0 14px; border-radius:6px; font-weight:800; font-size:17px; letter-spacing:.06em; color:#fff}
+.lane .verdict{margin-top:12px; font-weight:800; font-size:15px}
+.lane p{margin-top:4px; font-size:13px; color:var(--sub); line-height:1.6}
+.ok .verdict{color:#2e7d4f}
+.ng .verdict{color:#b3261e}
+.steps{margin-top:24px; display:grid; grid-template-columns:repeat(3,1fr); gap:14px; counter-reset:s}
+@media (max-width:900px){ .steps{grid-template-columns:1fr} }
+.step{padding:18px 20px; counter-increment:s}
+.step::before{content:counter(s,decimal-leading-zero); display:block; font-family:var(--serif); font-weight:800; font-size:26px; color:var(--accent); line-height:1}
+.step h4{margin-top:8px; font-size:15.5px}
+.step p{margin-top:6px; font-size:14px; color:var(--sub); line-height:1.7}
+
+/* チェックリスト */
+.lists{margin-top:26px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+@media (max-width:900px){ .lists{grid-template-columns:1fr} }
+.list{padding:20px 20px 14px}
+.list h3{display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:16.5px}
+.list h3 small{font-size:12px; font-weight:600; color:var(--sub)}
+.list ul{list-style:none; padding:0; margin-top:10px}
+.list li + li{border-top:1px solid var(--line-soft)}
+.list label{display:flex; gap:12px; align-items:flex-start; padding:10px 0; cursor:pointer; font-size:14.5px; line-height:1.55}
+.list input{appearance:none; flex:none; width:20px; height:20px; margin-top:1px; border:1.5px solid #b9b3a9; border-radius:6px; background:#fff; display:grid; place-items:center; transition:background .15s,border-color .15s}
+.list input:checked{background:var(--primary); border-color:var(--primary)}
+.list input:checked::after{content:""; width:10px; height:6px; border:2px solid #fff; border-top:0; border-right:0; transform:rotate(-45deg) translate(1px,-1px)}
+.list input:checked + span{color:var(--sub); text-decoration:line-through; text-decoration-color:rgba(92,97,105,.5)}
+.list .sec{margin-top:14px; font-size:12px; font-weight:700; color:var(--accent); letter-spacing:.1em}
+.list .hint{font-size:12.5px; color:var(--sub); display:block}
+.progress{height:4px; border-radius:4px; background:var(--muted); margin-top:10px; overflow:hidden}
+.progress i{display:block; height:100%; width:0; background:var(--primary); transition:width .3s var(--ease)}
+
+/* B プラン */
+.plans{margin-top:26px; display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+@media (max-width:760px){ .plans{grid-template-columns:1fr} }
+.plan{padding:20px 22px; display:grid; grid-template-columns:auto 1fr; gap:4px 16px}
+.plan .if{grid-row:span 2; display:grid; place-items:center; width:46px; height:46px; border-radius:12px; background:var(--accent-soft); color:var(--accent)}
+.plan .if .ico{width:22px; height:22px}
+.plan h4{font-size:15.5px}
+.plan h4 small{display:block; font-size:12px; color:var(--sub); font-weight:600; letter-spacing:.06em}
+.plan p{font-size:14px; color:var(--sub); line-height:1.7}
+.plan p b{color:var(--text)}
+
+/* 守ること */
+.rules{position:relative; margin-top:96px; color:#fff; isolation:isolate; overflow:hidden; background:#1c2a2c}
+.rules img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; opacity:.55}
+.rules::after{content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(18,30,32,.92) 0%,rgba(18,30,32,.7) 55%,rgba(18,30,32,.35) 100%)}
+.rules .container{padding-block:88px}
+.rules .kicker{color:#f0c9a8}
+.rules h2{margin-top:10px; font-family:var(--serif); font-weight:800; font-size:clamp(28px,3.6vw,42px)}
+.rules ol{list-style:none; padding:0; margin-top:30px; display:grid; gap:18px; max-width:640px; counter-reset:r}
+.rules li{counter-increment:r; display:grid; grid-template-columns:56px 1fr; gap:16px; align-items:baseline}
+.rules li::before{content:counter(r); font-family:var(--serif); font-weight:800; font-size:44px; line-height:1; color:#f0c9a8}
+.rules li b{font-size:clamp(18px,2vw,22px)}
+.rules li p{margin-top:4px; opacity:.82; font-size:14.5px}
+.oneline{margin-top:40px; display:grid; gap:8px; max-width:760px; font-size:14.5px}
+.oneline div{display:grid; grid-template-columns:64px 1fr; gap:12px; padding:10px 14px; border-radius:10px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14)}
+.oneline b{color:#f0c9a8}
+
+footer{padding-block:28px 40px; font-size:12px; color:var(--sub); line-height:1.8}
+footer a{color:var(--sub)}
+
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{transition-duration:.01ms!important; animation-duration:.01ms!important} html{scroll-behavior:auto} }
+@media print{ .toc{display:none} .map{break-inside:avoid} .hero{min-height:auto} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-bike" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 10h5l4.5 6.5M12 10l1.5-3h3"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18V7M3 14h18v4M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/></symbol>
+  <symbol id="i-road" viewBox="0 0 24 24"><path d="M7 21 10 3M17 21 14 3M12 6v2M12 11v2M12 16v2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-mtn" viewBox="0 0 24 24"><path d="m3 19 6.5-11 4 6.5 2.5-3.5L21 19Z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9a4.75 4.75 0 0 1-.5 9.5Z"/><path d="M8 21l1-1.5M12 21l1-1.5M16 21l1-1.5"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4Z"/><path d="M14 6v12" stroke-dasharray="2 2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 8l8 8"/></symbol>
+  <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+</svg>
+
+<!-- =========================================================== ヒーロー -->
+<header class="hero" id="top">
+  <img src="img/hero.jpg" alt="紅葉とススキの向こうに雪をかぶった北アルプスの稜線" fetchpriority="high">
+  <div class="container hero-inner">
+    <span class="eyebrow">Touring Plan · 2026.10.10 — 10.12</span>
+    <h1><span class="u">立山黒部<span class="x">×</span></span><span class="u">白馬<span class="x">×</span></span><span class="u">美ヶ原</span></h1>
+    <p class="hero-lead">秋の北アルプスを、Forza で巡る3日間。<br>扇沢から“逆ルート”で立山黒部に入り、標高2,450mの室堂を日帰りで歩く旅。</p>
+    <div class="hero-meta">
+      <span class="pill"><svg class="ico"><use href="#i-cal"/></svg>10/10（土）〜 10/12（月・祝）2泊3日</span>
+      <span class="pill"><svg class="ico"><use href="#i-bike"/></svg>Honda Forza MF10（ETCなし）</span>
+      <span class="pill"><svg class="ico"><use href="#i-bed"/></svg>Pension BONNARD（白馬・神城）× 2泊</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>総走行距離（目安）</span><b class="num">約730<small>km</small></b></div>
+      <div class="stat"><span>最高地点</span><b class="num">2,450<small>m 室堂</small></b></div>
+      <div class="stat"><span>給油</span><b class="num">4<small>回（推奨）</small></b></div>
+      <div class="stat"><span>宿泊（2名・2泊）</span><b class="num">約¥27,000</b></div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <div class="container toc-inner">
+    <a href="#overview">全体ルート</a>
+    <a href="#day1"><i style="color:var(--d1)"></i>Day 1 <small>10/10</small></a>
+    <a href="#day2"><i style="color:var(--d2)"></i>Day 2 <small>10/11</small></a>
+    <a href="#day3"><i style="color:var(--d3)"></i>Day 3 <small>10/12</small></a>
+    <a href="#fuel">給油</a>
+    <a href="#etc">ETCなし高速</a>
+    <a href="#prep">準備</a>
+    <a href="#bplan">Bプラン</a>
+  </div>
+</nav>
+
+<main>
+<!-- =========================================================== 全体ルート -->
+<section class="section" id="overview">
+  <div class="container">
+    <span class="kicker">Overview</span>
+    <h2 class="h2">全体ルート</h2>
+    <p class="lead">1日目に松本で彼女と合流して白馬へ。2日目は宿から扇沢へ上がり、アルペンルートを乗り継いで室堂を往復。3日目は白馬の朝景色を楽しんでから松本経由で東京へ戻ります。</p>
+    <div class="map tall" id="map-all" style="margin-top:28px" role="img" aria-label="3日間の全体ルート地図"></div>
+    <div class="legend">
+      <span><i style="background:var(--d1)"></i>Day 1</span>
+      <span><i style="background:var(--d2)"></i>Day 2（道路）</span>
+      <span style="color:var(--d2)"><i class="dash"></i><span style="color:var(--sub)">Day 2（アルペンルート）</span></span>
+      <span><i style="background:var(--d3)"></i>Day 3</span>
+      <span>番号ピンをタップすると Google マップで開けます</span>
+    </div>
+
+    <div class="overview">
+      <a class="card ov" href="#day1">
+        <img src="img/d1-utsukushi.jpg" alt="" loading="lazy">
+        <div class="ov-body">
+          <div class="ov-day"><b style="background:var(--d1)">DAY 1</b>10/10（土）</div>
+          <h3>長距離移動 ＋ 高原の景色</h3>
+          <p>東京 → 調布IC → 松本で合流 →（晴れなら）美ヶ原 → 白馬</p>
+          <div class="km">走行 <b class="num">約348km</b>・走行時間 約6時間</div>
+        </div>
+      </a>
+      <a class="card ov" href="#day2">
+        <img src="img/d2-kurobeko.jpg" alt="" loading="lazy">
+        <div class="ov-body">
+          <div class="ov-day"><b style="background:var(--d2)">DAY 2</b>10/11（日）</div>
+          <h3>立山黒部の核心日</h3>
+          <p>白馬 → 扇沢 → 黒部ダム → 大観峰 → 室堂を往復 → 白馬</p>
+          <div class="km">走行 <b class="num">約59km</b>（往復）＋ アルペンルート</div>
+        </div>
+      </a>
+      <a class="card ov" href="#day3">
+        <img src="img/d3-hakuba.jpg" alt="" loading="lazy">
+        <div class="ov-body">
+          <div class="ov-day"><b style="background:var(--d3)">DAY 3</b>10/12（月・祝）</div>
+          <h3>白馬の山景色 ＋ のんびり帰路</h3>
+          <p>大出公園 → 白馬岩岳 → 青木湖 → 松本で見送り → 東京</p>
+          <div class="km">走行 <b class="num">約323km</b>・走行時間 約5時間20分</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== DAY 1 -->
+<section id="day1" style="--dc:var(--d1)">
+  <div class="day-cover">
+    <img src="img/d1-utsukushi.jpg" alt="雲海の向こうに北アルプスを望む高原の道" loading="lazy">
+    <div class="container">
+      <span class="day-no"><b style="background:var(--d1)">DAY 1</b>10/10（土）</span>
+      <h2>東京から松本、<br>そして美ヶ原の空へ</h2>
+      <p class="route">東京 → 調布IC → 松本（合流）→ 美ヶ原 → 白馬 Pension BONNARD</p>
+    </div>
+    <span class="credit">Photo: Unsplash</span>
+  </div>
+  <div class="container">
+    <div class="chips">
+      <span class="chip"><svg class="ico"><use href="#i-road"/></svg>走行 <b class="num">約348km</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-clock"/></svg>走行時間 <b>約6時間</b>（休憩別）</span>
+      <span class="chip"><svg class="ico"><use href="#i-mtn"/></svg>美ヶ原 <b>約2,000m</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-cloud"/></svg>美ヶ原は<b>晴れたときだけ</b></span>
+    </div>
+
+    <div class="day-grid">
+      <ol class="tl">
+        <li class="key"><time>05:30<small>– 06:00</small></time><div><b>東京を出発</b><p>出発前に満タンにしておく。</p></div></li>
+        <li><time>06:00<small>– 07:30</small></time><div><b>一般道で中央道「調布IC」へ</b><p>首都高には乗らない（ETC専用入口が多いため）。</p></div></li>
+        <li><time>07:30<small>頃</small></time><div><b>調布ICから中央道へ</b><p>「一般」または「ETC／一般」レーンで通行券を受け取る。</p></div></li>
+        <li><time>09:00<small>頃</small></time><div><b>SA／PAで1回目の休憩</b><p>コーヒー・トイレ・ストレッチ。</p></div></li>
+        <li><time>10:30<small>– 11:00</small></time><div><b>松本ICで降りる</b></div></li>
+        <li class="key"><time>10:30<small>– 11:15</small></time><div><b>松本IC付近で満タン給油<span class="tag fuel">給油</span></b><p>ENEOS 松本インターTS。この旅でいちばん大事な給油ポイント。</p></div></li>
+        <li><time>11:30<small>– 12:00</small></time><div><b>松本駅・バスターミナル付近で待機</b></div></li>
+        <li class="key"><time>12:00</time><div><b>彼女と合流</b></div></li>
+        <li><time>12:00<small>– 13:00</small></time><div><b>昼食・荷物の積み込み</b></div></li>
+        <li><time>13:00<small>– 14:15</small></time><div><b>タンデムで美ヶ原へ</b></div></li>
+        <li class="key"><time>14:15<small>– 15:45</small></time><div><b>美ヶ原高原<span class="tag opt">晴れなら</span></b><p>高原散策と、北アルプスの大パノラマ。</p></div></li>
+        <li><time>15:45<small>– 18:30</small></time><div><b>美ヶ原 → 白馬・神城</b><p>午後の高原は冷える。タンデムは特に風で体温を奪われやすい。</p></div></li>
+        <li class="key"><time>18:30<small>– 19:00</small></time><div><b>Pension BONNARD チェックイン</b></div></li>
+        <li><time>夜</time><div><b>夕食・翌日の装備チェック</b><p>2日目は5時起き。できるだけ早く寝る。</p></div></li>
+      </ol>
+      <div class="map" id="map-d1" role="img" aria-label="Day 1 のルート地図"></div>
+    </div>
+
+    <div class="note"><b>Day 1 の原則：美ヶ原は「晴れたときだけ」。</b>山頂が霧・強風・雨なら迷わず <b>松本 → 大王わさび農場 → 安曇野 → 白馬</b> に切り替え。写真を撮るために2日目の体力を削らない。</div>
+
+    <div class="spots">
+      <article class="card spot">
+        <figure><img src="img/d1-utsukushi.jpg" alt="" loading="lazy"><figcaption><span>標高 約2,000m</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>UTSUKUSHIGAHARA</small>美ヶ原高原</h3>
+          <ul><li>草原と大きな空、遠くの山並み。走る道そのものが見どころ</li><li>10月の午後はかなり寒い。タンデムは風対策を</li><li>雲で山が隠れると魅力が大きく下がる</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E7%BE%8E%E3%83%B6%E5%8E%9F%E9%AB%98%E5%8E%9F" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d1-matsumoto.jpg" alt="" loading="lazy"><figcaption><span>合流地点</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>MATSUMOTO</small>松本</h3>
+          <ul><li>松本IC付近で満タンにしてから迎えに行く</li><li>合流は松本駅・バスターミナル付近、12:00</li><li>昼食を済ませてから美ヶ原へ</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E6%9D%BE%E6%9C%AC%E9%A7%85" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d1-road.jpg" alt="" loading="lazy"><figcaption><span>雨・霧のとき</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>RAINY DAY OPTION</small>大王わさび農場 → 安曇野</h3>
+          <ul><li>体力を使わない、松本→白馬の途中に寄れる代替案</li><li>そのまま安曇野を北上して白馬へ（約57km）</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E7%8E%8B%E3%82%8F%E3%81%95%E3%81%B3%E8%BE%B2%E5%A0%B4" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== DAY 2 -->
+<section id="day2" style="--dc:var(--d2)">
+  <div class="day-cover">
+    <img src="img/d2-kurobeko.jpg" alt="ロープウェイから見下ろすエメラルド色の黒部湖" loading="lazy">
+    <div class="container">
+      <span class="day-no"><b style="background:var(--d2)">DAY 2</b>10/11（日）</span>
+      <h2>扇沢から“逆ルート”で、<br>標高2,450mの室堂へ</h2>
+      <p class="route">白馬 → 扇沢 → 黒部ダム → 黒部平 → 大観峰 → 室堂 → みくりが池・雷鳥荘方面 → 同じ道を戻る → 白馬</p>
+    </div>
+    <span class="credit">Photo: Unsplash</span>
+  </div>
+  <div class="container">
+    <div class="chips">
+      <span class="chip"><svg class="ico"><use href="#i-road"/></svg>バイク <b class="num">約59km</b>（宿 ⇄ 扇沢）</span>
+      <span class="chip"><svg class="ico"><use href="#i-ticket"/></svg>きっぷ <b>扇沢 ⇄ 室堂 往復</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-clock"/></svg><b>05:20</b> 宿を出発</span>
+      <span class="chip"><svg class="ico"><use href="#i-mtn"/></svg>室堂 <b>2,450m</b></span>
+    </div>
+
+    <div class="note teal"><b>きっぷ作戦：</b>WEBの通常きっぷは完売。<b>キャンセル待ちを続けつつ、当日は超早朝に扇沢で当日券を買う。</b>乗れる便ならどれでも乗る（便は選ばない）。</div>
+
+    <div class="day-grid">
+      <ol class="tl">
+        <li><time>05:00</time><div><b>起床</b></div></li>
+        <li class="key"><time>05:20<small>– 05:30</small></time><div><b>Pension BONNARD を出発</b><p>早朝の山道は冷える。路面の凍結に注意。</p></div></li>
+        <li><time>06:15<small>– 06:30</small></time><div><b>扇沢に到着</b></div></li>
+        <li class="key"><time>06:30<small>〜</small></time><div><b>バイクを停めて当日券の列に並ぶ<span class="tag must">最重要</span></b></div></li>
+        <li><time>07:30<small>– 08:30</small></time><div><b>買えた便に乗る</b><p>便は選ばない。</p></div></li>
+        <li><time>09:00<small>– 10:00</small></time><div><b>室堂に到着</b><p>実際の便と乗り換えの待ち時間しだい。</p></div></li>
+        <li class="key"><time>10:00<small>– 13:30</small></time><div><b>室堂を歩く</b><p>到着時刻でコースを決める（下の A／B／C）。</p></div></li>
+        <li><time>13:30<small>– 14:30</small></time><div><b>入山時刻に合わせて復路へ</b><p>最終便に追われない時間に。</p></div></li>
+        <li><time>16:30<small>– 17:30</small></time><div><b>扇沢に戻る</b></div></li>
+        <li><time>18:30<small>頃</small></time><div><b>白馬に戻る</b></div></li>
+        <li><time>夜</time><div><b>夕食・お風呂・休息</b></div></li>
+      </ol>
+      <div class="map" id="map-d2" role="img" aria-label="Day 2 のルート地図"></div>
+    </div>
+
+    <!-- アルペンルート乗り継ぎ -->
+    <div class="card alpine">
+      <h3>アルペンルートの乗り継ぎ（扇沢 → 室堂）</h3>
+      <p class="sub">「扇沢 ⇄ 室堂 往復」のきっぷに乗り物はすべて含まれます。黒部ダムの堰堤だけは徒歩。帰りはまったく同じ道を戻ります。<span class="swipe">標高図は横にスクロールできます →</span></p>
+      <div class="profile-wrap"><svg class="profile" id="profile" viewBox="0 0 1000 250" role="img" aria-label="扇沢から室堂までの標高の変化"></svg></div>
+      <div class="legs">
+        <div class="leg"><b>関電トンネル電気バス</b><span>扇沢 → 黒部ダム</span></div>
+        <div class="leg walk"><b>徒歩（約0.6km）</b><span>ダムの堰堤を渡る → 黒部湖</span></div>
+        <div class="leg"><b>黒部ケーブルカー</b><span>黒部湖 → 黒部平</span></div>
+        <div class="leg"><b>立山ロープウェイ</b><span>黒部平 → 大観峰</span></div>
+        <div class="leg"><b>立山トンネル電気バス</b><span>大観峰 → 室堂</span></div>
+      </div>
+    </div>
+
+    <!-- 室堂の歩き方 -->
+    <div style="margin-top:44px">
+      <span class="kicker">Murodo Walk</span>
+      <h3 class="h2" style="font-size:clamp(24px,2.8vw,32px)">室堂の歩き方は、着いた時刻で決める</h3>
+      <div class="hikes">
+        <div class="card hike" style="--hc:#2e7d4f">
+          <span class="lv"><b>A</b>09:30頃に室堂着</span>
+          <h4>室堂 → みくりが池 → エンマ台 → 雷鳥荘 → 雷鳥沢 → 同じ道を戻る</h4>
+          <p>3〜4時間を見込む、いちばん充実したコース。天気・路面・彼女の体力がすべて良いときだけ最後まで。</p>
+        </div>
+        <div class="card hike" style="--hc:var(--d2)">
+          <span class="lv"><b>B</b>10:30以降に室堂着</span>
+          <h4>室堂 → みくりが池 → エンマ台 → 雷鳥荘付近 → 戻る</h4>
+          <p>いちばんおすすめの“確実な日帰り版”。景色は十分に楽しめて、最終便に追われない。</p>
+        </div>
+        <div class="card hike" style="--hc:#5c6169">
+          <span class="lv"><b>C</b>凍結・降雪・強風</span>
+          <h4>室堂 → みくりが池の周辺 → 戻る</h4>
+          <p>雷鳥沢へは無理に下りない。安全と帰りの余裕を最優先に。</p>
+        </div>
+      </div>
+      <div class="map" id="map-hike" style="margin-top:18px; height:380px" role="img" aria-label="室堂周辺の散策コース地図"></div>
+      <div class="legend">
+        <span><i style="background:#5c6169"></i>C：みくりが池まで</span>
+        <span><i style="background:var(--d2)"></i>B：雷鳥荘付近まで</span>
+        <span><i style="background:#2e7d4f"></i>A：雷鳥沢まで</span>
+      </div>
+    </div>
+
+    <div class="spots">
+      <article class="card spot">
+        <figure><img src="img/d2-dam.jpg" alt="" loading="lazy"><figcaption><span>1,470m</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>KUROBE DAM</small>黒部ダム</h3>
+          <ul><li>関電トンネル電気バスで扇沢から到着</li><li>堰堤を歩いて渡り、黒部湖駅へ（約0.6km）</li></ul>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d2-murodo.jpg" alt="" loading="lazy"><figcaption><span>2,450m</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>MURODO</small>室堂平</h3>
+          <ul><li>アルペンルートの最高地点。ここから散策スタート</li><li>10月は雪や凍結がありうる。前日に最新情報を確認</li></ul>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d2-jigokudani.jpg" alt="" loading="lazy"><figcaption><span>散策コース</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>MIKURIGAIKE → RAICHOSAWA</small>みくりが池・雷鳥沢</h3>
+          <ul><li>エンマ台からは地獄谷の噴気を望む</li><li>雷鳥沢への下りは帰りが登り返し。時間と体力に余裕があるときだけ</li></ul>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== DAY 3 -->
+<section id="day3" style="--dc:var(--d3)">
+  <div class="day-cover">
+    <img src="img/d3-hakuba.jpg" alt="新緑の向こうに雪の残る白馬の山々" loading="lazy">
+    <div class="container">
+      <span class="day-no"><b style="background:var(--d3)">DAY 3</b>10/12（月・祝）</span>
+      <h2>白馬の朝景色と、<br>のんびり帰り道</h2>
+      <p class="route">白馬 → 大出公園 → 白馬岩岳 → 青木湖 → 松本で見送り → 調布IC → 東京</p>
+    </div>
+    <span class="credit">Photo: Unsplash</span>
+  </div>
+  <div class="container">
+    <div class="chips">
+      <span class="chip"><svg class="ico"><use href="#i-road"/></svg>走行 <b class="num">約323km</b></span>
+      <span class="chip"><svg class="ico"><use href="#i-clock"/></svg>東京着 <b>18:30–20:00</b>（三連休の渋滞しだい）</span>
+      <span class="chip"><svg class="ico"><use href="#i-mtn"/></svg>岩岳は<b>ゴンドラで上がるだけ</b></span>
+    </div>
+
+    <div class="day-grid">
+      <ol class="tl">
+        <li><time>07:30<small>– 08:00</small></time><div><b>起床・チェックアウト</b></div></li>
+        <li class="key"><time>08:00</time><div><b>白馬・神城で満タン給油<span class="tag fuel">給油</span></b><p>ENEOS アルペンロード神城SS。</p></div></li>
+        <li class="key"><time>08:20<small>– 09:00</small></time><div><b>大出公園・白馬大橋</b><p>晴れた朝を優先。</p></div></li>
+        <li class="key"><time>09:15<small>– 11:15</small></time><div><b>白馬岩岳 MOUNTAIN HARBOR</b><p>3日目のメイン。ゴンドラで上がって景色を楽しむだけ。</p></div></li>
+        <li><time>11:30</time><div><b>白馬を出て南へ</b></div></li>
+        <li><time>12:00<small>頃</small></time><div><b>青木湖に少し寄る（15〜20分）<span class="tag opt">晴れなら</span></b></div></li>
+        <li><time>12:30<small>– 13:30</small></time><div><b>大町・安曇野方面で昼食</b></div></li>
+        <li class="key"><time>14:30<small>– 15:30</small></time><div><b>松本で彼女を見送る</b></div></li>
+        <li class="key"><time>15:30<small>頃</small></time><div><b>松本IC付近で満タンにして、ひとりで東京へ<span class="tag fuel">給油・推奨</span></b><p>下の「給油計画」を参照。</p></div></li>
+        <li><time>18:30<small>– 20:00</small></time><div><b>東京に到着</b><p>三連休最終日の渋滞しだい。</p></div></li>
+      </ol>
+      <div class="map" id="map-d3" role="img" aria-label="Day 3 のルート地図"></div>
+    </div>
+
+    <div class="spots">
+      <article class="card spot">
+        <figure><img src="img/d3-ohde.jpg" alt="" loading="lazy"><figcaption><span>無料</span><span>晴れの朝</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>OHDE PARK</small>大出公園・白馬大橋</h3>
+          <ul><li>白馬三山 × 川 × 吊り橋の定番構図</li><li>ほとんど体力を使わない</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E5%A4%A7%E5%87%BA%E5%85%AC%E5%9C%92+%E7%99%BD%E9%A6%AC" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d3-iwatake.jpg" alt="" loading="lazy"><figcaption><span>3日目のメイン</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>HAKUBA IWATAKE</small>白馬岩岳 MOUNTAIN HARBOR</h3>
+          <ul><li>ゴンドラで上がるだけ。登山はしない</li><li>前日に高所を歩いたので、今日は「眺めてのんびり」</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E7%99%BD%E9%A6%AC%E5%B2%A9%E5%B2%B3+MOUNTAIN+HARBOR" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+      <article class="card spot">
+        <figure><img src="img/d3-aoki.jpg" alt="" loading="lazy"><figcaption><span>15〜20分</span></figcaption></figure>
+        <div class="spot-body">
+          <h3><small>LAKE AOKI</small>青木湖</h3>
+          <ul><li>帰り道に少しだけ寄る</li><li>湖を一周はしない。予定を詰め込みすぎない</li></ul>
+          <a class="gm" href="https://www.google.com/maps/search/?api=1&query=%E9%9D%92%E6%9C%A8%E6%B9%96" target="_blank" rel="noopener">Google マップで開く<svg class="ico" style="width:14px;height:14px"><use href="#i-ext"/></svg></a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== 給油 -->
+<section class="section" id="fuel">
+  <div class="container">
+    <span class="kicker">Fuel Plan</span>
+    <h2 class="h2">給油計画</h2>
+    <p class="lead">タンク約12L × 燃費約30km/L ＝ 理論上の航続 約360km。高速・タンデム・山道・低温・加減速を考えて、<b>250〜280km を「安心して給油する区間」</b>とします（下のバーの斜線部分）。</p>
+
+    <div class="tanks">
+      <div class="card tank">
+        <h4>① 1タンク目<small>東京 → 松本IC</small></h4>
+        <div class="bar"><span class="zone"></span><i style="width:calc(224/360*100%)"></i><span class="max">360km</span></div>
+        <div class="km num">224<small> km</small></div>
+        <p>出発前に<b>必ず満タン</b>。東京 → 調布 → 中央道 → 松本まで。</p>
+      </div>
+      <div class="card tank">
+        <h4>② 2タンク目<small>松本IC → 美ヶ原 → 白馬 → 扇沢往復</small></h4>
+        <div class="bar"><span class="zone"></span><i style="width:calc(182/360*100%)"></i><span class="max">360km</span></div>
+        <div class="km num">182<small> km</small></div>
+        <p><b>ENEOS 松本インターTS</b>（松本IC近く・6:00〜23:00ごろ）で満タンにしてから迎えへ。Day 2 の朝は山麓のスタンドがまだ開いていないので、ここで入れた分で扇沢まで往復する。</p>
+      </div>
+      <div class="card tank">
+        <h4>③ 3タンク目<small>神城 → 白馬観光 → 松本IC</small></h4>
+        <div class="bar"><span class="zone"></span><i style="width:calc(85/360*100%)"></i><span class="max">360km</span></div>
+        <div class="km num">85<small> km</small></div>
+        <p><b>ENEOS アルペンロード神城SS</b>（8:00〜18:00ごろ）でチェックアウト後に満タン。</p>
+      </div>
+      <div class="card tank">
+        <h4>④ 4タンク目<small>松本IC → 東京</small><span class="tag must" style="margin:6px 0 0">追加を推奨</span></h4>
+        <div class="bar"><span class="zone"></span><i style="width:calc(238/360*100%)"></i><span class="max">360km</span></div>
+        <div class="km num">238<small> km</small></div>
+        <p>元の計画は「神城で満タン → そのまま東京」ですが、その場合は<b>神城から東京まで約323km</b>で、安心区間（250〜280km）を超えます。彼女を見送ったあと、<b>松本IC付近でもう一度満タン</b>にしてから高速に乗るのがおすすめ。</p>
+      </div>
+    </div>
+    <div class="note">Day 2 の早朝、扇沢へ向かう前の給油は予定に入れない。早すぎて山麓のスタンドはほとんど開いていない。予備の給油先は、大町市街の ENEOS／apollostation と、松本IC周辺（スタンドが多い）。</div>
+  </div>
+</section>
+
+<!-- =========================================================== ETC なし -->
+<section class="section" id="etc">
+  <div class="container">
+    <span class="kicker">No ETC</span>
+    <h2 class="h2">ETCなしで高速に乗る</h2>
+    <p class="lead">Forza には ETC がないので、<b>東京都内 → 一般道 → 調布IC → 中央道 → 松本IC</b> がいちばん確実。2026年は首都高の入口の多くが ETC専用（初台・四つ木・駒形など）なので、少しの時短のために首都高へ入らないこと。</p>
+
+    <div class="lanes">
+      <div class="card lane ok"><span class="sign" style="background:#2e7d4f">一般</span><div class="verdict">◯ 通る</div><p>通行券を取る／現金・クレジットカードで支払い</p></div>
+      <div class="card lane ok"><span class="sign" style="background:linear-gradient(90deg,#6d4aa5 50%,#2e7d4f 50%)">ETC／一般</span><div class="verdict">◯ 通る</div><p>一般車として通行できる</p></div>
+      <div class="card lane ng"><span class="sign" style="background:#6d4aa5">ETC専用</span><div class="verdict">✕ 入らない</div><p>ETCなしでは通れない</p></div>
+      <div class="card lane ng"><span class="sign" style="background:#c47a14">サポート</span><div class="verdict">△ 誤進入したときだけ</div><p>通常の入口として計画しない</p></div>
+    </div>
+
+    <div class="steps">
+      <div class="card step"><h4>ナビは「調布IC」を最初の経由地に</h4><p>Google マップ／Yahoo!カーナビで「中央自動車道 調布IC」を最初の経由地に設定。<b>一般道で調布まで → そこから中央道</b>。ETC専用の首都高入口に連れて行かれるのを防げる。</p></div>
+      <div class="card step"><h4>料金所は「一般」へ</h4><p>通行券が出る入口なら通行券を取る。手前に定額区間があれば現地の案内どおりに支払う。出口の松本ICも「一般」「ETC・一般」で通行券を渡して精算（現金・クレジット可）。</p></div>
+      <div class="card step"><h4>ETC専用に入ってしまったら</h4><p><b>絶対にバックしない。</b>「サポート」レーンに進んで停車し、係員の指示に従う。サポートレーンは ETC故障・カード異常などのためのもの。</p></div>
+    </div>
+    <div class="note teal"><b>なぜ調布IC？</b>NEXCO のルート検索で、調布IC は「通常料金」で計算でき ETC専用の表示がない。周辺の一部IC（例：国立府中）は ETC専用と明記されている。帰りも同じく <b>松本IC → 中央道 → 調布ICで降りる → 一般道</b>。</div>
+  </div>
+</section>
+
+<!-- =========================================================== 準備 -->
+<section class="section" id="prep">
+  <div class="container">
+    <span class="kicker">Checklist</span>
+    <h2 class="h2">出発前の準備</h2>
+    <p class="lead">MF10・約33,000km、前回のオイル交換から5,000km以上、後輪はパンクで新品に交換したばかり。チェックした内容はこの端末に保存されます。</p>
+
+    <div class="lists">
+      <div class="card list" data-list="bike">
+        <h3>Forza 点検<small class="cnt"></small></h3>
+        <div class="progress"><i></i></div>
+        <ul>
+          <li><label><input type="checkbox" data-k="oil"><span>エンジンオイル交換</span></label></li>
+          <li><label><input type="checkbox" data-k="filter"><span>オイルフィルター<span class="hint">前回替えていなければ一緒に</span></span></label></li>
+          <li><label><input type="checkbox" data-k="rear"><span>新しい後輪の空気圧・エア漏れ</span></label></li>
+          <li><label><input type="checkbox" data-k="front"><span>前輪の溝・劣化・空気圧</span></label></li>
+          <li><label><input type="checkbox" data-k="wheel"><span>ホイールの歪み・エア漏れ</span></label></li>
+          <li><label><input type="checkbox" data-k="pad"><span>前後のブレーキパッド</span></label></li>
+          <li><label><input type="checkbox" data-k="fluid"><span>ブレーキフルード</span></label></li>
+          <li><label><input type="checkbox" data-k="cool"><span>冷却水</span></label></li>
+          <li><label><input type="checkbox" data-k="light"><span>灯火類・ブレーキランプ</span></label></li>
+          <li><label><input type="checkbox" data-k="batt"><span>バッテリーの始動状態</span></label></li>
+          <li><label><input type="checkbox" data-k="belt"><span>Vベルト・CVTの交換履歴<span class="hint">33,000kmで履歴不明なら最低限お店で確認</span></span></label></li>
+        </ul>
+      </div>
+      <div class="card list" data-list="tools">
+        <h3>携行工具<small class="cnt"></small></h3>
+        <div class="progress"><i></i></div>
+        <ul>
+          <li><label><input type="checkbox" data-k="kit"><span>チューブレス用パンク修理キット（ガムタイプ）</span></label></li>
+          <li><label><input type="checkbox" data-k="pump"><span>携帯電動空気入れ</span></label></li>
+          <li><label><input type="checkbox" data-k="plier"><span>小さなペンチ（釘抜き用）</span></label></li>
+          <li><label><input type="checkbox" data-k="glove"><span>作業用手袋</span></label></li>
+          <li><label><input type="checkbox" data-k="lamp"><span>小型ヘッドライト</span></label></li>
+          <li><label><input type="checkbox" data-k="tie"><span>結束バンド・テープ</span></label></li>
+          <li><label><input type="checkbox" data-k="battery"><span>モバイルバッテリー</span></label></li>
+          <li><label><input type="checkbox" data-k="rs"><span>ロードサービスの連絡先</span></label></li>
+        </ul>
+        <p class="hint" style="margin-top:8px">修理キットは<b>トレッド面の小さな釘穴</b>だけ。サイドの損傷・大きな裂け目・ホイールの歪み・バルブ破損はロードサービスへ。</p>
+      </div>
+      <div class="card list" data-list="gear">
+        <h3>山の装備（2人分）<small class="cnt"></small></h3>
+        <div class="progress"><i></i></div>
+        <ul>
+          <li class="sec">必ず持つ</li>
+          <li><label><input type="checkbox" data-k="boots"><span>防水の登山靴</span></label></li>
+          <li><label><input type="checkbox" data-k="rain"><span>レインウェア上下</span></label></li>
+          <li><label><input type="checkbox" data-k="base"><span>速乾インナー・フリース・薄手ダウン</span></label></li>
+          <li><label><input type="checkbox" data-k="cap"><span>手袋・ニット帽</span></label></li>
+          <li><label><input type="checkbox" data-k="water"><span>水 1人1〜1.5L</span></label></li>
+          <li><label><input type="checkbox" data-k="food"><span>チョコ・エナジーバー・おにぎり</span></label></li>
+          <li><label><input type="checkbox" data-k="pack"><span>20〜30Lのザック・ヘッドライト</span></label></li>
+          <li class="sec">あると安心</li>
+          <li><label><input type="checkbox" data-k="pole"><span>トレッキングポール</span></label></li>
+          <li><label><input type="checkbox" data-k="spike"><span>チェーンスパイク<span class="hint">10/9 に室堂の積雪・凍結を見て判断</span></span></label></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== B プラン -->
+<section class="section" id="bplan">
+  <div class="container">
+    <span class="kicker">Plan B</span>
+    <h2 class="h2">いちばん大事な B プラン</h2>
+    <div class="plans">
+      <div class="card plan"><span class="if"><svg class="ico"><use href="#i-cloud"/></svg></span><h4><small>DAY 1</small>美ヶ原の天気が悪い</h4><p><b>松本 → 大王わさび農場 → 安曇野 → 白馬</b> に変更。</p></div>
+      <div class="card plan"><span class="if"><svg class="ico"><use href="#i-clock"/></svg></span><h4><small>DAY 2</small>当日券が遅い便しか取れない</h4><p>室堂の散策を短縮。<b>みくりが池 ＋ 雷鳥荘方面</b>まで。雷鳥沢へは無理に下りない。</p></div>
+      <div class="card plan"><span class="if"><svg class="ico"><use href="#i-x"/></svg></span><h4><small>DAY 2</small>扇沢の当日券が完売</h4><p>一日中並んで時間を無駄にしない。<b>白馬・青木湖・大町・安曇野</b>の日帰りに切り替え、10/12 のキャンセル・当日券の可能性も確認。</p></div>
+      <div class="card plan"><span class="if"><svg class="ico"><use href="#i-snow"/></svg></span><h4><small>DAY 2</small>道路の凍結・降雪</h4><p>扇沢への道に凍結のおそれがあれば<b>Forza で無理に上がらない</b>。10/9 の最新の天気・積雪・道路情報で判断。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================== 守ること -->
+<section class="rules">
+  <img src="img/bike.jpg" alt="" loading="lazy">
+  <div class="container">
+    <span class="kicker">Three Rules</span>
+    <h2>この旅で守る、3つのこと</h2>
+    <ol>
+      <li><div><b>Day 1 で疲れきらない。</b><p>美ヶ原は晴れたときだけ。翌日のための体力を残す。</p></div></li>
+      <li><div><b>Day 2 は最終便に追われない。雷鳥沢で無理をしない。</b><p>着いた時刻でコースを決め、帰りに余裕を持たせる。</p></div></li>
+      <li><div><b>ETCなしで首都高に乗らない。一般道で調布ICへ。</b><p>入口を間違えたら、バックせずにサポートレーンへ。</p></div></li>
+    </ol>
+    <div class="oneline">
+      <div><b>10/10</b><span>東京 一般道 → 調布IC → 松本で合流 → 晴れなら美ヶ原 → 白馬泊</span></div>
+      <div><b>10/11</b><span>05:30 白馬発 → 06:30 扇沢で当日券 → 室堂日帰り散策 → 白馬泊</span></div>
+      <div><b>10/12</b><span>白馬の朝景色 → 岩岳 → 青木湖 → 松本で見送り → 松本IC → 調布IC → 東京</span></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container">
+    距離・走行時間は OSRM（OpenStreetMap）による概算で、休憩・渋滞は含みません。きっぷ・営業時間・道路状況は出発前に公式情報を確認してください。<br>
+    写真：<a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash</a>（Unsplash License）。地図：© OpenStreetMap contributors。宿・スタンドの位置は目安です。
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   地図データ
+   ROUTES は OSRM（router.project-osrm.org）で取得した道路の経路を間引いたもの。
+   実行時に外部の経路 API は呼ばない（ページを開くたびに結果が変わらないように）。
+   ============================================================ */
+const ROUTES = {"d1":[{"km":16.9,"pts":[[35.69067,139.70117],[35.68971,139.70139],[35.68971,139.70415],[35.68887,139.69979],[35.68683,139.69483],[35.68036,139.68517],[35.67815,139.68038],[35.67078,139.65515],[35.67004,139.65029],[35.66796,139.64518],[35.66743,139.63855],[35.66931,139.63249],[35.6704,139.62516],[35.67467,139.61973],[35.67635,139.6166],[35.67936,139.60909],[35.68041,139.60456],[35.6799,139.60256],[35.67678,139.59855],[35.67541,139.59517],[35.67374,139.5791],[35.67261,139.57421],[35.67096,139.57023],[35.66599,139.56186],[35.6643,139.55732],[35.66237,139.53878]]},{"km":207.3,"pts":[[35.66237,139.53878],[35.66083,139.53399],[35.65666,139.52574],[35.65569,139.51997],[35.65604,139.51229],[35.65984,139.49922],[35.66035,139.48113],[35.66342,139.4687],[35.66474,139.4563],[35.66594,139.45103],[35.66857,139.44564],[35.67679,139.43534],[35.67877,139.42883],[35.67852,139.42457],[35.67536,139.41487],[35.67463,139.40831],[35.67558,139.39674],[35.67959,139.38592],[35.68047,139.38084],[35.6798,139.37604],[35.67566,139.36664],[35.67463,139.36155],[35.67697,139.34376],[35.67672,139.33331],[35.67735,139.32038],[35.67543,139.31304],[35.66757,139.30117],[35.66416,139.28998],[35.65877,139.28128],[35.65476,139.26999],[35.6513,139.2665],[35.64888,139.26561],[35.64457,139.26556],[35.64295,139.26458],[35.64175,139.26286],[35.64041,139.25486],[35.64093,139.24969],[35.63999,139.23906],[35.64057,139.23477],[35.64037,139.22752],[35.63745,139.21419],[35.63497,139.20867],[35.63268,139.20546],[35.63016,139.20374],[35.62614,139.20233],[35.62426,139.20067],[35.61832,139.19045],[35.6185,139.18496],[35.62083,139.17963],[35.62294,139.17116],[35.62196,139.16816],[35.61756,139.16426],[35.61612,139.16167],[35.61573,139.15915],[35.6168,139.1535],[35.61653,139.14912],[35.61782,139.14342],[35.62056,139.13975],[35.62232,139.13017],[35.62244,139.12608],[35.62138,139.11657],[35.62196,139.11195],[35.62361,139.10836],[35.63069,139.09913],[35.63305,139.09319],[35.63318,139.08977],[35.63176,139.08243],[35.63275,139.07538],[35.63243,139.06979],[35.63341,139.06446],[35.63302,139.05278],[35.63227,139.04937],[35.63007,139.04616],[35.62254,139.04159],[35.61988,139.03908],[35.61686,139.03283],[35.61302,139.02712],[35.61191,139.02391],[35.61023,139.01178],[35.61059,139.00737],[35.61281,139.00268],[35.6191,138.99445],[35.62045,138.99026],[35.61541,138.96431],[35.61594,138.95952],[35.61841,138.94993],[35.61848,138.9444],[35.61752,138.93909],[35.61605,138.93589],[35.61397,138.93397],[35.60902,138.93155],[35.60757,138.92991],[35.60582,138.92314],[35.60179,138.91545],[35.60137,138.90993],[35.6034,138.90383],[35.6037,138.90041],[35.59889,138.8792],[35.5996,138.87331],[35.60287,138.86599],[35.60463,138.85629],[35.6043,138.85026],[35.60634,138.83762],[35.6056,138.8251],[35.60648,138.81917],[35.60614,138.81237],[35.60715,138.80761],[35.6094,138.80411],[35.63926,138.77396],[35.64153,138.76855],[35.645,138.7631],[35.6468,138.75801],[35.65092,138.75184],[35.65257,138.7475],[35.65292,138.73969],[35.64823,138.72987],[35.6472,138.71849],[35.6459,138.71542],[35.64171,138.71018],[35.6396,138.70596],[35.63783,138.69446],[35.6349,138.68622],[35.63363,138.67802],[35.63278,138.67676],[35.63706,138.67382],[35.63736,138.67232],[35.63662,138.67174],[35.63658,138.67242],[35.63709,138.67245],[35.6452,138.66881],[35.64614,138.66494],[35.64583,138.657],[35.64244,138.64459],[35.64374,138.63642],[35.64345,138.62775],[35.64475,138.61742],[35.64617,138.61233],[35.6462,138.60862],[35.63332,138.57449],[35.63291,138.56931],[35.63424,138.55768],[35.6449,138.54245],[35.64333,138.538],[35.64342,138.53632],[35.64407,138.53615],[35.64532,138.53728],[35.64745,138.53743],[35.65339,138.53647],[35.65908,138.53366],[35.66545,138.52855],[35.67321,138.51995],[35.68148,138.50503],[35.69194,138.49426],[35.70395,138.47666],[35.70652,138.47474],[35.71246,138.47206],[35.7181,138.46597],[35.72512,138.46321],[35.73273,138.4546],[35.7408,138.44955],[35.74658,138.44406],[35.75443,138.43991],[35.76028,138.43428],[35.76627,138.43096],[35.77237,138.42406],[35.77512,138.42283],[35.78047,138.42195],[35.7826,138.42076],[35.785,138.41743],[35.78657,138.41121],[35.79143,138.40756],[35.79294,138.40029],[35.79535,138.39679],[35.79919,138.3952],[35.8081,138.39587],[35.81551,138.39337],[35.82262,138.39458],[35.82678,138.39258],[35.83204,138.39226],[35.83524,138.39001],[35.8381,138.38554],[35.8423,138.38082],[35.84396,138.3775],[35.84485,138.37394],[35.84553,138.36378],[35.84978,138.35537],[35.85072,138.34553],[35.85342,138.34031],[35.85519,138.33513],[35.85681,138.3331],[35.86061,138.33048],[35.86695,138.32273],[35.86835,138.31995],[35.87083,138.31119],[35.87272,138.30772],[35.88147,138.30084],[35.88598,138.29836],[35.88793,138.29621],[35.89106,138.2877],[35.89581,138.27933],[35.89894,138.27041],[35.90333,138.26419],[35.90621,138.25858],[35.90954,138.25607],[35.91582,138.25492],[35.91874,138.25211],[35.92449,138.2426],[35.92699,138.22685],[35.92871,138.22175],[35.93141,138.21684],[35.93581,138.21194],[35.94336,138.20659],[35.94942,138.20094],[35.95882,138.19473],[35.96368,138.18899],[35.96872,138.18464],[35.97168,138.17776],[35.97326,138.17577],[35.97535,138.17476],[35.97992,138.17414],[35.98267,138.17164],[35.98428,138.16601],[35.98485,138.15494],[35.98669,138.14921],[35.99295,138.14038],[36.00019,138.13435],[36.00268,138.12967],[36.00344,138.12189],[36.00161,138.11455],[36.00146,138.11104],[36.00412,138.10411],[36.00523,138.09849],[36.00708,138.09475],[36.00944,138.09193],[36.01421,138.08819],[36.01898,138.08264],[36.02591,138.07755],[36.03243,138.06677],[36.03965,138.06124],[36.04462,138.05493],[36.04956,138.05063],[36.05138,138.04796],[36.05226,138.04409],[36.05425,138.04283],[36.05947,138.03689],[36.06202,138.03543],[36.06528,138.03508],[36.06901,138.03589],[36.07487,138.03849],[36.07802,138.03889],[36.08284,138.03796],[36.0862,138.03555],[36.08831,138.03218],[36.08941,138.02792],[36.08859,138.01617],[36.08928,138.0089],[36.09045,138.00486],[36.09257,138.00166],[36.10462,137.99071],[36.12877,137.97463],[36.13692,137.96747],[36.14035,137.96673],[36.15131,137.96818],[36.16016,137.96752],[36.16287,137.96642],[36.16572,137.96273],[36.16842,137.95351],[36.17136,137.94625],[36.17354,137.94343],[36.17605,137.94182],[36.18715,137.9377],[36.19766,137.93505],[36.20102,137.9335],[36.20509,137.93052],[36.20865,137.92952],[36.21299,137.92986],[36.21672,137.931],[36.22049,137.9331],[36.22617,137.93751],[36.23067,137.93878],[36.23658,137.93783],[36.24149,137.93795],[36.2471,137.93627],[36.25314,137.9361],[36.26176,137.93386],[36.26855,137.93913],[36.27191,137.93332],[36.26892,137.93182],[36.26986,137.93201],[36.26985,137.93142],[36.26726,137.93201],[36.26151,137.93488],[36.25696,137.9351],[36.25284,137.93627],[36.24744,137.93634],[36.2415,137.93807],[36.2366,137.93796]]},{"km":3.0,"pts":[[36.2366,137.93796],[36.23472,137.93849],[36.23346,137.94024],[36.23058,137.94078],[36.23195,137.94974],[36.23168,137.9567],[36.2325,137.95873],[36.2325,137.96161],[36.23094,137.96185],[36.23073,137.96357]]},{"km":32.8,"pts":[[36.23073,137.96357],[36.23094,137.96185],[36.22847,137.96221],[36.22611,137.96504],[36.22709,137.96678],[36.22726,137.96891],[36.22613,137.96897],[36.22555,137.97149],[36.2274,137.98203],[36.22672,137.98212],[36.22674,137.98342],[36.22951,137.99709],[36.22926,138.01405],[36.22787,138.02421],[36.22703,138.02785],[36.22571,138.03033],[36.22588,138.03164],[36.22274,138.03815],[36.22089,138.03991],[36.22098,138.04182],[36.22022,138.0424],[36.21818,138.04772],[36.21915,138.05274],[36.22118,138.05531],[36.2224,138.06072],[36.22393,138.06434],[36.22329,138.06924],[36.22041,138.07647],[36.21917,138.07775],[36.21975,138.07806],[36.21827,138.07944],[36.21621,138.08307],[36.216,138.08902],[36.21435,138.08634],[36.21378,138.08641],[36.21414,138.08666],[36.2131,138.08752],[36.21259,138.09088],[36.21073,138.093],[36.21149,138.09945],[36.21119,138.10029],[36.21027,138.10002],[36.20978,138.10283],[36.20607,138.10205],[36.20478,138.103],[36.20322,138.10265],[36.20597,138.10589],[36.20305,138.10513],[36.20038,138.10727],[36.19927,138.10919],[36.19967,138.11575],[36.19843,138.11616],[36.19716,138.11473],[36.19648,138.11483],[36.19619,138.11722],[36.19408,138.11938],[36.19533,138.12134],[36.19372,138.12429],[36.19277,138.12327],[36.19231,138.1246],[36.19134,138.1244],[36.19092,138.12236],[36.19013,138.12206],[36.18932,138.12276],[36.18761,138.12081],[36.18626,138.123],[36.18594,138.1264],[36.18662,138.127],[36.18619,138.12903],[36.18863,138.12923],[36.18885,138.13015],[36.19024,138.13031],[36.1913,138.13205],[36.19216,138.13112],[36.19317,138.13208],[36.19507,138.13146],[36.19669,138.13222],[36.19725,138.13505],[36.19832,138.13566],[36.19763,138.13901],[36.199,138.13957],[36.1996,138.14094],[36.20224,138.14132],[36.20584,138.14018],[36.20849,138.1416],[36.21102,138.13961],[36.21359,138.1411],[36.21421,138.14264],[36.21694,138.1386],[36.2184,138.14022],[36.21844,138.14162],[36.21921,138.14],[36.2208,138.13947],[36.21957,138.14033],[36.21942,138.14203],[36.21999,138.14309],[36.21969,138.14193],[36.22027,138.14085],[36.22232,138.14107],[36.22206,138.1397],[36.22332,138.13923],[36.22326,138.13708],[36.22391,138.13618],[36.22533,138.13563],[36.22425,138.13651],[36.22574,138.13665],[36.2265,138.13521],[36.22614,138.13431],[36.22685,138.13562],[36.22688,138.13371],[36.22752,138.13545],[36.22722,138.13708],[36.22835,138.13566],[36.22826,138.13788],[36.22905,138.13819],[36.22915,138.13918],[36.22896,138.14112],[36.22707,138.14389],[36.228,138.14383],[36.23084,138.13916],[36.23089,138.13994]]},{"km":87.8,"pts":[[36.23089,138.13994],[36.23084,138.13916],[36.228,138.14383],[36.22707,138.14389],[36.22896,138.14112],[36.22915,138.13918],[36.22905,138.13819],[36.22826,138.13788],[36.22835,138.13566],[36.22722,138.13708],[36.22752,138.13545],[36.22688,138.13371],[36.22685,138.13562],[36.22614,138.13431],[36.2265,138.13521],[36.22574,138.13665],[36.22425,138.13651],[36.22533,138.13563],[36.22391,138.13618],[36.22326,138.13708],[36.22332,138.13923],[36.22206,138.1397],[36.22232,138.14107],[36.22027,138.14085],[36.21969,138.14193],[36.21999,138.14309],[36.21942,138.14203],[36.21957,138.14033],[36.2208,138.13947],[36.21921,138.14],[36.21844,138.14162],[36.2184,138.14022],[36.21694,138.1386],[36.21421,138.14264],[36.21359,138.1411],[36.21102,138.13961],[36.20849,138.1416],[36.20584,138.14018],[36.20224,138.14132],[36.1996,138.14094],[36.199,138.13957],[36.19763,138.13901],[36.19832,138.13566],[36.19725,138.13505],[36.19669,138.13222],[36.19507,138.13146],[36.19317,138.13208],[36.19216,138.13112],[36.1913,138.13205],[36.19024,138.13031],[36.18885,138.13015],[36.18863,138.12923],[36.18619,138.12903],[36.18662,138.127],[36.18594,138.1264],[36.18626,138.123],[36.18761,138.12081],[36.18932,138.12276],[36.19013,138.12206],[36.19092,138.12236],[36.19134,138.1244],[36.19231,138.1246],[36.19277,138.12327],[36.19372,138.12429],[36.19533,138.12134],[36.19408,138.11938],[36.19619,138.11722],[36.19648,138.11483],[36.19716,138.11473],[36.19843,138.11616],[36.19967,138.11575],[36.19927,138.10919],[36.20038,138.10727],[36.20305,138.10513],[36.20597,138.10589],[36.20322,138.10265],[36.20478,138.103],[36.20607,138.10205],[36.20978,138.10283],[36.21027,138.10002],[36.21119,138.10029],[36.21149,138.09945],[36.21073,138.093],[36.21259,138.09088],[36.2131,138.08752],[36.21414,138.08666],[36.21378,138.08641],[36.21435,138.08634],[36.216,138.08902],[36.21621,138.08307],[36.21827,138.07944],[36.21975,138.07806],[36.21917,138.07775],[36.22041,138.07647],[36.22329,138.06924],[36.22393,138.06434],[36.2224,138.06072],[36.22118,138.05531],[36.21915,138.05274],[36.21818,138.04772],[36.22022,138.0424],[36.22098,138.04182],[36.22089,138.03991],[36.22274,138.03815],[36.22588,138.03164],[36.22571,138.03033],[36.22703,138.02785],[36.22787,138.02421],[36.22902,138.0162],[36.2295,137.99691],[36.22672,137.98212],[36.23123,137.98164],[36.23111,137.96934],[36.233,137.9693],[36.2332,137.96355],[36.2325,137.96161],[36.23248,137.95844],[36.23168,137.9567],[36.23189,137.94975],[36.2303,137.94061],[36.23064,137.94007],[36.2336,137.93989],[36.23394,137.93822],[36.23299,137.93741],[36.23336,137.93839],[36.24149,137.93795],[36.2471,137.93627],[36.25284,137.93614],[36.25696,137.93497],[36.26179,137.93468],[36.26721,137.93189],[36.27086,137.93083],[36.28131,137.93111],[36.28787,137.92831],[36.29516,137.92676],[36.29728,137.92562],[36.29822,137.92384],[36.30103,137.92389],[36.3107,137.9205],[36.31691,137.91997],[36.32002,137.91792],[36.32345,137.91457],[36.32477,137.90875],[36.3291,137.90766],[36.33118,137.90552],[36.33645,137.90477],[36.34145,137.90541],[36.34535,137.90769],[36.34726,137.90786],[36.3494,137.90327],[36.35874,137.89182],[36.36221,137.88812],[36.36612,137.88524],[36.37981,137.8713],[36.38259,137.87165],[36.38766,137.87094],[36.39997,137.86712],[36.4098,137.86735],[36.41572,137.86842],[36.42088,137.86779],[36.43659,137.86294],[36.43669,137.85666],[36.44076,137.85682],[36.44736,137.85449],[36.45056,137.85249],[36.46482,137.84953],[36.47502,137.84819],[36.48275,137.85199],[36.48685,137.85125],[36.49305,137.85982],[36.49609,137.86286],[36.50006,137.85731],[36.50227,137.85558],[36.51981,137.85021],[36.52121,137.85289],[36.54028,137.84256],[36.5415,137.84279],[36.54383,137.84487],[36.5459,137.84546],[36.54818,137.84476],[36.5504,137.8431],[36.55225,137.84276],[36.56225,137.8444],[36.56455,137.84329],[36.57017,137.83854],[36.57696,137.8382],[36.58106,137.83932],[36.58292,137.84062],[36.58826,137.84169],[36.59232,137.84384],[36.59483,137.84603],[36.60006,137.84802],[36.60201,137.84966],[36.60699,137.85693],[36.61355,137.86127],[36.61616,137.86174],[36.62041,137.86001],[36.62192,137.85799],[36.6233,137.85348],[36.62522,137.85129],[36.62545,137.8494],[36.62483,137.84708],[36.62584,137.84362],[36.6277,137.84356],[36.63108,137.84478],[36.6441,137.84451],[36.64482,137.84632],[36.6459,137.8457]]}],"d1b":[{"km":16.4,"pts":[[36.23073,137.96357],[36.23094,137.96185],[36.2325,137.96161],[36.2325,137.9586],[36.23168,137.9567],[36.23189,137.94975],[36.2303,137.94049],[36.2336,137.93989],[36.23394,137.93822],[36.23306,137.93737],[36.23281,137.938],[36.23336,137.93839],[36.24149,137.93795],[36.2471,137.93627],[36.25284,137.93614],[36.25696,137.93497],[36.26179,137.93468],[36.27032,137.93092],[36.28173,137.93101],[36.28787,137.92831],[36.29516,137.92676],[36.29728,137.92562],[36.29822,137.92384],[36.30103,137.92389],[36.3107,137.9205],[36.31705,137.9199],[36.32345,137.91457],[36.32477,137.90875],[36.32885,137.90778],[36.33152,137.90538],[36.33482,137.9048],[36.33891,137.90521],[36.33883,137.90846],[36.33783,137.90885],[36.3389,137.90897]]},{"km":40.2,"pts":[[36.3389,137.90897],[36.33783,137.90885],[36.33883,137.90846],[36.33891,137.90521],[36.34153,137.90543],[36.34535,137.90769],[36.34726,137.90786],[36.3494,137.90327],[36.35874,137.89182],[36.36221,137.88812],[36.36612,137.88524],[36.37994,137.87124],[36.38259,137.87165],[36.38766,137.87094],[36.39997,137.86712],[36.4098,137.86735],[36.41572,137.86842],[36.42088,137.86779],[36.43659,137.86294],[36.43669,137.85666],[36.44076,137.85682],[36.44736,137.85449],[36.45031,137.85255],[36.4626,137.84996],[36.47444,137.8481],[36.48275,137.85199],[36.48678,137.8512],[36.49305,137.85982],[36.49609,137.86286],[36.50006,137.85731],[36.50227,137.85558],[36.51981,137.85021],[36.52121,137.85289],[36.54028,137.84256],[36.5415,137.84279],[36.54383,137.84487],[36.5459,137.84546],[36.54818,137.84476],[36.5504,137.8431],[36.55225,137.84276],[36.56225,137.8444],[36.56455,137.84329],[36.57017,137.83854],[36.57696,137.8382],[36.58106,137.83932],[36.58292,137.84062],[36.58826,137.84169],[36.59232,137.84384],[36.59483,137.84603],[36.60006,137.84802],[36.60201,137.84966],[36.60699,137.85693],[36.61355,137.86127],[36.6159,137.86175],[36.62041,137.86001],[36.62192,137.85799],[36.6233,137.85348],[36.62522,137.85129],[36.62545,137.8494],[36.62483,137.84708],[36.62584,137.84362],[36.6277,137.84356],[36.63108,137.84478],[36.6441,137.84451],[36.64482,137.84632],[36.6459,137.8457]]}],"d2":[{"km":29.3,"pts":[[36.6459,137.8457],[36.64482,137.84632],[36.6441,137.84451],[36.63108,137.84478],[36.6277,137.84356],[36.62584,137.84362],[36.62483,137.84708],[36.62545,137.8494],[36.62522,137.85129],[36.6233,137.85348],[36.62192,137.85799],[36.62041,137.86001],[36.61567,137.86175],[36.61355,137.86127],[36.60699,137.85693],[36.60201,137.84966],[36.60006,137.84802],[36.59483,137.84603],[36.59232,137.84384],[36.58826,137.84169],[36.58292,137.84062],[36.57884,137.8385],[36.57052,137.8384],[36.56455,137.84329],[36.56225,137.8444],[36.55225,137.84276],[36.5504,137.8431],[36.54818,137.84476],[36.5459,137.84546],[36.54383,137.84487],[36.54043,137.84253],[36.53502,137.84568],[36.53209,137.83539],[36.53099,137.82711],[36.52806,137.82508],[36.52739,137.82606],[36.52777,137.8161],[36.52666,137.81192],[36.52181,137.80432],[36.52182,137.80048],[36.52244,137.79962],[36.52822,137.79773],[36.53355,137.79315],[36.53826,137.78639],[36.5406,137.78436],[36.54568,137.76943],[36.54664,137.76491],[36.55252,137.7593],[36.55652,137.74517],[36.55946,137.74019],[36.55971,137.73803],[36.56117,137.74134],[36.56167,137.7372],[36.5599,137.73223],[36.56103,137.72622],[36.56018,137.72317],[36.55814,137.72153],[36.55878,137.72099]]}],"d3":[{"km":7.1,"pts":[[36.6459,137.8457],[36.64764,137.8449],[36.65696,137.84811],[36.66646,137.84903],[36.67003,137.85072],[36.67247,137.85024],[36.67902,137.85431],[36.69961,137.86477],[36.70131,137.862],[36.70255,137.85808]]},{"km":2.6,"pts":[[36.70255,137.85808],[36.70131,137.862],[36.69961,137.86477],[36.70548,137.86732],[36.70856,137.86764],[36.71247,137.87004],[36.71389,137.87288]]},{"km":14.7,"pts":[[36.71389,137.87288],[36.71247,137.87004],[36.70856,137.86764],[36.70256,137.86633],[36.67902,137.85431],[36.67265,137.85032],[36.67003,137.85072],[36.66646,137.84903],[36.65696,137.84811],[36.64642,137.84437],[36.63108,137.84478],[36.6277,137.84356],[36.62584,137.84362],[36.62483,137.84708],[36.62545,137.8494],[36.62511,137.85157],[36.6233,137.85348],[36.62103,137.85938],[36.61697,137.86163],[36.61377,137.86137],[36.6074,137.85726],[36.60388,137.85296],[36.60381,137.85373],[36.60495,137.85472],[36.60597,137.8538],[36.60584,137.85322]]},{"km":13.0,"pts":[[36.60584,137.85322],[36.60597,137.8538],[36.60456,137.85471],[36.60275,137.85077],[36.60103,137.84867],[36.59483,137.84603],[36.59232,137.84384],[36.58826,137.84169],[36.58292,137.84062],[36.57861,137.83845],[36.57099,137.8383],[36.56906,137.83927],[36.56448,137.84334],[36.56225,137.8444],[36.55225,137.84276],[36.5504,137.8431],[36.54818,137.84476],[36.5459,137.84546],[36.54339,137.84463],[36.54139,137.84273],[36.54019,137.84259],[36.51385,137.85672],[36.50925,137.85756],[36.50011,137.8612]]},{"km":36.7,"pts":[[36.50011,137.8612],[36.4992,137.85866],[36.49605,137.86309],[36.49315,137.86006],[36.48685,137.85125],[36.48275,137.85199],[36.47538,137.84831],[36.4739,137.84813],[36.45056,137.85249],[36.44736,137.85449],[36.44076,137.85682],[36.43669,137.85666],[36.43659,137.86294],[36.42088,137.86779],[36.41572,137.86842],[36.4098,137.86735],[36.39997,137.86712],[36.38766,137.87094],[36.38259,137.87165],[36.38014,137.87116],[36.37842,137.87223],[36.36612,137.88524],[36.36221,137.88812],[36.35874,137.89182],[36.3494,137.90327],[36.34708,137.908],[36.34535,137.90769],[36.34145,137.90541],[36.33645,137.90477],[36.33223,137.90514],[36.33069,137.90575],[36.32885,137.90778],[36.32477,137.90875],[36.32345,137.91457],[36.31739,137.9197],[36.30989,137.92068],[36.30103,137.92389],[36.29829,137.92399],[36.29788,137.92536],[36.29882,137.92649],[36.29909,137.9258],[36.29853,137.92551],[36.29394,137.92734],[36.28789,137.92844],[36.28095,137.9313],[36.27086,137.93096],[36.26774,137.9318],[36.26151,137.93488],[36.25696,137.9351],[36.25284,137.93627],[36.24744,137.93634],[36.2415,137.93807],[36.2366,137.93796],[36.23472,137.93849],[36.23346,137.94024],[36.23079,137.94047],[36.23195,137.94974],[36.23168,137.9567],[36.23248,137.95844],[36.2325,137.96161],[36.23094,137.96185],[36.23073,137.96357]]},{"km":10.5,"pts":[[36.23073,137.96357],[36.23094,137.96185],[36.2325,137.96161],[36.23248,137.95844],[36.23164,137.95633],[36.23699,137.95643],[36.24497,137.95267],[36.25348,137.951],[36.26151,137.94781],[36.26585,137.94481],[36.26601,137.94297],[36.27191,137.93332],[36.26892,137.93182],[36.2699,137.93198],[36.26935,137.93145],[36.26151,137.93488],[36.25696,137.9351],[36.25284,137.93627],[36.24744,137.93634],[36.2415,137.93807],[36.2366,137.93796]]},{"km":219.6,"pts":[[36.2366,137.93796],[36.23163,137.93889],[36.22836,137.93855],[36.22542,137.93719],[36.21744,137.93146],[36.21296,137.92998],[36.20865,137.92965],[36.20513,137.93064],[36.20107,137.93363],[36.1977,137.9352],[36.18818,137.93751],[36.17608,137.94194],[36.17361,137.94352],[36.17146,137.94629],[36.16852,137.95356],[36.16581,137.96276],[36.16293,137.96652],[36.16017,137.96765],[36.15131,137.9683],[36.14033,137.96686],[36.13716,137.96749],[36.12881,137.97474],[36.10463,137.99084],[36.09263,138.00176],[36.09052,138.00492],[36.08925,138.00957],[36.08883,138.01616],[36.0899,138.02831],[36.08881,138.03225],[36.08666,138.03554],[36.08316,138.03798],[36.07846,138.03899],[36.07488,138.03866],[36.06577,138.03561],[36.06212,138.03594],[36.05923,138.03738],[36.05297,138.04457],[36.04978,138.05068],[36.04486,138.0551],[36.03978,138.06146],[36.0325,138.06685],[36.02632,138.07725],[36.01903,138.08274],[36.01471,138.08782],[36.0095,138.09201],[36.00713,138.09486],[36.00532,138.09853],[36.00421,138.10413],[36.00155,138.11106],[36.00162,138.11406],[36.00352,138.12185],[36.00278,138.12969],[36.00026,138.1344],[35.99301,138.14046],[35.98701,138.14874],[35.98486,138.15542],[35.98429,138.16666],[35.98278,138.17167],[35.98023,138.17414],[35.97537,138.17486],[35.9733,138.1759],[35.97166,138.17803],[35.96909,138.18431],[35.96374,138.18907],[35.95908,138.19466],[35.9494,138.20111],[35.94294,138.2071],[35.93551,138.21235],[35.93149,138.21691],[35.92929,138.2207],[35.9272,138.22644],[35.92475,138.24218],[35.91881,138.25218],[35.91586,138.25504],[35.90949,138.25621],[35.90627,138.25868],[35.90313,138.2647],[35.89901,138.27047],[35.89589,138.27939],[35.89114,138.28775],[35.88779,138.29664],[35.88603,138.29848],[35.88151,138.30093],[35.87312,138.3074],[35.87103,138.31095],[35.86866,138.31929],[35.86702,138.32281],[35.86066,138.33056],[35.85687,138.33319],[35.85526,138.33518],[35.8535,138.34036],[35.85082,138.34558],[35.84984,138.35551],[35.84563,138.36381],[35.84493,138.37398],[35.84405,138.37755],[35.84237,138.3809],[35.83817,138.38562],[35.8353,138.39008],[35.83207,138.3924],[35.8268,138.39269],[35.82264,138.39468],[35.81551,138.39347],[35.80809,138.39599],[35.79913,138.39531],[35.79541,138.39688],[35.79292,138.40056],[35.79151,138.40765],[35.78676,138.41115],[35.78509,138.41746],[35.78268,138.42083],[35.77995,138.42222],[35.77436,138.42317],[35.77193,138.42452],[35.76632,138.43105],[35.76033,138.43438],[35.75407,138.4403],[35.74662,138.44416],[35.74054,138.44987],[35.73325,138.4543],[35.72517,138.4633],[35.71814,138.46608],[35.71251,138.47215],[35.70656,138.47484],[35.70399,138.47677],[35.69164,138.4948],[35.68124,138.50553],[35.67374,138.51931],[35.66794,138.52627],[35.66219,138.53154],[35.65614,138.53546],[35.65108,138.53718],[35.6439,138.53789],[35.64375,138.53913],[35.64587,138.54325],[35.64398,138.54414],[35.6357,138.55507],[35.63433,138.5577],[35.63299,138.5694],[35.63346,138.57474],[35.64564,138.60584],[35.64632,138.60881],[35.64625,138.61235],[35.64483,138.61743],[35.64353,138.62775],[35.64383,138.63642],[35.64254,138.64422],[35.64579,138.65629],[35.64616,138.66051],[35.64614,138.66963],[35.64405,138.6948],[35.64514,138.69945],[35.65095,138.70993],[35.6518,138.71253],[35.65255,138.72015],[35.65168,138.72795],[35.65198,138.73069],[35.65284,138.73191],[35.6519,138.73342],[35.65326,138.73688],[35.65267,138.74753],[35.65069,138.75252],[35.64699,138.75806],[35.64564,138.76379],[35.64197,138.76803],[35.63908,138.77446],[35.61004,138.80401],[35.6075,138.80791],[35.60649,138.81211],[35.60656,138.81963],[35.60569,138.82449],[35.60642,138.83763],[35.60438,138.8503],[35.60469,138.85649],[35.6029,138.86608],[35.59967,138.87344],[35.59898,138.87915],[35.60378,138.90041],[35.60351,138.90393],[35.60141,138.91033],[35.60201,138.91584],[35.60592,138.92305],[35.60781,138.93008],[35.60907,138.93142],[35.6137,138.9334],[35.61597,138.93538],[35.61815,138.93899],[35.61944,138.94387],[35.61937,138.94876],[35.6163,138.95874],[35.61556,138.96427],[35.61766,138.97323],[35.61836,138.98043],[35.62045,138.98787],[35.62055,138.99064],[35.61917,138.99461],[35.61145,139.00543],[35.61047,139.00893],[35.61057,139.01317],[35.61877,139.03571],[35.62309,139.04106],[35.63084,139.04678],[35.63256,139.04978],[35.63315,139.05277],[35.63355,139.06447],[35.63256,139.06985],[35.63289,139.07536],[35.63189,139.08242],[35.63331,139.0897],[35.63319,139.09322],[35.63073,139.09928],[35.62385,139.10826],[35.62208,139.11205],[35.6215,139.11688],[35.62258,139.1265],[35.6224,139.1303],[35.62069,139.13992],[35.61792,139.14363],[35.61669,139.14885],[35.61686,139.15401],[35.61585,139.15876],[35.61621,139.16161],[35.61764,139.16418],[35.62204,139.16808],[35.62304,139.17117],[35.62111,139.17911],[35.61854,139.18532],[35.61845,139.19045],[35.62504,139.2013],[35.63162,139.20415],[35.63412,139.20636],[35.6382,139.21512],[35.64063,139.22767],[35.64078,139.23471],[35.6402,139.23904],[35.64105,139.24998],[35.64058,139.25466],[35.64176,139.26255],[35.64445,139.26524],[35.64893,139.2654],[35.65089,139.26607],[35.65481,139.26984],[35.65867,139.28074],[35.66431,139.29],[35.66769,139.30116],[35.67553,139.31299],[35.67746,139.32037],[35.67703,139.34449],[35.67473,139.36157],[35.67575,139.36662],[35.68001,139.37633],[35.68059,139.38084],[35.6796,139.38631],[35.67581,139.39622],[35.67471,139.40665],[35.67527,139.41385],[35.67853,139.42405],[35.67881,139.42951],[35.67691,139.43536],[35.66865,139.44572],[35.66557,139.45262],[35.66353,139.46872],[35.66044,139.48129],[35.65992,139.49944],[35.65614,139.51236],[35.65576,139.51878],[35.65661,139.52525],[35.66076,139.53354],[35.66257,139.53923],[35.66443,139.5574],[35.66641,139.56245],[35.67235,139.57261],[35.67384,139.57917],[35.67549,139.59515],[35.67663,139.59811],[35.67998,139.60251],[35.6805,139.60549],[35.67867,139.61145],[35.67502,139.61965],[35.6706,139.62493],[35.66942,139.63268],[35.6676,139.63836],[35.66822,139.64527],[35.67024,139.6499],[35.67074,139.6528],[35.66807,139.64571],[35.66743,139.63855],[35.66931,139.63249],[35.6704,139.62516],[35.67467,139.61973],[35.67635,139.6166],[35.67936,139.60909],[35.68041,139.60456],[35.6799,139.60256],[35.67678,139.59855],[35.67541,139.59517],[35.67374,139.5791],[35.67261,139.57421],[35.67096,139.57023],[35.66599,139.56186],[35.6643,139.55732],[35.66237,139.53878]]},{"km":18.7,"pts":[[35.66237,139.53878],[35.66144,139.53629],[35.65855,139.53499],[35.65818,139.53428],[35.66,139.53225],[35.65905,139.535],[35.66154,139.53591],[35.66223,139.53694],[35.66443,139.5574],[35.66641,139.56245],[35.67235,139.57261],[35.67384,139.57917],[35.67549,139.59515],[35.67663,139.59811],[35.67998,139.60251],[35.68052,139.60501],[35.67968,139.60868],[35.67631,139.61706],[35.67502,139.61965],[35.67052,139.6252],[35.66942,139.63268],[35.66756,139.6387],[35.66819,139.64526],[35.67019,139.64992],[35.67102,139.65521],[35.67841,139.68028],[35.68043,139.68489],[35.68694,139.69472],[35.68895,139.69972],[35.68982,139.70413],[35.69044,139.70433],[35.69067,139.70117]]}]};
+
+const P = {
+  tokyo:   { ll:[35.6909,139.7003],  name:'東京（出発・到着）', q:'新宿駅' },
+  chofu:   { ll:[35.66237,139.53878], name:'中央道 調布IC', q:'調布IC' },
+  mtic:    { ll:[36.2366,137.93796],  name:'長野道 松本IC', q:'松本IC' },
+  enmt:    { ll:[36.2333,137.9440],   name:'ENEOS 松本インターTS（目安）', q:'ENEOS 松本インターTS' },
+  mtst:    { ll:[36.23075,137.96419], name:'松本駅（合流）', q:'松本駅' },
+  utsu:    { ll:[36.23072,138.14029], name:'美ヶ原高原', q:'美ヶ原高原美術館' },
+  wasabi:  { ll:[36.33863,137.90994], name:'大王わさび農場（雨天時）', q:'大王わさび農場' },
+  inn:     { ll:[36.6460,137.8460],   name:'Pension BONNARD（白馬・神城／目安）', q:'Pension BONNARD 白馬' },
+  enkm:    { ll:[36.6554,137.85395],  name:'ENEOS アルペンロード神城SS', q:'ENEOS アルペンロード神城SS' },
+  ogi:     { ll:[36.55878,137.72071], name:'扇沢駅', q:'扇沢駅' },
+  dam:     { ll:[36.56669,137.66364], name:'黒部ダム（1,470m）', q:'黒部ダム' },
+  lake:    { ll:[36.56653,137.65829], name:'黒部湖駅', q:'黒部湖駅' },
+  daira:   { ll:[36.56715,137.65015], name:'黒部平（1,828m）', q:'黒部平駅' },
+  daikan:  { ll:[36.56981,137.63164], name:'大観峰（2,316m）', q:'大観峰駅' },
+  murodo:  { ll:[36.57719,137.59579], name:'室堂（2,450m）', q:'室堂ターミナル' },
+  mikuri:  { ll:[36.58057,137.5973],  name:'みくりが池', q:'みくりが池' },
+  enma:    { ll:[36.58277,137.59659], name:'エンマ台', q:'エンマ台 立山' },
+  raicho:  { ll:[36.5845,137.59835],  name:'雷鳥荘', q:'雷鳥荘 立山' },
+  sawa:    { ll:[36.58711,137.60119], name:'雷鳥沢', q:'雷鳥沢キャンプ場' },
+  ohde:    { ll:[36.7030,137.8580],   name:'大出公園・白馬大橋', q:'大出公園 白馬' },
+  iwatake: { ll:[36.71383,137.87277], name:'白馬岩岳 MOUNTAIN HARBOR', q:'白馬岩岳 MOUNTAIN HARBOR' },
+  aoki:    { ll:[36.61042,137.85103], name:'青木湖', q:'青木湖' },
+  omachi:  { ll:[36.50005,137.86156], name:'大町（昼食）', q:'信濃大町駅' },
+};
+const ALPINE = ['ogi','dam','lake','daira','daikan','murodo'];
+const C = { d1:'#1e6e75', d2:'#b4532a', d3:'#b98a2e' };
+const gm = (q) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+
+function baseMap(el) {
+  const map = L.map(el, { scrollWheelZoom:false, zoomControl:true, attributionControl:true, zoomSnap:.25 });
+  // CARTO のタイルは API キーが必要になったので OSM 標準タイルを使う（前回の信州ページと同じ）
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:18, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  return map;
+}
+// 白い縁取り付きの線（地図の上で読みやすくする）
+function line(map, lls, color, opts = {}) {
+  L.polyline(lls, { color:'#fff', weight:(opts.weight || 5) + 4, opacity:.9, lineCap:'round', lineJoin:'round' }).addTo(map);
+  return L.polyline(lls, { color, weight:opts.weight || 5, opacity:1, dashArray:opts.dash, lineCap:'round', lineJoin:'round' }).addTo(map);
+}
+function pin(map, key, label, color, cls = '') {
+  const p = P[key];
+  const m = L.marker(p.ll, { icon: L.divIcon({ className:'', html:`<span class="pin ${cls}" style="background:${color}">${label}</span>`, iconSize:[28,28], iconAnchor:[14,14] }) }).addTo(map);
+  m.bindPopup(`<b>${p.name}</b><a href="${gm(p.q)}" target="_blank" rel="noopener">Google マップで開く →</a>`);
+  m.bindTooltip(p.name, { className:'lbl', direction:'top', offset:[0,-14] });
+  return m;
+}
+const legsOf = (day) => ROUTES[day].map((l) => l.pts);
+const alpineLL = () => ALPINE.map((k) => P[k].ll);
+
+const BUILDERS = {
+  'map-all'(el) {
+    const map = baseMap(el);
+    // Day 1 と Day 3 は中央道で同じ道を通るので、Day 3 を太く下に敷き、Day 1 を細く上に重ねて両方見えるようにする
+    legsOf('d3').forEach((pts) => line(map, pts, C.d3, { weight:8 }));
+    legsOf('d1').forEach((pts) => L.polyline(pts, { color:C.d1, weight:3.5, lineCap:'round', lineJoin:'round' }).addTo(map));
+    legsOf('d2').forEach((pts) => line(map, pts, C.d2));
+    line(map, alpineLL(), C.d2, { dash:'2 8', weight:4 });
+    pin(map, 'tokyo', '⌂', '#2b2f35', 'home');
+    pin(map, 'mtst', '1', C.d1);
+    pin(map, 'utsu', '2', C.d1);
+    pin(map, 'inn', '宿', '#2b2f35', 'home');
+    pin(map, 'murodo', '3', C.d2);
+    map.fitBounds(L.latLngBounds([P.tokyo.ll, P.murodo.ll, P.iwatake.ll, P.utsu.ll, P.chofu.ll]), { paddingTopLeft:[30,30], paddingBottomRight:[40,50] });
+  },
+  'map-d1'(el) {
+    const map = baseMap(el);
+    legsOf('d1').forEach((pts) => line(map, pts, C.d1));
+    ROUTES.d1b.forEach((l) => line(map, l.pts, '#8a8f96', { dash:'6 8', weight:4 }));
+    pin(map, 'tokyo', 'S', '#2b2f35', 'home');
+    pin(map, 'chofu', '1', C.d1);
+    pin(map, 'mtic', '2', C.d1);
+    pin(map, 'enmt', '⛽', '#2b2f35', 'sm fuel');
+    pin(map, 'mtst', '3', C.d1);
+    pin(map, 'utsu', '4', C.d1);
+    pin(map, 'wasabi', '雨', '#8a8f96', 'sm');
+    pin(map, 'inn', '宿', '#2b2f35', 'home');
+    map.fitBounds(L.latLngBounds([P.tokyo.ll, P.inn.ll, P.utsu.ll]), { padding:[24,24] });
+  },
+  'map-d2'(el) {
+    const map = baseMap(el);
+    legsOf('d2').forEach((pts) => line(map, pts, C.d2));
+    line(map, alpineLL(), C.d2, { dash:'2 8', weight:4 });
+    pin(map, 'inn', '宿', '#2b2f35', 'home');
+    pin(map, 'ogi', '1', C.d2);
+    pin(map, 'dam', '2', C.d2, 'sm');
+    pin(map, 'daira', '3', C.d2, 'sm');
+    pin(map, 'daikan', '4', C.d2, 'sm');
+    pin(map, 'murodo', '5', C.d2);
+    map.fitBounds(L.latLngBounds([P.inn.ll, P.murodo.ll, P.ogi.ll]), { padding:[28,28] });
+  },
+  'map-hike'(el) {
+    const map = baseMap(el);
+    line(map, [P.murodo.ll, P.mikuri.ll], '#5c6169', { weight:5 });
+    line(map, [P.mikuri.ll, P.enma.ll, P.raicho.ll], C.d2, { weight:5 });
+    line(map, [P.raicho.ll, P.sawa.ll], '#2e7d4f', { weight:5 });
+    pin(map, 'murodo', 'S', '#2b2f35', 'home');
+    pin(map, 'mikuri', 'C', '#5c6169', 'sm');
+    pin(map, 'enma', '・', C.d2, 'sm');
+    pin(map, 'raicho', 'B', C.d2, 'sm');
+    pin(map, 'sawa', 'A', '#2e7d4f', 'sm');
+    map.fitBounds(L.latLngBounds([P.murodo.ll, P.sawa.ll]), { padding:[40,40] });
+  },
+  'map-d3'(el) {
+    const map = baseMap(el);
+    legsOf('d3').forEach((pts) => line(map, pts, C.d3));
+    pin(map, 'inn', '宿', '#2b2f35', 'home');
+    pin(map, 'enkm', '⛽', '#2b2f35', 'sm fuel');
+    pin(map, 'ohde', '1', C.d3);
+    pin(map, 'iwatake', '2', C.d3);
+    pin(map, 'aoki', '3', C.d3);
+    pin(map, 'omachi', '4', C.d3, 'sm');
+    pin(map, 'mtst', '5', C.d3);
+    pin(map, 'mtic', '⛽', '#2b2f35', 'sm fuel');
+    pin(map, 'tokyo', 'G', '#2b2f35', 'home');
+    map.fitBounds(L.latLngBounds([P.tokyo.ll, P.iwatake.ll, P.mtst.ll]), { padding:[24,24] });
+  },
+};
+
+// 画面に入った地図から作る（最初の表示を軽くする）
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    io.unobserve(e.target);
+    try { BUILDERS[e.target.id](e.target); } catch (err) { console.error(err); }
+  });
+}, { rootMargin:'300px' });
+document.querySelectorAll('.map[id]').forEach((el) => io.observe(el));
+
+/* ---------------- アルペンルートの標高図 ---------------- */
+(function profile() {
+  const st = [
+    { n:'扇沢', h:1433 }, { n:'黒部ダム', h:1470 }, { n:'黒部湖', h:1455 },
+    { n:'黒部平', h:1828 }, { n:'大観峰', h:2316 }, { n:'室堂', h:2450 },
+  ];
+  const svg = document.getElementById('profile');
+  const W = 1000, H = 250, L0 = 40, R0 = 40, T = 40, B = 46, min = 1300, max = 2550;
+  const x = (i) => L0 + i * (W - L0 - R0) / (st.length - 1);
+  const y = (h) => T + (H - T - B) * (1 - (h - min) / (max - min));
+  const pts = st.map((s, i) => [x(i), y(s.h)]);
+  const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = path + ` L ${x(st.length - 1)} ${H - B} L ${x(0)} ${H - B} Z`;
+  let g = `<defs><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4532a" stop-opacity=".28"/><stop offset="1" stop-color="#b4532a" stop-opacity="0"/></linearGradient></defs>`;
+  [1500, 2000, 2500].forEach((h) => { g += `<line x1="${L0}" x2="${W - R0}" y1="${y(h)}" y2="${y(h)}" stroke="#dfdbd4" stroke-dasharray="3 5"/><text x="${W - R0 + 6}" y="${y(h) + 4}" font-size="11" fill="#5c6169">${h.toLocaleString()}m</text>`; });
+  g += `<path d="${area}" fill="url(#pg)"/><path d="${path}" fill="none" stroke="#b4532a" stroke-width="3" stroke-linejoin="round"/>`;
+  pts.forEach((p, i) => {
+    const s = st[i];
+    g += `<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#fff" stroke="#b4532a" stroke-width="3"/>`;
+    g += `<text x="${p[0]}" y="${p[1] - 14}" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1d21">${s.h.toLocaleString()}m</text>`;
+    g += `<text x="${p[0]}" y="${H - B + 24}" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1a1d21">${s.n}</text>`;
+  });
+  svg.innerHTML = g;
+})();
+
+/* ---------------- 目次のハイライト ---------------- */
+(function toc() {
+  const links = [...document.querySelectorAll('.toc a')];
+  const targets = links.map((a) => document.querySelector(a.getAttribute('href')));
+  const on = () => {
+    const y = window.scrollY + 120;
+    let idx = -1;
+    targets.forEach((t, i) => { if (t && t.offsetTop <= y) idx = i; });
+    links.forEach((a, i) => a.classList.toggle('is-on', i === idx));
+    // scrollIntoView は使わない（追従中の目次に使うとページ全体がスクロールして戻ってしまう）。横方向だけ動かす
+    if (idx >= 0) {
+      const box = links[idx].parentElement, a = links[idx];
+      if (a.offsetLeft < box.scrollLeft || a.offsetLeft + a.offsetWidth > box.scrollLeft + box.clientWidth) box.scrollLeft = a.offsetLeft - 16;
+    }
+  };
+  let raf;
+  window.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(on); }, { passive:true });
+  on();
+})();
+
+/* ---------------- チェックリスト（この端末に保存） ---------------- */
+(function checklist() {
+  const KEY = 'tateyama-ride-1010:checks';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {} };
+  document.querySelectorAll('.list').forEach((list) => {
+    const name = list.dataset.list;
+    const boxes = [...list.querySelectorAll('input[type=checkbox]')];
+    const update = () => {
+      const n = boxes.filter((b) => b.checked).length;
+      list.querySelector('.cnt').textContent = `${n} / ${boxes.length}`;
+      list.querySelector('.progress i').style.width = (n / boxes.length * 100) + '%';
+    };
+    boxes.forEach((b) => {
+      const k = name + ':' + b.dataset.k;
+      b.checked = !!saved[k];
+      b.addEventListener('change', () => { saved[k] = b.checked; save(); update(); });
+    });
+    update();
+  });
+})();
+</script>
+</body>
+</html>
