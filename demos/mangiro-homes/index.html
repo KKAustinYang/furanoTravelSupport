@@ -436,6 +436,12 @@ html[lang="ja"] .ai-copy h2{line-height:1.42; letter-spacing:.02em}
    ブランド表記がヘッダーと二重にならないようにする。リセットはバー右の「新しい会話」で代替。
    ============================================================ */
 body.is-ai{overflow:hidden}
+/* 全画面チャット中は、トラックパッドの2本指スワイプ（左右）で「戻る」が発動しないようにする。
+   iframe 内で端までスクロールした勢いがページ側へ伝わると、ブラウザの履歴ナビゲーションになるため
+   ・チャットを包む要素で横方向の連鎖を止める
+   ・ページのルートでも横方向のオーバースクロール（＝スワイプで戻る）を無効にする */
+html:has(body.is-ai),body.is-ai{overscroll-behavior-x:none}
+body.is-ai .ai-stage,body.is-ai .ai-frame{overscroll-behavior:contain}
 body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 .ai-view{
   height:calc(100dvh - var(--header-h)); display:flex; flex-direction:column; background:var(--surface);
@@ -475,6 +481,20 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 .ai-loading .spark svg{width:26px; height:26px}
 @keyframes breathe{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(201,164,106,.35)}50%{transform:scale(1.05); box-shadow:0 0 0 14px rgba(201,164,106,0)}}
 @media (max-width:900px){ .req{max-width:none} .req > span{display:none} .req{padding:0 4px; background:none; border:0} }
+
+/* 有人チャット（LiveDesk）: ウィジェットのヘッダーは会話の終了ボタンがあるので隠せない。
+   代わりにこちらのバーをウィジェットのヘッダー行にぴったり重ね、1行にまとめる。
+   右端 60px だけ穴を空けて、ウィジェットの「会話を終了」ボタンを見せる（押せる）。 */
+.ai-view.ch-chat{position:relative}
+.ai-view.ch-chat .ai-bar{
+  position:absolute; z-index:2; top:0; height:55px;
+  left:calc(50% - min(1040px,100%) / 2); width:calc(min(1040px,100%) - 60px);
+  display:flex; justify-content:space-between; padding-inline:12px 8px; border-bottom:0;
+}
+.ai-view.ch-chat .ai-title{position:absolute; left:calc(50% + 30px); transform:translateX(-50%)}
+.ai-view.ch-chat .ai-actions{flex:0 1 auto; max-width:calc(50% - 130px); justify-content:flex-end}   /* 中央の見出しにぶつからない幅 */
+.ai-view.ch-chat .req{max-width:100%}
+.ai-view.ch-chat::after{content:""; position:absolute; z-index:3; top:55px; left:0; right:0; height:1px; background:var(--line); pointer-events:none}
 @media (max-width:640px){ .back span{display:none} .ai-bar{height:52px; gap:6px} .ai-title{font-size:16px} .req button{width:36px; height:36px; padding:0; justify-content:center} .req button span{display:none} .req button svg{width:18px; height:18px} }
 
 /* ============================================================
@@ -876,10 +896,12 @@ const LIVEDESK_ORIGIN = 'https://livedesk.engagelab.com';
 const LIVEDESK_SRC = LIVEDESK_ORIGIN + '/console/livedesk/widget/?website_token=KyYNaBb3YkGgi2tAnKg5RPfw&action=autoStart';
 const LIVEDESK_PREFIX = 'livedesk-widget:';
 
-// crop はウィジェット自身のヘッダーの高さ。iframe をその分だけ上にずらして隠す
+// crop はウィジェット自身のヘッダーの高さ。iframe をその分だけ上にずらして隠す。
+// LiveDesk は隠さない（0）: 会話の終了・新しい会話はウィジェットのヘッダーにしかなく、
+// トークンが iframe 側の localStorage にあるため親ページからはリセットできない
 const CHANNELS = {
   ai:   { hash:'#/ai',   crop:66, title:'nav_ai',     icon:'i-spark', fancy:true,  loading:'ai_loading',   allow:'microphone *; camera *; display-capture *' },
-  chat: { hash:'#/chat', crop:56, title:'chat_title', icon:'i-spark', fancy:true,  loading:'chat_loading', allow:'camera; microphone' },
+  chat: { hash:'#/chat', crop:0,  title:'chat_title', icon:'i-spark', fancy:true,  loading:'chat_loading', allow:'camera; microphone' },
 };
 const viewOf = (hash = location.hash) => Object.keys(CHANNELS).find((k) => CHANNELS[k].hash === hash) || null;
 
@@ -1355,6 +1377,7 @@ function renderBar(ch) {
   $('#aiTitleText').classList.toggle('ai-shine', c.fancy);
   $('#aiBeta').hidden = !c.fancy;
   $('#aiReset').hidden = ch !== 'ai';
+  $('#aiView').classList.toggle('ch-chat', ch === 'chat');
 }
 
 function sendLiveDeskLocale() {
