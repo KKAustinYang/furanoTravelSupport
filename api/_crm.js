@@ -265,7 +265,8 @@ async function opGetLeadStatus(req) {
 }
 
 async function opLogPropertyView(req) {
-  const uk = String(req.user_key).trim(), pno = String(req.property_no).trim()
+  // 表示用の「No.」「#」が付いたまま来ても同じ物件として数える（同じ物件が 2 行に割れると関心度が狂う）
+  const uk = String(req.user_key).trim(), pno = String(req.property_no).trim().replace(/^(No\.?|#)\s*/i, '')
   const views = await viewsOf(uk)
   const hit = views[pno]
   const q = req.kind === 'question' ? 1 : 0
