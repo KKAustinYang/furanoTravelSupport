@@ -498,6 +498,7 @@ function renderDrawer({ opportunity:o, contact:c = {}, tasks = [], other_opportu
           <label>確度（%）<input name="probability" inputmode="numeric" value="${esc(o.probability)}" placeholder="フェーズの既定値"></label>
           <label>完了予定日<input name="close_date" type="date" value="${esc(o.close_date)}"></label>
           <label>リード評価<select name="rating">${opt(['Hot', 'Warm', 'Cool'], o.rating, '未評価')}</select></label>
+          <label class="full">評価の根拠（AI が計算）<input value="${esc(o.rating_reasons ? (o.rating_reasons + (o.rating_score !== '' && o.rating_score != null ? `　合計 ${o.rating_score} 点` : '')) : '—')}" readonly></label>
           <label>種別<select name="category">${opt(['投資用', '自己居住用', 'セカンドハウス'], o.category, '—')}</select></label>
           <span class="group">担当者が入力</span>
           <label>物件価格<input name="property_price" inputmode="numeric" value="${esc(o.property_price)}" placeholder="円"></label>

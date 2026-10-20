@@ -229,6 +229,23 @@ async function sendNotifyMail(subject, text) {
   } catch (e) { return { sent: false, reason: String(e.message || e).slice(0, 200) } }
 }
 
+/** 評価の更新。点数が上がったときだけ（同点・下がったときは据え置き）、担当者が付けた評価は変えない。
+ *  点数と評価はワークフローで計算する（skill「登録」§5）。点数が無い古い呼び出しは評価の順位で比べる。 */
+function applyRating(o, r) {
+  const incoming = normRating(r.rating)
+  if (!incoming) return { changed: false, note: 'no_input' }
+  if (o.rating_set_by === 'agent') return { changed: false, note: 'agent_set_protected' }
+  const hasScores = has(r.rating_score) && has(o.rating_score)
+  const higher = hasScores ? Number(r.rating_score) > Number(o.rating_score) : (RANK[incoming] || 0) > (RANK[o.rating] || 0)
+  if (higher || !o.rating) {
+    o.rating = incoming; o.rating_set_by = 'ai'
+    if (has(r.rating_score)) o.rating_score = Number(r.rating_score)
+    if (has(r.rating_reasons)) o.rating_reasons = String(r.rating_reasons)
+    return { changed: true, note: 'raised' }
+  }
+  return { changed: false, note: 'not_raised' }
+}
+
 /* ============================================================ AI の操作 */
 
 async function opRegisterLead(r) {
@@ -253,6 +270,7 @@ async function opRegisterLead(r) {
       name: `${contact.name || ''}-`, type: OPP_TYPE, owner: OWNER, stage: STAGES[0], probability: '',
       close_date: addMonths(today(), TIMINGS[r.purchase_timing] || 12),
       lead_source: LEAD_SOURCE, rating: incoming || '', rating_set_by: incoming ? 'ai' : '',
+      rating_score: has(r.rating_score) ? Number(r.rating_score) : '', rating_reasons: r.rating_reasons || '',
       category, notes: notesBlock(r, '登録'),
       purchase_timing: r.purchase_timing || '', conversation_language: r.conversation_language || '',
       property_price: '', expected_yield: '', brokerage_fee: '', payment_date: '', contract_price: '',
@@ -267,15 +285,10 @@ async function opRegisterLead(r) {
 
   // 未クローズの案件がある → 更新。評価は上がるときだけ、担当者が付けた評価は変えない
   const o = { ...existing }
-  let note = 'no_input', changed = false
-  if (incoming) {
-    if (o.rating_set_by === 'agent') note = 'agent_set_protected'
-    else if ((RANK[incoming] || 0) > (RANK[o.rating] || 0)) { o.rating = incoming; o.rating_set_by = 'ai'; note = 'raised'; changed = true }
-    else note = 'not_raised'
-  }
+  const { changed, note } = applyRating(o, r)
   if (!o.category && category) o.category = category
   // 追記。上書きしない。見出しだけの空ブロックは足さない
-  const block = notesBlock(r, '更新')
+  const block = notesBlock(changed ? r : { ...r, rating_reasons: '' }, '更新')
   if (block.includes('\n')) o.notes = (o.notes ? o.notes + '\n\n' : '') + block
   o.updated_at = now
   await saveOpp(o)
@@ -314,10 +327,13 @@ async function opRequestMeeting(r) {
                   email_sent: mail.sent, email_note: mail.reason || '' }
   await store.lpush('notifications', notif, 500)
 
-  await store.set([['opp:' + opp.id, { ...opp, updated_at: jst() }]])
-  await audit(opp.id, 'request_meeting', 'ai', `${title} を作成・${task.assignee} に通知${mail.sent ? '（メール送信）' : ''}`)
+  // 面談・内見の希望は加点される（+3）。上がったときだけ評価を書き換える
+  const upd = { ...opp, updated_at: jst() }
+  const rt = applyRating(upd, r)
+  await store.set([['opp:' + opp.id, upd]])
+  await audit(opp.id, 'request_meeting', 'ai', `${title} を作成・${task.assignee} に通知${mail.sent ? '（メール送信）' : ''}` + (rt.changed ? `・評価 ${upd.rating} に上げた` : ''))
   return { ok: true, created: true, duplicate: false, task_id: task.id, opportunity_id: opp.id,
-           notified: true, email_sent: mail.sent }
+           notified: true, email_sent: mail.sent, rating: upd.rating, rating_changed: rt.changed, rating_note: rt.note }
 }
 
 async function opGetLeadStatus(r) {
