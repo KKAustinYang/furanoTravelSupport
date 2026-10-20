@@ -19,6 +19,7 @@
 // rewrite in vercel.json is routed deterministically.
 
 import { sendTicketMail } from './_mail.js'
+import { handleCrm } from './_crm.js'
 
 const UPSTREAM = 'https://api.modellix.ai'
 
@@ -109,6 +110,9 @@ export default async function handler(req, res) {
 
   // GPTBots 宛てか、Modellix 宛てか、メール送信かをパスの先頭で決める
   const path = suffix.replace(/^\//, '')
+
+  // /api/crm — MANGIRO の担当者用 CRM 画面。閲覧コードを確認してから CRM に中継する
+  if (path === 'crm' || path.startsWith('crm?') || path.startsWith('crm/')) return handleCrm(req, res)
 
   // /api/mail/send — 中継ではなく、この関数自身がメールを送る
   if (path.startsWith('mail/')) {
