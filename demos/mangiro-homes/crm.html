@@ -4,26 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>MANGIRO CRM ｜ リード管理</title>
+<title>MANGIRO CRM ｜ 案件管理</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   MANGIRO CRM（担当者用・リード管理）
-   AI エージェントがワークフロー（MANGIRO_CRM.flow → crm_gas.gs）で登録したリードを
-   担当者が確認・更新する画面。配色と書体は物件サイト（index.html）と同じ。
-   データは /api/crm 経由で読む。接続先が未設定ならサンプルデータで表示する。
+   MANGIRO CRM（担当者用）
+   構成は IREA の商談画面に合わせる：顧客 → 案件 → タスク。
+   AI チャットが書き込むのは「登録フォーム送信時の顧客・案件」と「面談・内見希望時のタスク」だけ。
+   それ以外の項目（フェーズの進行・物件価格・成約情報など）は担当者がこの画面で入力する。
+   データは /api/crm から読む。接続先が未設定ならサンプルデータで表示する。
    ============================================================ */
 :root{
   --bg:#FAF9F7; --surface:#FFFFFF; --muted:#F3F0EB; --line:#E5E1DA; --line-soft:#EFEBE4;
   --text:#2B2823; --text-sub:#6F685F; --ink:#1F1C18;
-  --accent:#8C6E4A; --accent-dark:#75593A; --accent-soft:#F0E9E0; --kinako:#C9A46A;
-  --hot:#B8452F; --hot-soft:#F8E6E1; --warm:#B7791F; --warm-soft:#FAF0DC;
-  --cool:#3D6E8F; --cool-soft:#E3EDF3; --cold:#5C6169; --cold-soft:#ECEDEF;
-  --ok:#2E7D4F; --ok-soft:#E3F1E8;
-  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --accent:#8C6E4A; --accent-dark:#75593A; --accent-soft:#F0E9E0;
+  --hot:#B8452F; --hot-soft:#F8E6E1; --warm:#B7791F; --warm-soft:#FAF0DC; --cool:#3D6E8F; --cool-soft:#E3EDF3;
+  --ok:#2E7D4F; --ok-soft:#E3F1E8; --cold:#5C6169; --cold-soft:#ECEDEF;
+  --r-md:12px; --r-lg:16px;
   --shadow-sm:0 1px 2px rgba(43,40,35,.06); --shadow-md:0 8px 28px rgba(43,40,35,.09); --shadow-lg:0 24px 64px rgba(43,40,35,.18);
   --ease:cubic-bezier(.16,1,.3,1);
   --font:"Inter","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic Medium","Meiryo",system-ui,sans-serif;
@@ -40,6 +40,7 @@ a{color:inherit}
 .num{font-variant-numeric:tabular-nums}
 .ico{width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sub{font-size:12.5px; color:var(--text-sub)}
 
 /* ---------- ヘッダー ---------- */
 .top{position:sticky; top:0; z-index:40; height:64px; display:flex; align-items:center; gap:18px; padding:0 clamp(16px,2.4vw,32px); background:rgba(255,255,255,.94); backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
@@ -48,54 +49,45 @@ a{color:inherit}
 .brand b{font-size:17px; letter-spacing:.22em}
 .brand .tag{height:22px; padding:0 8px; border-radius:6px; background:var(--ink); color:#fff; font-size:11px; font-weight:700; letter-spacing:.08em; display:inline-grid; place-items:center}
 .top nav{display:flex; gap:4px; margin-left:12px}
-.top nav a{height:36px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; text-decoration:none; color:var(--text-sub); font-weight:500}
-.top nav a[aria-current="page"]{background:var(--accent-soft); color:var(--accent-dark); font-weight:600}
-.top .right{margin-left:auto; display:flex; align-items:center; gap:10px}
-.mode{display:inline-flex; align-items:center; gap:7px; height:30px; padding:0 12px; border-radius:999px; font-size:12px; font-weight:600; background:var(--muted); color:var(--text-sub); white-space:nowrap}
+.top nav button{white-space:nowrap; height:36px; padding:0 14px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; color:var(--text-sub); font-weight:500}
+.top nav button[aria-current="page"]{background:var(--accent-soft); color:var(--accent-dark); font-weight:600}
+.top nav .cnt{min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--hot); color:#fff; font-size:11px; font-weight:700; display:inline-grid; place-items:center}
+.top .right{margin-left:auto; display:flex; align-items:center; gap:8px}
+.mode{display:inline-flex; align-items:center; gap:7px; height:30px; padding:0 12px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap}
 .mode i{width:7px; height:7px; border-radius:50%; background:currentColor}
 .mode.live{background:var(--ok-soft); color:var(--ok)}
 .mode.demo{background:var(--warm-soft); color:var(--warm)}
-.icon-btn{width:36px; height:36px; border-radius:999px; display:grid; place-items:center; color:var(--text-sub); transition:background .15s}
+.icon-btn{position:relative; width:36px; height:36px; border-radius:999px; display:grid; place-items:center; color:var(--text-sub); transition:background .15s}
 .icon-btn:hover{background:var(--muted); color:var(--text)}
 .icon-btn.spin svg{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.site-link{font-size:13px; color:var(--text-sub); text-decoration:none; white-space:nowrap}
-.site-link:hover{color:var(--accent)}
-@media (max-width:760px){
-  .top nav,.site-link{display:none}
-  .top{gap:10px}
-  .brand b{font-size:15px; letter-spacing:.14em}
-  .mode .full{display:none}
-  .kpis{grid-template-columns:repeat(3,1fr); gap:8px}
-  .kpi{padding:10px 12px}
-  .kpi b{font-size:20px}
-  .kpi span{font-size:11px}
-  .page-head h1{font-size:21px}
-  .page-head p{display:none}
-  .toolbar .select{flex:1 1 140px}
-  .count{flex-basis:100%; margin-left:0}
-  dl.kv{grid-template-columns:96px 1fr}
-  .d-head,.d-body{padding-inline:16px}
-}
+.icon-btn .dot{position:absolute; top:3px; right:2px; min-width:16px; height:16px; padding:0 4px; border-radius:999px; background:var(--hot); color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center}
+
+/* 通知 */
+.notif{position:absolute; top:58px; right:clamp(16px,2.4vw,32px); width:min(400px,calc(100vw - 32px)); max-height:70vh; overflow:auto; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); box-shadow:var(--shadow-lg); z-index:50}
+.notif h4{padding:14px 16px 10px; font-size:13px; border-bottom:1px solid var(--line-soft); display:flex; justify-content:space-between; align-items:center}
+.notif h4 button{font-size:12px; color:var(--accent); font-weight:600}
+.notif ul{padding:0}
+.notif li{list-style:none; padding:12px 16px; border-bottom:1px solid var(--line-soft); font-size:13px; cursor:pointer}
+.notif li:hover{background:#FBF8F4}
+.notif li.unread{background:#FDF8F1}
+.notif li.unread::before{content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--hot); margin-right:7px; vertical-align:1px}
+.notif .empty{padding:24px 16px; color:var(--text-sub); text-align:center}
 
 /* ---------- 本体 ---------- */
 main{max-width:1320px; margin:0 auto; padding:28px clamp(16px,2.4vw,32px) 64px}
 .page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap}
-.page-head h1{font-size:24px; letter-spacing:.02em}
+.page-head h1{font-size:24px}
 .page-head p{margin-top:4px; color:var(--text-sub); font-size:13.5px}
-.updated{font-size:12.5px; color:var(--text-sub)}
-
-.kpis{margin-top:20px; display:grid; grid-template-columns:repeat(7,1fr); gap:12px}
-@media (max-width:1100px){ .kpis{grid-template-columns:repeat(4,1fr)} }
-@media (max-width:600px){ .kpis{grid-template-columns:repeat(3,1fr)} }
+.banner{margin-top:16px; padding:12px 16px; border-radius:var(--r-md); background:var(--warm-soft); color:#7A5413; font-size:13px; display:flex; gap:10px}
+.banner .ico{color:var(--warm); margin-top:1px}
+.kpis{margin-top:20px; display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
 .kpi{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:14px 16px; text-align:left; transition:border-color .15s, box-shadow .2s}
 button.kpi:hover{border-color:#D5CCBF}
 button.kpi[aria-pressed="true"]{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
 .kpi span{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-sub)}
 .kpi span i{width:8px; height:8px; border-radius:50%}
-.kpi b{display:block; margin-top:4px; font-size:26px; font-weight:700; letter-spacing:-.01em}
-.kpi small{font-size:12px; color:var(--text-sub); font-weight:500; margin-left:4px}
-
+.kpi b{display:block; margin-top:4px; font-size:26px; letter-spacing:-.01em}
 .toolbar{margin-top:22px; display:flex; flex-wrap:wrap; align-items:center; gap:10px}
 .search{flex:1 1 280px; max-width:420px; display:flex; align-items:center; gap:8px; height:40px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface)}
 .search:focus-within{border-color:var(--accent)}
@@ -103,11 +95,10 @@ button.kpi[aria-pressed="true"]{border-color:var(--accent); box-shadow:0 0 0 3px
 .select{height:40px; padding:0 34px 0 14px; border:1px solid var(--line); border-radius:999px; background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m7 10 5 5 5-5' fill='none' stroke='%236F685F' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") right 12px center/16px no-repeat; appearance:none; cursor:pointer}
 .count{margin-left:auto; font-size:13px; color:var(--text-sub)}
 
-/* ---------- 一覧 ---------- */
 .table-wrap{margin-top:14px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden}
 table{width:100%; border-collapse:collapse}
 th,td{padding:12px 16px; text-align:left; vertical-align:middle; border-bottom:1px solid var(--line-soft)}
-th{font-size:12px; font-weight:600; color:var(--text-sub); background:#FCFBF9; white-space:nowrap; letter-spacing:.02em}
+th{font-size:12px; font-weight:600; color:var(--text-sub); background:#FCFBF9; white-space:nowrap}
 tbody tr{cursor:pointer; transition:background .12s}
 tbody tr:hover{background:#FBF8F4}
 tbody tr[aria-selected="true"]{background:var(--accent-soft)}
@@ -116,77 +107,66 @@ tbody tr:last-child td{border-bottom:0}
 .avatar{width:36px; height:36px; border-radius:50%; flex:none; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--accent-dark); background:var(--accent-soft)}
 .who b{display:block; font-weight:600}
 .who > div span{display:block; font-size:12.5px; color:var(--text-sub)}
-.sub{font-size:12.5px; color:var(--text-sub)}
-.badge{display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px; border-radius:6px; font-size:12px; font-weight:700; letter-spacing:.04em; white-space:nowrap}
-.r-HOT{background:var(--hot-soft); color:var(--hot)}
-.r-WARM{background:var(--warm-soft); color:var(--warm)}
-.r-COOL{background:var(--cool-soft); color:var(--cool)}
-.r-COLD{background:var(--cold-soft); color:var(--cold)}
-.r-none{background:var(--muted); color:var(--text-sub)}
+.badge{display:inline-flex; align-items:center; height:24px; padding:0 9px; border-radius:6px; font-size:12px; font-weight:700; letter-spacing:.03em; white-space:nowrap}
+.r-Hot{background:var(--hot-soft); color:var(--hot)} .r-Warm{background:var(--warm-soft); color:var(--warm)} .r-Cool{background:var(--cool-soft); color:var(--cool)} .r-none{background:var(--muted); color:var(--text-sub)}
 .by{font-size:11px; font-weight:600; color:var(--text-sub); margin-left:6px}
-.pill{display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; font-size:12.5px; font-weight:500; border:1px solid var(--line); white-space:nowrap; background:var(--surface)}
-.pill i{width:7px; height:7px; border-radius:50%; background:#B9B3A9}
-.m-希望 i{background:var(--warm)} .m-日程確定 i{background:var(--ok)} .m-辞退 i{background:var(--cold)}
-.m-希望{border-color:#EBD8B5} .m-日程確定{border-color:#C7E2D1}
-.cond{white-space:nowrap}
-.prop{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px}
-.empty{padding:56px 16px; text-align:center; color:var(--text-sub)}
-.hide-md{}
-@media (max-width:1100px){ .hide-md{display:none} }
-
-/* スマホはカード表示 */
-@media (max-width:760px){
-  .table-wrap{background:none; border:0; overflow:visible}
-  table,tbody{display:block}
-  thead{display:none}
-  tbody tr{display:grid; grid-template-columns:1fr auto; gap:6px 10px; padding:14px; margin-bottom:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md)}
-  tbody td{padding:0; border:0}
-  tbody td.c-who{grid-column:1/2}
-  tbody td.c-rating{grid-column:2/3; justify-self:end}
-  tbody td.c-meet,tbody td.c-cond,tbody td.c-prop{grid-column:1/-1}
-  tbody td.c-date{grid-column:1/-1; font-size:12px; color:var(--text-sub)}
-}
+.stage{display:inline-flex; align-items:center; gap:8px; white-space:nowrap; font-size:13px}
+.stage .bar{width:56px; height:5px; border-radius:999px; background:var(--muted); overflow:hidden}
+.stage .bar i{display:block; height:100%; background:var(--accent)}
+.stage.closed .bar i{background:var(--cold)}
+.pill{display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; font-size:12.5px; border:1px solid var(--line); white-space:nowrap; background:var(--surface)}
+.pill.hot{border-color:#EFC9BF; color:var(--hot); background:var(--hot-soft)}
+.pill.done{color:var(--ok); border-color:#C7E2D1; background:var(--ok-soft)}
+.empty-row{padding:56px 16px; text-align:center; color:var(--text-sub)}
+@media (max-width:1100px){ .hide-md{display:none} .kpis{grid-template-columns:repeat(3,1fr)} }
 
 /* ---------- 詳細パネル ---------- */
 .scrim{position:fixed; inset:0; z-index:60; background:rgba(24,20,16,.32); animation:fade .2s}
 @keyframes fade{from{opacity:0}}
-.drawer{position:fixed; top:0; right:0; bottom:0; z-index:61; width:min(560px,100vw); background:var(--bg); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; animation:slide .32s var(--ease)}
+.drawer{position:fixed; top:0; right:0; bottom:0; z-index:61; width:min(620px,100vw); background:var(--bg); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; animation:slide .32s var(--ease)}
 @keyframes slide{from{transform:translateX(24px); opacity:0}}
-.d-head{padding:20px 22px 16px; background:var(--surface); border-bottom:1px solid var(--line); display:flex; gap:14px; align-items:flex-start}
-.d-head .avatar{width:48px; height:48px; font-size:16px}
+.d-head{padding:18px 22px 14px; background:var(--surface); border-bottom:1px solid var(--line); display:flex; gap:14px; align-items:flex-start}
+.d-head .avatar{width:46px; height:46px; font-size:16px}
 .d-head h2{font-size:19px; line-height:1.35}
-.d-head .meta{margin-top:6px; display:flex; flex-wrap:wrap; gap:6px}
+.d-head .meta{margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
 .d-head .close{margin-left:auto}
+.stepper{display:flex; gap:3px; padding:12px 22px; background:var(--surface); border-bottom:1px solid var(--line); overflow-x:auto}
+.stepper span{flex:1 0 auto; min-width:28px; height:6px; border-radius:999px; background:var(--muted)}
+.stepper span.on{background:var(--accent)}
 .d-body{flex:1; overflow:auto; padding:18px 22px 28px; display:grid; gap:14px; align-content:start}
 .sec{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 18px}
 .sec h3{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--text-sub); letter-spacing:.04em}
 .sec h3 .ico{width:16px; height:16px; color:var(--accent)}
-dl.kv{margin-top:10px; display:grid; grid-template-columns:120px 1fr; gap:8px 14px; font-size:13.5px}
+.sec h3 .grow{margin-left:auto; font-weight:500; font-size:12px}
+dl.kv{margin-top:10px; display:grid; grid-template-columns:110px 1fr; gap:8px 14px; font-size:13.5px}
 dl.kv dt{color:var(--text-sub)}
 dl.kv dd{word-break:break-word}
-.summary{margin-top:10px; padding:12px 14px; border-radius:10px; background:var(--accent-soft); font-size:13.5px; line-height:1.75; white-space:pre-wrap}
-.views{margin-top:10px; width:100%; font-size:13px}
-.views th,.views td{padding:8px 6px; border-bottom:1px solid var(--line-soft); background:none}
-.views th{font-size:11.5px}
-.star{color:var(--warm); font-weight:700}
+.form{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
+.form label{display:grid; gap:5px; font-size:12px; color:var(--text-sub)}
+.form .full{grid-column:1/-1}
+.form select,.form input,.form textarea{height:38px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font-size:13.5px; min-width:0}
+.form input[readonly]{background:var(--muted); color:var(--text-sub)}
+.form textarea{height:auto; min-height:76px; padding:10px 12px; resize:vertical; line-height:1.6}
+.form .group{grid-column:1/-1; margin-top:6px; font-size:11.5px; font-weight:700; color:var(--accent); letter-spacing:.08em}
+.actions{grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; align-items:center}
+.actions .msg{margin-right:auto; font-size:12.5px; color:var(--text-sub)}
+.btn{height:38px; padding:0 18px; border-radius:999px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px; white-space:nowrap}
+.btn-accent{background:var(--accent); color:#fff}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-line{border:1px solid var(--line); background:var(--surface); height:32px; padding:0 12px; font-size:12.5px}
+.btn-line:hover{border-color:var(--accent); color:var(--accent)}
+.notes{margin-top:10px; padding:12px 14px; border-radius:10px; background:#FCFBF9; border:1px solid var(--line-soft); font-size:13px; line-height:1.75; white-space:pre-wrap; max-height:340px; overflow:auto}
+.task{padding:12px 0; border-bottom:1px solid var(--line-soft)}
+.task:last-child{border-bottom:0}
+.task-head{display:flex; align-items:flex-start; gap:10px}
+.task-head b{flex:1; font-size:13.5px}
+.task pre{margin-top:8px; font:inherit; font-size:13px; white-space:pre-wrap; background:var(--accent-soft); border-radius:8px; padding:10px 12px}
 .tl{list-style:none; padding:0; margin-top:12px; position:relative}
 .tl::before{content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:var(--line)}
 .tl li{position:relative; padding:0 0 12px 22px; font-size:13px}
 .tl li::before{content:""; position:absolute; left:0; top:5px; width:12px; height:12px; border-radius:50%; background:var(--surface); border:2.5px solid var(--accent)}
-.tl li b{font-weight:600}
+.tl li.staff::before{border-color:var(--ok)}
 .tl li span{display:block; font-size:12px; color:var(--text-sub)}
-.edit{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
-.edit label{display:grid; gap:5px; font-size:12px; color:var(--text-sub)}
-.edit .full{grid-column:1/-1}
-.edit select,.edit input,.edit textarea{height:38px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font-size:13.5px}
-.edit textarea{height:auto; min-height:84px; padding:10px 12px; resize:vertical; line-height:1.6}
-.edit .note{grid-column:1/-1; font-size:12px; color:var(--text-sub)}
-.btn{height:40px; padding:0 18px; border-radius:999px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:8px}
-.btn-accent{background:var(--accent); color:#fff}
-.btn-accent:hover{background:var(--accent-dark)}
-.btn-accent:disabled{opacity:.5; cursor:default}
-.actions{grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; align-items:center}
-.actions .msg{margin-right:auto; font-size:12.5px; color:var(--text-sub)}
 .loading{padding:40px 0; text-align:center; color:var(--text-sub)}
 
 /* ---------- ログイン ---------- */
@@ -196,14 +176,32 @@ dl.kv dd{word-break:break-word}
 .gate p{margin-top:6px; color:var(--text-sub); font-size:13.5px}
 .gate input{margin-top:18px; width:100%; height:44px; padding:0 14px; border:1px solid var(--line); border-radius:10px; font-size:15px; letter-spacing:.08em}
 .gate input:focus{outline:0; border-color:var(--accent)}
-.gate .btn{margin-top:14px; width:100%}
+.gate .btn{margin-top:14px; width:100%; height:44px}
 .gate .err{margin-top:10px; font-size:13px; color:var(--hot); min-height:1.6em}
-
-.banner{margin-top:16px; padding:12px 16px; border-radius:var(--r-md); background:var(--warm-soft); color:#7A5413; font-size:13px; display:flex; gap:10px; align-items:flex-start}
-.banner .ico{color:var(--warm); margin-top:1px}
 
 .toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:80; transform:translate(-50%,10px); opacity:0; pointer-events:none; padding:11px 18px; border-radius:999px; background:var(--ink); color:#fff; font-size:13.5px; box-shadow:var(--shadow-lg); transition:opacity .2s, transform .3s var(--ease)}
 .toast.on{opacity:1; transform:translate(-50%,0)}
+
+/* ---------- スマホ ---------- */
+@media (max-width:760px){
+  .top{gap:8px}
+  .top nav{margin-left:4px}
+  .top nav button{padding:0 10px}
+  .brand b,.brand .tag,.mode .full{display:none}
+  .kpis{grid-template-columns:repeat(3,1fr); gap:8px}
+  .kpi{padding:10px 12px} .kpi b{font-size:20px} .kpi span{font-size:11px}
+  .page-head p{display:none}
+  .toolbar .select{flex:1 1 140px}
+  .count{flex-basis:100%; margin-left:0}
+  .table-wrap{background:none; border:0; overflow:visible}
+  table,tbody{display:block} thead{display:none}
+  tbody tr{display:grid; grid-template-columns:1fr auto; gap:6px 10px; padding:14px; margin-bottom:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md)}
+  tbody td{padding:0; border:0}
+  tbody td.c-main{grid-column:1/2} tbody td.c-side{grid-column:2/3; justify-self:end} tbody td.c-full{grid-column:1/-1}
+  .form{grid-template-columns:1fr}
+  dl.kv{grid-template-columns:90px 1fr}
+  .d-head,.d-body,.stepper{padding-inline:16px}
+}
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.01ms!important; transition-duration:.01ms!important} }
 </style>
 </head>
@@ -214,12 +212,11 @@ dl.kv dd{word-break:break-word}
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v3.5L4 16h16l-2-3.5V9a6 6 0 0 0-6-6Z"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></symbol>
-  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/></symbol>
-  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6Z"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
-  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></symbol>
-  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></symbol>
+  <symbol id="i-case" viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12h17"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3.5h9l3.5 3.5v13.5H6Z"/><path d="M9 11h7M9 14.5h7M9 18h4"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol>
 </svg>
@@ -229,20 +226,23 @@ dl.kv dd{word-break:break-word}
     <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#8C6E4A"/><path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/></svg>
     <b>MANGIRO</b><span class="tag">CRM</span>
   </a>
-  <nav aria-label="メニュー"><a href="crm.html" aria-current="page">リード</a></nav>
+  <nav aria-label="メニュー" id="nav" hidden>
+    <button type="button" data-view="opps" aria-current="page">案件</button>
+    <button type="button" data-view="tasks">タスク<span class="cnt" id="taskCnt" hidden></span></button>
+  </nav>
   <div class="right">
     <span class="mode" id="mode" hidden><i></i><span></span></span>
+    <button class="icon-btn" id="bell" type="button" title="通知" aria-label="通知" hidden><svg class="ico"><use href="#i-bell"/></svg><span class="dot" id="bellDot" hidden></span></button>
     <button class="icon-btn" id="reload" type="button" title="再読み込み" aria-label="再読み込み" hidden><svg class="ico"><use href="#i-refresh"/></svg></button>
     <button class="icon-btn" id="logout" type="button" title="ログアウト" aria-label="ログアウト" hidden><svg class="ico"><use href="#i-logout"/></svg></button>
-    <a class="site-link" href="index.html">サイトに戻る →</a>
   </div>
+  <div class="notif" id="notif" hidden></div>
 </header>
 
-<!-- 閲覧コード -->
 <section class="gate" id="gate" hidden>
   <form id="gateForm">
     <h1>担当者ログイン</h1>
-    <p>リードには個人情報が含まれます。共有された閲覧コードを入力してください。</p>
+    <p>顧客の個人情報が含まれます。共有された閲覧コードを入力してください。</p>
     <label class="sr-only" for="code">閲覧コード</label>
     <input id="code" type="password" autocomplete="current-password" placeholder="閲覧コード" required>
     <button class="btn btn-accent" type="submit">ログイン</button>
@@ -252,44 +252,36 @@ dl.kv dd{word-break:break-word}
 
 <main id="app" hidden>
   <div class="page-head">
-    <div>
-      <h1>リード管理</h1>
-      <p>MANGIRO AI チャットで登録されたお客様。評価と面談の状況は AI が更新し、担当者がここで確認・修正します。</p>
+    <div><h1 id="title">案件</h1><p id="lead"></p></div>
+    <span class="sub num" id="updated"></span>
+  </div>
+  <div class="banner" id="demoBanner" hidden><svg class="ico"><use href="#i-info"/></svg><span>CRM の接続先が設定されていないため、<b>サンプルデータ</b>を表示しています。変更はこのブラウザ内だけに反映されます。</span></div>
+
+  <section id="vOpps">
+    <div class="kpis" id="kpis"></div>
+    <div class="toolbar">
+      <label class="search"><svg class="ico"><use href="#i-search"/></svg><input id="q" type="search" placeholder="お名前・メール・電話・物件番号・備考で検索" aria-label="検索"></label>
+      <select class="select" id="fStage" aria-label="フェーズ"></select>
+      <select class="select" id="fCat" aria-label="種別"><option value="">種別：すべて</option><option>投資用</option><option>自己居住用</option><option>セカンドハウス</option></select>
+      <select class="select" id="sort" aria-label="並び順"><option value="updated">更新が新しい順</option><option value="created">登録が新しい順</option><option value="close">完了予定日が近い順</option><option value="rating">評価が高い順</option></select>
+      <span class="count num" id="count"></span>
     </div>
-    <span class="updated num" id="updated"></span>
-  </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>案件名・顧客</th><th>評価</th><th>フェーズ</th><th class="hide-md">種別</th><th class="hide-md">完了予定日</th><th class="hide-md">担当者</th><th>タスク</th></tr></thead><tbody id="rows"></tbody></table>
+      <div class="empty-row" id="empty" hidden>条件に合う案件はありません。</div>
+    </div>
+  </section>
 
-  <div class="banner" id="demoBanner" hidden>
-    <svg class="ico"><use href="#i-info"/></svg>
-    <span>CRM の接続先が設定されていないため、<b>サンプルデータ</b>を表示しています。変更はこのブラウザ内だけに反映され、保存されません。</span>
-  </div>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="toolbar">
-    <label class="search"><svg class="ico"><use href="#i-search"/></svg><input id="q" type="search" placeholder="氏名・メール・電話・エリア・物件番号で検索" aria-label="検索"></label>
-    <select class="select" id="fMeet" aria-label="面談の状況">
-      <option value="">面談：すべて</option><option>未案内</option><option>希望</option><option>日程確定</option><option>辞退</option>
-    </select>
-    <select class="select" id="fTiming" aria-label="購入時期"><option value="">購入時期：すべて</option></select>
-    <select class="select" id="sort" aria-label="並び順">
-      <option value="updated">更新が新しい順</option>
-      <option value="created">登録が新しい順</option>
-      <option value="rating">評価が高い順</option>
-      <option value="views">閲覧が多い順</option>
-    </select>
-    <span class="count num" id="count"></span>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>お客様</th><th>評価</th><th>面談</th><th class="hide-md">購入時期</th><th>希望条件</th><th>関心の高い物件</th><th class="hide-md">登録日</th>
-      </tr></thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <div class="empty" id="empty" hidden>条件に合うリードはありません。</div>
-  </div>
+  <section id="vTasks" hidden>
+    <div class="toolbar">
+      <select class="select" id="fTask" aria-label="状態"><option value="未着手">未着手</option><option value="完了">完了</option><option value="">すべて</option></select>
+      <span class="count num" id="tCount"></span>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>件名</th><th>案件</th><th>期日</th><th class="hide-md">優先度</th><th class="hide-md">担当</th><th>状態</th></tr></thead><tbody id="tRows"></tbody></table>
+      <div class="empty-row" id="tEmpty" hidden>タスクはありません。</div>
+    </div>
+  </section>
 </main>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -297,372 +289,348 @@ dl.kv dd{word-break:break-word}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ============================================================
-   データの取得
-   /api/crm の応答で表示モードを決める:
-     200            → ライブ（Google Sheets / 本番は Salesforce）
-     401            → 閲覧コードの入力画面
-     503・404・通信不可 → サンプルデータ（デモ）
-   ============================================================ */
 const API = '/api/crm';
 const CODE_KEY = 'mangiro-crm:code';
-let MODE = 'demo';
-let LEADS = [];
-let ANON = 0;
+const STAGES = ['1.条件のヒアリング','2.物件検索','3.内見','4.買付','5.ローン事前審査','6.売買契約締結','7.ローン本審査','8.決済、引渡し','9.手数料入金','10.クローズ済み'];
+const CLOSED = STAGES[9];
+const RANK = { Hot:3, Warm:2, Cool:1 };
+const LEAD = {
+  opps:'MANGIRO AI チャットの登録フォームから作られた案件です。フェーズの進行と成約情報は担当者が入力します。',
+  tasks:'面談・内見のご希望が入ると、AI がタスクを作って担当者に通知します。',
+};
+let MODE = 'demo', DATA = { opportunities:[], tasks:[], notifications:[], notifications_seen:'' };
+let view = 'opps', selected = null;
 
 const $ = (s, r = document) => r.querySelector(s);
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const getCode = () => { try { return sessionStorage.getItem(CODE_KEY) || ''; } catch { return ''; } };
 const setCode = (v) => { try { v ? sessionStorage.setItem(CODE_KEY, v) : sessionStorage.removeItem(CODE_KEY); } catch {} };
-
 async function call(operation, request = {}, code = getCode()) {
-  let res;
   try {
-    res = await fetch(API, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-CRM-Code':code }, body:JSON.stringify({ operation, request }) });
+    const r = await fetch(API, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-CRM-Code':code }, body:JSON.stringify({ operation, request }) });
+    let data = null; try { data = await r.json(); } catch {}
+    return { status:r.status, data };
   } catch { return { status:0, data:null }; }
-  let data = null;
-  try { data = await res.json(); } catch {}
-  return { status:res.status, data };
 }
+
+/* ---------------- 表示の部品 ---------------- */
+const jstNow = () => new Date().toLocaleString('sv-SE', { timeZone:'Asia/Tokyo' }).replace(' ', 'T');
+const dt = (v, t) => { if (!v) return ''; const s = String(v); return t ? s.slice(0, 16).replace('T', ' ') : s.slice(0, 10); };
+const initials = (n) => { const s = String(n || '').replace(/^(Mr|Mrs|Ms|Miss|Dr)\.?\s+/i, '').trim(); if (!s) return '?'; const p = s.split(/\s+/); return /^[A-Za-z]/.test(s) ? (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase() : s[0]; };
+const rating = (r, by) => r ? `<span class="badge r-${esc(r)}">${esc(r)}</span>${by === 'agent' ? '<span class="by">担当者</span>' : ''}` : '<span class="badge r-none">未評価</span>';
+const stage = (s) => { const i = Math.max(0, STAGES.indexOf(s)); return `<span class="stage${s === CLOSED ? ' closed' : ''}"><span class="bar"><i style="width:${(i + 1) * 10}%"></i></span>${esc(s)}</span>`; };
 
 /* ---------------- サンプルデータ（接続先が未設定のとき） ---------------- */
 function demoData() {
-  // h が大きいほど新しい（その日の中での時刻のつもり）。表示は日本時間
-  const d = (days, h = 10) => new Date(Date.now() - days * 864e5 - (24 - h) * 36e5).toLocaleString('sv-SE', { timeZone:'Asia/Tokyo' }).replace(' ', 'T');
-  const L = (o) => ({ phase:'1.条件のヒアリング', lead_source:'MANGIRO AI チャット', granted:true, consent_email:true, owner:'', meeting_contact_method:'', meeting_time_pref:'', meeting_summary:'', hearing_notes:'', rating_reasons:'', pref_area_min_sqm:'', pref_walk_max:'', invest_goal:'', ...o, lead_key:o.email, opportunity_name:o.account_name + '-' });
-  const leads = [
-    L({ account_name:'Ryan Tan', email:'ryan.tan@example.com', phone:'+65-9000-0001', user_key:'u-ryan', created_at:d(0, 9), updated_at:d(0, 15),
-        rating:'HOT', rating_set_by:'ai', rating_reasons:'購入時期3ヶ月以内・面談希望・ローン利用', purchase_timing:'3ヶ月以内',
-        pref_ward:'江戸川区', pref_budget_max_yen:50000000, pref_layout:'2LDK', pref_walk_max:7, purchase_purpose:'投資', purchase_financing:'ローン', invest_goal:'利回り4%・保有10年',
-        meeting_status:'希望', meeting_contact_method:'WhatsApp', meeting_time_pref:'平日19時以降（SGT）',
-        meeting_summary:'【面談前サマリー】Ryan様（英語）／HOT／投資・利回り4%・保有10年\n・江戸川区で5,000万円以内の2LDK、駅徒歩7分以内\n・ローン利用 → 在留資格・借入条件は面談で確認\n・最も関心の高い物件：No.100137656684（質問3回）',
-        hearing_notes:'ペット可希望 / 西葛西・葛西エリアを優先', viewed_properties:'100137656684,100138744472,100140017182', top_property:'100137656684', viewed_count:3, view_total:6, question_total:4 }),
-    L({ account_name:'王 雅琳', email:'yalin.wang@example.com', phone:'+86-138-0000-0002', user_key:'u-wang', created_at:d(1, 21), updated_at:d(0, 11),
-        rating:'WARM', rating_set_by:'ai', rating_reasons:'購入時期6ヶ月以内・詳細3件以上', purchase_timing:'6ヶ月以内',
-        pref_ward:'荒川区', pref_budget_max_yen:60000000, pref_layout:'2LDK', purchase_purpose:'自己居住', purchase_financing:'現金',
-        meeting_status:'未案内', viewed_properties:'100139922105,100138643238,100140010563,100137001420', top_property:'100139922105', viewed_count:4, view_total:5, question_total:2 }),
-    L({ account_name:'Kim Minjun', email:'minjun.kim@example.com', phone:'+82-10-0000-0003', user_key:'u-kim', created_at:d(3, 14), updated_at:d(1, 10),
-        rating:'HOT', rating_set_by:'agent', rating_reasons:'面談で予算・時期を確認済み', purchase_timing:'3ヶ月以内',
-        pref_ward:'江戸川区', pref_budget_max_yen:45000000, pref_layout:'1LDK', purchase_purpose:'投資', purchase_financing:'ローン', invest_goal:'賃貸運用',
-        meeting_status:'日程確定', meeting_contact_method:'Zoom', meeting_time_pref:'10/24 18:00（JST）', owner:'佐藤',
-        meeting_summary:'【面談前サマリー】Kim様（英語・韓国語）／投資・賃貸運用／ローン利用', viewed_properties:'100138744472,100141200331', top_property:'100138744472', viewed_count:2, view_total:4, question_total:3 }),
-    L({ account_name:'Sarah Lee', email:'sarah.lee@example.com', phone:'+1-415-000-0004', user_key:'u-sarah', created_at:d(4, 3), updated_at:d(2, 3),
-        rating:'COOL', rating_set_by:'ai', rating_reasons:'購入時期未定', purchase_timing:'1年以上先',
-        pref_ward:'江戸川区', pref_budget_max_yen:35000000, pref_layout:'1K', purchase_purpose:'投資', purchase_financing:'現金',
-        meeting_status:'辞退', viewed_properties:'100140900164', top_property:'100140900164', viewed_count:1, view_total:2, question_total:1 }),
-    L({ account_name:'Nguyen Van An', email:'an.nguyen@example.com', phone:'+84-90-000-0005', user_key:'u-nguyen', created_at:d(5, 12), updated_at:d(5, 13),
-        rating:'WARM', rating_set_by:'ai', rating_reasons:'費用・ローンの質問あり', purchase_timing:'6ヶ月以内',
-        pref_ward:'荒川区', pref_budget_max_yen:40000000, pref_layout:'2DK', purchase_purpose:'自己居住', purchase_financing:'ローン',
-        meeting_status:'未案内', viewed_properties:'100137944210,100139105587', top_property:'100137944210', viewed_count:2, view_total:3, question_total:2 }),
-    L({ account_name:'Emily Chen', email:'emily.chen@example.com', phone:'+852-0000-0006', user_key:'u-emily', created_at:d(7, 16), updated_at:d(6, 9),
-        rating:'COLD', rating_set_by:'agent', rating_reasons:'観光目的の情報収集（担当者判断）', purchase_timing:'未定',
-        pref_ward:'江戸川区', pref_budget_max_yen:30000000, pref_layout:'1LDK', purchase_purpose:'検討中', purchase_financing:'未定',
-        meeting_status:'辞退', owner:'田中', viewed_properties:'100140017182', top_property:'100140017182', viewed_count:1, view_total:1, question_total:0 }),
-    L({ account_name:'佐々木 翔', email:'sho.sasaki@example.com', phone:'090-0000-0007', user_key:'u-sasaki', created_at:d(8, 20), updated_at:d(3, 20),
-        rating:'WARM', rating_set_by:'ai', rating_reasons:'詳細3件以上・面談に関心', purchase_timing:'6ヶ月以内',
-        pref_ward:'荒川区', pref_budget_max_yen:55000000, pref_layout:'3LDK', purchase_purpose:'自己居住', purchase_financing:'ローン',
-        meeting_status:'希望', meeting_contact_method:'電話', meeting_time_pref:'土日の午前',
-        meeting_summary:'【面談前サマリー】佐々木様／自己居住・家族4人／荒川区で3LDK、学区を重視', viewed_properties:'100141003377,100139922105,100138123004', top_property:'100141003377', viewed_count:3, view_total:5, question_total:3 }),
-    L({ account_name:'Daniel Wong', email:'daniel.wong@example.com', phone:'+60-12-000-0008', user_key:'u-daniel', created_at:d(10, 8), updated_at:d(9, 8),
-        rating:'COOL', rating_set_by:'ai', rating_reasons:'購入時期1年以上先', purchase_timing:'1年以上先',
-        pref_ward:'江戸川区', pref_budget_max_yen:70000000, pref_layout:'2LDK', purchase_purpose:'投資', purchase_financing:'現金',
-        meeting_status:'未案内', viewed_properties:'100138643238', top_property:'100138643238', viewed_count:1, view_total:1, question_total:0 }),
+  const d = (days) => new Date(Date.now() - days * 864e5).toLocaleString('sv-SE', { timeZone:'Asia/Tokyo' }).replace(' ', 'T');
+  const add = (days, m) => { const t = new Date(Date.now() - days * 864e5); t.setMonth(t.getMonth() + m); return t.toISOString().slice(0, 10); };
+  const base = { type:'購入案件依頼', owner:'Tsuyoshi Hikichi', lead_source:'MANGIRO AIチャット', probability:'', property_price:'', expected_yield:'', brokerage_fee:'', payment_date:'', contract_price:'', completed_date:'', contracted_property:'', file_link:'' };
+  const O = (id, days, c, o) => ({ ...base, id, contact_key:c.email.toLowerCase(), contact:c, name:c.name + '-', created_at:d(days), updated_at:d(Math.max(0, days - 1)), rating_set_by:'ai', stage:STAGES[0], ...o });
+  const opps = [
+    O('OPP-DEMO-01', 0, { name:'Mrs. Loh', email:'loh@example.com', phone:'+65 9000 0001' }, { rating:'Hot', category:'投資用', close_date:add(0, 12), open_tasks:1,
+      notes:'【MANGIRO AIチャット】' + d(0).slice(0, 10) + ' 登録\n希望：江戸川区／5,000万円以下／2LDK／60㎡以上／駅徒歩10分以内\n購入時期：1年以内\n目的：投資（利回り4%・10年保有）\n資金計画：ローン\n関心物件：No.100140172305（質問3回）、ほか1件\nヒアリング：築20年以内、浸水想定区域は避けたい\n評価根拠：時期1年以内(1)+予算とエリア(1)+面談希望(1)\n会話言語：EN' }),
+    O('OPP-DEMO-02', 1, { name:'王 雅琳', email:'yalin.wang@example.com', phone:'+86 138 0000 0002' }, { rating:'Warm', category:'自己居住用', close_date:add(1, 6), open_tasks:0,
+      notes:'【MANGIRO AIチャット】' + d(1).slice(0, 10) + ' 登録\n希望：荒川区／6,000万円以下／2LDK\n購入時期：半年以内\n目的：自己居住\n資金計画：現金\n関心物件：No.100139922105（質問2回）、ほか3件\n評価根拠：時期半年以内(1)+詳細3件以上(1)\n会話言語：ZH' }),
+    O('OPP-DEMO-03', 3, { name:'Kim Minjun', email:'minjun.kim@example.com', phone:'+82 10 0000 0003' }, { rating:'Hot', rating_set_by:'agent', stage:STAGES[2], probability:'30', category:'投資用', close_date:add(3, 3), open_tasks:0,
+      notes:'【MANGIRO AIチャット】' + d(3).slice(0, 10) + ' 登録\n希望：江戸川区／4,500万円以下／1LDK\n購入時期：3ヶ月以内\n目的：投資（賃貸運用）\n資金計画：ローン\n関心物件：No.100138744472（質問3回）\n会話言語：EN\n\n【担当者メモ】' + d(2).slice(0, 10) + '\n10/24 内見。ローン事前審査の書類を案内済み' }),
+    O('OPP-DEMO-04', 5, { name:'佐々木 翔', email:'sho.sasaki@example.com', phone:'090-0000-0004' }, { rating:'Warm', category:'自己居住用', close_date:add(5, 12), open_tasks:1,
+      notes:'【MANGIRO AIチャット】' + d(5).slice(0, 10) + ' 登録\n希望：荒川区／5,500万円以下／3R+\n購入時期：1年以内\n目的：自己居住（家族4人）\n資金計画：ローン\nヒアリング：学区を重視\n会話言語：JA' }),
+    O('OPP-DEMO-05', 9, { name:'Sarah Lee', email:'sarah.lee@example.com', phone:'+1 415 000 0005' }, { rating:'Cool', category:'投資用', close_date:add(9, 12), open_tasks:0,
+      notes:'【MANGIRO AIチャット】' + d(9).slice(0, 10) + ' 登録\n希望：江戸川区／3,500万円以下／1R-1DK\n購入時期：まだ決めていない\n目的：投資\n会話言語：EN' }),
+    O('OPP-DEMO-06', 40, { name:'Daniel Wong', email:'daniel.wong@example.com', phone:'+60 12 000 0006' }, { rating:'Hot', rating_set_by:'agent', stage:CLOSED, category:'投資用', close_date:add(40, 3), contract_price:'46800000', completed_date:d(5).slice(0, 10), contracted_property:'No.100137656684', open_tasks:0,
+      notes:'【MANGIRO AIチャット】' + d(40).slice(0, 10) + ' 登録\n購入時期：3ヶ月以内\n目的：投資\n会話言語：EN' }),
   ];
-  return { leads, anonymous_viewers:23, generated_at:new Date().toISOString().slice(0, 19) };
-}
-function demoDetail(lead) {
-  const props = String(lead.viewed_properties || '').split(',').filter(Boolean);
-  const views = props.map((p, i) => ({ property_no:p, view_count:p === lead.top_property ? 3 : 1 + (i % 2), question_count:p === lead.top_property ? Math.max(1, lead.question_total - props.length + 1) : (i % 2), last_viewed_at:lead.updated_at, first_viewed_at:lead.created_at }));
-  const audit = [
-    ...(lead.meeting_status !== '未案内' ? [{ ts:lead.updated_at, operation:'update_lead', detail:JSON.stringify({ changed:['meeting_status', 'meeting_contact_method', 'meeting_time_pref', 'meeting_summary'] }) }] : []),
-    { ts:lead.created_at, operation:'create_lead', detail:JSON.stringify({ created:true, rating:{ rating:lead.rating, reason:'raised' } }) },
-    ...views.map((v) => ({ ts:lead.created_at, operation:'log_property_view', detail:JSON.stringify({ property_no:v.property_no, kind:v.question_count ? 'question' : 'detail' }) })),
+  const tasks = [
+    { id:'TASK-DEMO-1', opp_id:'OPP-DEMO-01', title:'【MANGIRO AIチャット】内見希望 No.100140172305', assignee:'Tsuyoshi Hikichi', due_date:d(0).slice(0, 10), priority:'高', status:'未着手', created_at:d(0),
+      body:'【面談前サマリー】Mrs. Loh（英語）／Hot／投資・利回り4%・10年保有／ローン利用→在留資格は面談で確認\n・No.100140172305 を内見希望（質問3回）\nご連絡：WhatsApp、平日19時以降（日本時間）' },
+    { id:'TASK-DEMO-2', opp_id:'OPP-DEMO-04', title:'【MANGIRO AIチャット】面談希望', assignee:'Tsuyoshi Hikichi', due_date:d(5).slice(0, 10), priority:'高', status:'未着手', created_at:d(5),
+      body:'【面談前サマリー】佐々木様／自己居住・家族4人／荒川区で3LDK、学区を重視\nご連絡：電話、土日の午前' },
+    { id:'TASK-DEMO-3', opp_id:'OPP-DEMO-03', title:'【MANGIRO AIチャット】面談希望', assignee:'Tsuyoshi Hikichi', due_date:d(3).slice(0, 10), priority:'高', status:'完了', created_at:d(3),
+      body:'【面談前サマリー】Kim様（英語・韓国語）／投資・賃貸運用／ローン利用\nご連絡：Zoom、平日夜' },
   ];
-  return { lead, views, audit };
+  const notifications = [
+    { id:'N1', ts:d(0), to:'Tsuyoshi Hikichi', text:'MANGIRO AIチャットから内見のご希望がありました（No.100140172305）。タスクに面談前サマリーがあります。ご連絡：WhatsApp、平日19時以降（日本時間）', opp_id:'OPP-DEMO-01' },
+    { id:'N2', ts:d(5), to:'Tsuyoshi Hikichi', text:'MANGIRO AIチャットから面談のご希望がありました。タスクに面談前サマリーがあります。ご連絡：電話、土日の午前', opp_id:'OPP-DEMO-04' },
+  ];
+  return { opportunities:opps, tasks, notifications, notifications_seen:d(1) };
 }
+const demoAudit = (o) => [
+  ...DATA.tasks.filter((t) => t.opp_id === o.id).map((t) => ({ ts:t.created_at, by:'ai', detail:`${t.title} を作成・${t.assignee} に通知` })),
+  { ts:o.created_at, by:'ai', detail:`新規登録（顧客・案件を作成）・評価 ${o.rating}` },
+];
 
-/* ---------------- 表示用の整形 ---------------- */
-const RANK = { HOT:4, WARM:3, COOL:2, COLD:1 };
-const MEET = ['未案内', '希望', '日程確定', '辞退'];
-const yen = (v) => {
-  const n = Number(v); if (!n) return '';
-  const man = Math.round(n / 10000);
-  return man >= 10000 ? `${Math.floor(man / 10000)}億${man % 10000 ? (man % 10000).toLocaleString() + '万' : ''}円` : `${man.toLocaleString()}万円`;
-};
-const date = (v, withTime) => {
-  if (!v) return '';
-  const s = String(v).replace(' ', 'T');
-  const t = new Date(s.length <= 19 && !/[zZ+]/.test(s) ? s + '+09:00' : s);
-  if (isNaN(t)) return String(v);
-  const o = { timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit' };
-  if (withTime) Object.assign(o, { hour:'2-digit', minute:'2-digit' });
-  return t.toLocaleString('ja-JP', o);
-};
-const ago = (v) => {
-  const s = String(v || '').replace(' ', 'T'); if (!s) return '';
-  const t = new Date(s.length <= 19 && !/[zZ+]/.test(s) ? s + '+09:00' : s);
-  const m = Math.round((Date.now() - t) / 60000);
-  if (isNaN(m)) return '';
-  if (m < 60) return `${Math.max(1, m)}分前`;
-  if (m < 1440) return `${Math.round(m / 60)}時間前`;
-  return `${Math.round(m / 1440)}日前`;
-};
-const initials = (name) => {
-  const s = String(name || '').trim(); if (!s) return '?';
-  const parts = s.split(/\s+/);
-  return /^[A-Za-z]/.test(s) ? (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase() : s[0];
-};
-const ratingBadge = (r, by) => r
-  ? `<span class="badge r-${esc(r)}">${esc(r)}</span>${by === 'agent' ? '<span class="by">担当者</span>' : ''}`
-  : '<span class="badge r-none">未評価</span>';
-const meetPill = (m) => `<span class="pill m-${esc(m || '未案内')}"><i></i>${esc(m || '未案内')}</span>`;
-const cond = (l) => [l.pref_ward, yen(l.pref_budget_max_yen) && yen(l.pref_budget_max_yen) + '以内', l.pref_layout].filter(Boolean).join('・');
-
-/* ---------------- 一覧 ---------------- */
-const filter = { rating:'', meet:'', timing:'', q:'' };
+/* ---------------- 案件一覧 ---------------- */
+const F = { kpi:'', stage:'', cat:'', q:'' };
 function renderKpis() {
-  const c = (f) => LEADS.filter(f).length;
+  const all = DATA.opportunities, open = all.filter((o) => o.stage !== CLOSED);
   const items = [
-    { k:'', label:'リード総数', v:LEADS.length },
-    { k:'HOT', label:'HOT', v:c((l) => l.rating === 'HOT'), color:'var(--hot)' },
-    { k:'WARM', label:'WARM', v:c((l) => l.rating === 'WARM'), color:'var(--warm)' },
-    { k:'COOL', label:'COOL', v:c((l) => l.rating === 'COOL'), color:'var(--cool)' },
-    { k:'COLD', label:'COLD', v:c((l) => l.rating === 'COLD'), color:'var(--cold)' },
-    { k:'meet', label:'面談 希望・確定', v:c((l) => l.meeting_status === '希望' || l.meeting_status === '日程確定'), color:'var(--ok)' },
+    { k:'open', label:'進行中の案件', v:open.length },
+    { k:'Hot', label:'Hot', v:open.filter((o) => o.rating === 'Hot').length, c:'var(--hot)' },
+    { k:'Warm', label:'Warm', v:open.filter((o) => o.rating === 'Warm').length, c:'var(--warm)' },
+    { k:'Cool', label:'Cool', v:open.filter((o) => o.rating === 'Cool').length, c:'var(--cool)' },
+    { k:'task', label:'未完了タスクあり', v:open.filter((o) => o.open_tasks > 0).length, c:'var(--ok)' },
+    { k:'closed', label:'クローズ済み', v:all.length - open.length, c:'var(--cold)' },
   ];
-  $('#kpis').innerHTML = items.map((i) =>
-    `<button type="button" class="kpi" data-k="${i.k}" aria-pressed="${(i.k === 'meet' ? filter.meet === '__meet' : filter.rating === i.k && i.k !== '') || (i.k === '' && !filter.rating && filter.meet !== '__meet')}">
-       <span>${i.color ? `<i style="background:${i.color}"></i>` : ''}${esc(i.label)}</span><b class="num">${i.v}</b></button>`).join('')
-    + `<div class="kpi"><span>未登録の閲覧者</span><b class="num">${ANON}<small>人</small></b></div>`;
+  $('#kpis').innerHTML = items.map((i) => `<button type="button" class="kpi" data-k="${i.k}" aria-pressed="${F.kpi === i.k}"><span>${i.c ? `<i style="background:${i.c}"></i>` : ''}${esc(i.label)}</span><b class="num">${i.v}</b></button>`).join('');
 }
-function visible() {
-  const q = filter.q.trim().toLowerCase();
-  let list = LEADS.filter((l) =>
-    (!filter.rating || l.rating === filter.rating) &&
-    (!filter.meet || (filter.meet === '__meet' ? ['希望', '日程確定'].includes(l.meeting_status) : (l.meeting_status || '未案内') === filter.meet)) &&
-    (!filter.timing || l.purchase_timing === filter.timing) &&
-    (!q || [l.account_name, l.email, l.phone, l.pref_ward, l.pref_layout, l.viewed_properties, l.owner].join(' ').toLowerCase().includes(q)));
-  const s = $('#sort').value;
+function visibleOpps() {
+  const q = F.q.trim().toLowerCase();
+  const L = DATA.opportunities.filter((o) => {
+    const closed = o.stage === CLOSED;
+    if (F.kpi === 'open' && closed) return false;
+    if (['Hot', 'Warm', 'Cool'].includes(F.kpi) && (o.rating !== F.kpi || closed)) return false;
+    if (F.kpi === 'task' && !(o.open_tasks > 0 && !closed)) return false;
+    if (F.kpi === 'closed' && !closed) return false;
+    if (F.stage && o.stage !== F.stage) return false;
+    if (F.cat && o.category !== F.cat) return false;
+    const c = o.contact || {};
+    if (q && ![o.name, c.name, c.email, c.phone, o.notes, o.contracted_property].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
   const by = {
     updated:(a, b) => String(b.updated_at).localeCompare(String(a.updated_at)),
     created:(a, b) => String(b.created_at).localeCompare(String(a.created_at)),
-    rating:(a, b) => (RANK[b.rating] || 0) - (RANK[a.rating] || 0) || String(b.updated_at).localeCompare(String(a.updated_at)),
-    views:(a, b) => (Number(b.view_total) || 0) - (Number(a.view_total) || 0),
-  }[s];
-  return list.slice().sort(by);
+    close:(a, b) => String(a.close_date || '9').localeCompare(String(b.close_date || '9')),
+    rating:(a, b) => (RANK[b.rating] || 0) - (RANK[a.rating] || 0),
+  }[$('#sort').value];
+  return L.sort(by);
 }
-let selected = null;
-function renderRows() {
-  const list = visible();
-  $('#count').textContent = `${list.length} / ${LEADS.length} 件`;
-  $('#empty').hidden = list.length > 0;
-  $('#rows').innerHTML = list.map((l) => `
-    <tr data-key="${esc(l.lead_key)}" tabindex="0" aria-selected="${l.lead_key === selected}">
-      <td class="c-who"><div class="who"><span class="avatar">${esc(initials(l.account_name))}</span><div><b>${esc(l.account_name)}</b><span>${esc(l.email)}</span></div></div></td>
-      <td class="c-rating">${ratingBadge(l.rating, l.rating_set_by)}</td>
-      <td class="c-meet">${meetPill(l.meeting_status)}${l.meeting_contact_method ? `<div class="sub">${esc(l.meeting_contact_method)}</div>` : ''}</td>
-      <td class="hide-md">${esc(l.purchase_timing || '—')}</td>
-      <td class="c-cond"><span class="cond">${esc(cond(l) || '—')}</span><div class="sub">${esc([l.purchase_purpose, l.purchase_financing].filter(Boolean).join('・'))}</div></td>
-      <td class="c-prop">${l.top_property ? `<span class="prop">No.${esc(l.top_property)}</span>` : '—'}<div class="sub">閲覧 ${Number(l.viewed_count) || 0}件・質問 ${Number(l.question_total) || 0}回</div></td>
-      <td class="c-date hide-md num">${esc(date(l.created_at))}<div class="sub">更新 ${esc(ago(l.updated_at))}</div></td>
+function renderOpps() {
+  renderKpis();
+  const L = visibleOpps();
+  $('#count').textContent = `${L.length} / ${DATA.opportunities.length} 件`;
+  $('#empty').hidden = L.length > 0;
+  $('#rows').innerHTML = L.map((o) => `
+    <tr data-opp="${esc(o.id)}" tabindex="0" aria-selected="${o.id === selected}">
+      <td class="c-main"><div class="who"><span class="avatar">${esc(initials(o.contact && o.contact.name))}</span><div><b>${esc(o.name)}</b><span>${esc(o.contact && o.contact.email)}</span></div></div></td>
+      <td class="c-side">${rating(o.rating, o.rating_set_by)}</td>
+      <td class="c-full">${stage(o.stage)}</td>
+      <td class="hide-md">${esc(o.category || '—')}</td>
+      <td class="hide-md num">${esc(o.close_date || '—')}</td>
+      <td class="hide-md">${esc(o.owner)}</td>
+      <td class="c-full">${o.open_tasks ? `<span class="pill hot">未完了 ${o.open_tasks}</span>` : '<span class="sub">—</span>'}</td>
     </tr>`).join('');
 }
-function renderAll() {
-  renderKpis(); renderRows();
-  const timings = [...new Set(LEADS.map((l) => l.purchase_timing).filter(Boolean))];
-  const cur = $('#fTiming').value;
-  $('#fTiming').innerHTML = '<option value="">購入時期：すべて</option>' + timings.map((t) => `<option ${t === cur ? 'selected' : ''}>${esc(t)}</option>`).join('');
+
+/* ---------------- タスク一覧 ---------------- */
+function renderTasks() {
+  const f = $('#fTask').value;
+  const L = DATA.tasks.filter((t) => !f || t.status === f);
+  const open = DATA.tasks.filter((t) => t.status !== '完了').length;
+  $('#taskCnt').hidden = !open; $('#taskCnt').textContent = open;
+  $('#tCount').textContent = `${L.length} 件`;
+  $('#tEmpty').hidden = L.length > 0;
+  const name = (id) => (DATA.opportunities.find((o) => o.id === id) || {}).name || id;
+  $('#tRows').innerHTML = L.map((t) => `
+    <tr data-opp="${esc(t.opp_id)}" tabindex="0">
+      <td class="c-main"><b>${esc(t.title)}</b></td>
+      <td class="c-side">${esc(name(t.opp_id))}</td>
+      <td class="c-full num">${esc(t.due_date)}</td>
+      <td class="hide-md">${esc(t.priority)}</td>
+      <td class="hide-md">${esc(t.assignee)}</td>
+      <td class="c-full"><span class="pill ${t.status === '完了' ? 'done' : 'hot'}">${esc(t.status)}</span></td>
+    </tr>`).join('');
 }
 
-/* ---------------- 詳細 ---------------- */
-const OPLABEL = { create_lead:'リード登録', update_lead:'情報の更新', log_property_view:'物件の閲覧', conv_state:'会話の状態' };
-function auditText(a) {
-  let d = {}; try { d = JSON.parse(a.detail || '{}'); } catch {}
-  if (a.operation === 'log_property_view') return `No.${d.property_no || ''}${d.kind === 'question' ? ' について質問' : ' の詳細を表示'}`;
-  if (a.operation === 'create_lead') return `${d.created === false ? '再登録（同じメール）' : 'フォームから登録'}${d.rating && d.rating.rating ? `・評価 ${d.rating.rating}` : ''}`;
-  if (a.operation === 'update_lead') return (d.changed && d.changed.length ? '変更：' + d.changed.map((c) => FIELD[c] || c).join('・') : '変更なし');
-  return '';
+/* ---------------- 通知 ---------------- */
+const isUnread = (n) => String(n.ts) > String(DATA.notifications_seen || '');
+function renderBell() {
+  const unread = DATA.notifications.filter(isUnread).length;
+  $('#bellDot').hidden = !unread; $('#bellDot').textContent = unread;
+  $('#notif').innerHTML = `<h4>担当者への通知${unread ? '<button type="button" id="markRead">すべて既読にする</button>' : ''}</h4>` +
+    (DATA.notifications.length ? '<ul>' + DATA.notifications.map((n) =>
+      `<li class="${isUnread(n) ? 'unread' : ''}" data-opp="${esc(n.opp_id)}">${esc(n.text)}<div class="sub num">${esc(dt(n.ts, true))}・宛先 ${esc(n.to || 'Tsuyoshi Hikichi')}${n.email_sent ? '・メール送信済み' : ''}</div></li>`).join('') + '</ul>'
+      : '<div class="empty">通知はありません</div>');
 }
-const FIELD = { meeting_status:'面談の状況', meeting_contact_method:'連絡方法', meeting_time_pref:'希望時間帯', meeting_summary:'面談前サマリー', rating:'評価', owner:'担当者', hearing_notes:'ヒアリングメモ' };
+async function markRead() {
+  if (MODE === 'live') await call('mark_notifications_read');
+  DATA.notifications_seen = jstNow(); renderBell();
+}
 
-async function openLead(key) {
-  selected = key; renderRows();
-  const base = LEADS.find((l) => l.lead_key === key);
-  $('#drawer').innerHTML = `<div class="loading">読み込み中…</div>`;
-  $('#drawer').hidden = false; $('#scrim').hidden = false;
-  let detail;
-  if (MODE === 'demo') detail = demoDetail(base);
-  else {
-    const r = await call('get_lead', { email:key });
+/* ---------------- 案件の詳細 ---------------- */
+async function openOpp(id) {
+  selected = id; $('#notif').hidden = true;
+  if (view === 'opps') renderOpps();
+  $('#drawer').innerHTML = '<div class="loading">読み込み中…</div>'; $('#drawer').hidden = false; $('#scrim').hidden = false;
+  let d;
+  if (MODE === 'demo') {
+    const o = DATA.opportunities.find((x) => x.id === id);
+    d = { opportunity:o, contact:o.contact, tasks:DATA.tasks.filter((t) => t.opp_id === id), other_opportunities:[], audit:demoAudit(o) };
+  } else {
+    const r = await call('get_opportunity', { id });
     if (r.status === 401) return gate();
-    detail = r.data && r.data.ok ? r.data : { lead:base, views:[], audit:[] };
-    detail.lead = { ...base, ...detail.lead };
+    if (!r.data || !r.data.ok) { $('#drawer').innerHTML = '<div class="loading">読み込めませんでした</div>'; return; }
+    d = r.data;
   }
-  renderDrawer(detail);
+  renderDrawer(d);
 }
-function kv(rows) {
-  return '<dl class="kv">' + rows.filter((r) => r[1] !== '' && r[1] != null).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('') + '</dl>';
-}
-function renderDrawer({ lead:l, views = [], audit = [] }) {
-  const top = l.top_property;
+const opt = (list, cur, empty) => (empty ? `<option value="">${empty}</option>` : '') + list.map((v) => `<option ${v === cur ? 'selected' : ''}>${esc(v)}</option>`).join('');
+function renderDrawer({ opportunity:o, contact:c = {}, tasks = [], other_opportunities:others = [], audit = [] }) {
+  const si = STAGES.indexOf(o.stage);
   $('#drawer').innerHTML = `
     <div class="d-head">
-      <span class="avatar">${esc(initials(l.account_name))}</span>
-      <div>
-        <h2 id="dName">${esc(l.account_name)}</h2>
-        <div class="meta">${ratingBadge(l.rating, l.rating_set_by)}${meetPill(l.meeting_status)}${l.owner ? `<span class="pill">担当：${esc(l.owner)}</span>` : ''}</div>
-      </div>
+      <span class="avatar">${esc(initials(c.name))}</span>
+      <div><h2 id="dName">${esc(o.name)}</h2>
+        <div class="meta">${rating(o.rating, o.rating_set_by)}<span class="pill">${esc(o.stage)}</span>${o.category ? `<span class="pill">${esc(o.category)}</span>` : ''}</div></div>
       <button class="icon-btn close" type="button" data-close aria-label="閉じる"><svg class="ico"><use href="#i-close"/></svg></button>
     </div>
+    <div class="stepper" title="${esc(o.stage)}">${STAGES.map((s, i) => `<span class="${i <= si ? 'on' : ''}" title="${esc(s)}"></span>`).join('')}</div>
     <div class="d-body">
-      <section class="sec"><h3><svg class="ico"><use href="#i-user"/></svg>連絡先</h3>${kv([
-        ['メール', `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>`],
-        ['電話', esc(l.phone)],
-        ['メール配信', l.consent_email ? '同意あり' : '同意なし'],
-        ['登録', esc(date(l.created_at, true))],
-        ['最終更新', esc(date(l.updated_at, true))],
-        ['流入元', esc(l.lead_source)],
-      ])}</section>
-
-      <section class="sec"><h3><svg class="ico"><use href="#i-home"/></svg>購入の条件</h3>${kv([
-        ['購入時期', esc(l.purchase_timing)],
-        ['エリア', esc(l.pref_ward)],
-        ['予算（上限）', esc(yen(l.pref_budget_max_yen))],
-        ['間取り', esc(l.pref_layout)],
-        ['面積', l.pref_area_min_sqm ? esc(l.pref_area_min_sqm) + '㎡以上' : ''],
-        ['駅徒歩', l.pref_walk_max ? esc(l.pref_walk_max) + '分以内' : ''],
-        ['目的', esc(l.purchase_purpose)],
-        ['資金計画', esc(l.purchase_financing)],
-        ['投資目標', esc(l.invest_goal)],
-        ['ヒアリングメモ', esc(l.hearing_notes)],
-      ])}</section>
-
-      <section class="sec"><h3><svg class="ico"><use href="#i-star"/></svg>評価</h3>${kv([
-        ['評価', ratingBadge(l.rating, l.rating_set_by)],
-        ['設定者', l.rating_set_by === 'agent' ? '担当者（AI は上書きしません）' : (l.rating ? 'AI' : '')],
-        ['根拠', esc(l.rating_reasons)],
-      ])}</section>
-
-      <section class="sec"><h3><svg class="ico"><use href="#i-cal"/></svg>面談</h3>${kv([
-        ['状況', meetPill(l.meeting_status)],
-        ['連絡方法', esc(l.meeting_contact_method)],
-        ['希望時間帯', esc(l.meeting_time_pref)],
-      ])}${l.meeting_summary ? `<div class="summary">${esc(l.meeting_summary)}</div>` : ''}</section>
-
-      <section class="sec"><h3><svg class="ico"><use href="#i-search"/></svg>閲覧した物件</h3>
-        ${views.length ? `<table class="views"><thead><tr><th>物件番号</th><th>閲覧</th><th>質問</th><th>最終閲覧</th></tr></thead><tbody>${views.map((v) =>
-          `<tr><td class="prop">${v.property_no === top ? '<span class="star">★ </span>' : ''}No.${esc(v.property_no)}</td><td class="num">${Number(v.view_count) || 0}</td><td class="num">${Number(v.question_count) || 0}</td><td class="num sub">${esc(date(v.last_viewed_at))}</td></tr>`).join('')}</tbody></table>
-          <p class="sub" style="margin-top:8px">★ は最も関心の高い物件（質問回数が最多。同数なら最後に見た物件）</p>`
-          : `<p class="sub" style="margin-top:8px">${l.viewed_properties ? esc(l.viewed_properties) : '記録はありません'}</p>`}
+      <section class="sec"><h3><svg class="ico"><use href="#i-user"/></svg>顧客</h3>
+        <dl class="kv"><dt>お名前</dt><dd>${esc(c.name)}</dd><dt>メール</dt><dd><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></dd><dt>電話</dt><dd>${esc(c.phone || '—')}</dd><dt>登録</dt><dd class="num">${esc(dt(o.created_at, true))}</dd></dl>
+        ${others.length ? `<p class="sub" style="margin-top:10px">同じ顧客の他の案件：${others.map((x) => `<a href="#" data-goto="${esc(x.id)}">${esc(x.stage)}（${esc(dt(x.created_at))}）</a>`).join('、')}</p>` : ''}
       </section>
 
-      <section class="sec"><h3><svg class="ico"><use href="#i-edit"/></svg>担当者による更新</h3>
-        <form class="edit" id="editForm">
-          <label>評価<select name="rating">
-            <option value="">変更しない</option>${['HOT', 'WARM', 'COOL', 'COLD'].map((r) => `<option ${r === l.rating ? 'selected' : ''}>${r}</option>`).join('')}
-          </select></label>
-          <label>面談の状況<select name="meeting_status">${MEET.map((m) => `<option ${m === (l.meeting_status || '未案内') ? 'selected' : ''}>${m}</option>`).join('')}</select></label>
-          <label class="full">担当者<input name="owner" value="${esc(l.owner)}" placeholder="例：佐藤"></label>
-          <label class="full">面談前サマリー<textarea name="meeting_summary">${esc(l.meeting_summary)}</textarea></label>
-          <p class="note">ここで変えた評価は「担当者が設定」として保存され、以後 AI からは変更されません（COLD は担当者だけが設定できます）。空欄は既存の値を消しません。</p>
-          <div class="actions"><span class="msg" id="editMsg"></span><button class="btn btn-accent" type="submit">保存</button></div>
+      <section class="sec"><h3><svg class="ico"><use href="#i-task"/></svg>タスク<span class="grow">${tasks.filter((t) => t.status !== '完了').length} 件 未完了</span></h3>
+        ${tasks.length ? tasks.map((t) => `<div class="task"><div class="task-head"><b>${esc(t.title)}</b>
+            <button type="button" class="btn btn-line" data-task="${esc(t.id)}" data-status="${t.status === '完了' ? '未着手' : '完了'}">${t.status === '完了' ? '未着手に戻す' : '完了にする'}</button></div>
+            <div class="sub num">期日 ${esc(t.due_date)}・優先度 ${esc(t.priority)}・${esc(t.assignee)}・${esc(t.status)}</div>
+            <pre>${esc(t.body)}</pre></div>`).join('') : '<p class="sub" style="margin-top:8px">面談・内見のご希望はまだありません</p>'}
+      </section>
+
+      <section class="sec"><h3><svg class="ico"><use href="#i-case"/></svg>案件情報</h3>
+        <form class="form" id="oppForm">
+          <label>案件名<input value="${esc(o.name)}" readonly></label>
+          <label>案件種別<input value="${esc(o.type)}" readonly></label>
+          <label>担当者<input name="owner" value="${esc(o.owner)}"></label>
+          <label>リードソース<input value="${esc(o.lead_source)}" readonly></label>
+          <label>フェーズ<select name="stage">${opt(STAGES, o.stage)}</select></label>
+          <label>確度（%）<input name="probability" inputmode="numeric" value="${esc(o.probability)}" placeholder="フェーズの既定値"></label>
+          <label>完了予定日<input name="close_date" type="date" value="${esc(o.close_date)}"></label>
+          <label>リード評価<select name="rating">${opt(['Hot', 'Warm', 'Cool'], o.rating, '未評価')}</select></label>
+          <label>種別<select name="category">${opt(['投資用', '自己居住用', 'セカンドハウス'], o.category, '—')}</select></label>
+          <span class="group">担当者が入力</span>
+          <label>物件価格<input name="property_price" inputmode="numeric" value="${esc(o.property_price)}" placeholder="円"></label>
+          <label>期待収益<input name="expected_yield" value="${esc(o.expected_yield)}" placeholder="例：4.2%"></label>
+          <label>仲介手数料<input name="brokerage_fee" inputmode="numeric" value="${esc(o.brokerage_fee)}" placeholder="円"></label>
+          <label>入金日<input name="payment_date" type="date" value="${esc(o.payment_date)}"></label>
+          <label>成約価格<input name="contract_price" inputmode="numeric" value="${esc(o.contract_price)}" placeholder="円"></label>
+          <label>完了日<input name="completed_date" type="date" value="${esc(o.completed_date)}"></label>
+          <label class="full">成約物件名<input name="contracted_property" value="${esc(o.contracted_property)}"></label>
+          <label class="full">ファイルリンク<input name="file_link" type="url" value="${esc(o.file_link)}" placeholder="https://"></label>
+          <p class="sub full">評価を変えると「担当者が設定」になり、以後 AI からは変わりません。フェーズを「10.クローズ済み」にすると、同じメールで再登録されたときは新しい案件が作られます。</p>
+          <div class="actions"><span class="msg" id="oppMsg"></span><button class="btn btn-accent" type="submit">保存</button></div>
         </form>
       </section>
 
-      <section class="sec"><h3><svg class="ico"><use href="#i-clock"/></svg>AI・担当者の対応履歴</h3>
-        ${audit.length ? `<ul class="tl">${audit.map((a) => `<li><b>${esc(OPLABEL[a.operation] || a.operation)}</b> ${esc(auditText(a))}<span class="num">${esc(date(a.ts, true))}</span></li>`).join('')}</ul>` : '<p class="sub" style="margin-top:8px">履歴はありません</p>'}
+      <section class="sec"><h3><svg class="ico"><use href="#i-note"/></svg>備考<span class="grow">AI と担当者の記録（追記のみ）</span></h3>
+        <div class="notes">${esc(o.notes || '（記録なし）')}</div>
+        <form class="form" id="noteForm"><label class="full">メモを追記<textarea name="note" placeholder="例：10/24 内見。ローン事前審査の書類を案内"></textarea></label>
+          <div class="actions"><button class="btn btn-accent" type="submit">追記</button></div></form>
+      </section>
+
+      <section class="sec"><h3><svg class="ico"><use href="#i-clock"/></svg>履歴</h3>
+        ${audit.length ? `<ul class="tl">${audit.map((a) => `<li class="${a.by === 'staff' ? 'staff' : ''}"><b>${a.by === 'staff' ? '担当者' : 'AI'}</b>　${esc(a.detail)}<span class="num">${esc(dt(a.ts, true))}</span></li>`).join('')}</ul>` : '<p class="sub" style="margin-top:8px">履歴はありません</p>'}
       </section>
     </div>`;
-  $('#editForm').addEventListener('submit', (e) => saveLead(e, l));
+  $('#oppForm').addEventListener('submit', (e) => saveOpp(e, o));
+  $('#noteForm').addEventListener('submit', (e) => saveNote(e, o));
   $('.close', $('#drawer')).focus();
 }
-async function saveLead(e, l) {
+async function saveOpp(e, o) {
   e.preventDefault();
-  const f = new FormData(e.target);
-  const req = { email:l.email };
-  for (const k of ['rating', 'meeting_status', 'owner', 'meeting_summary']) {
-    const v = String(f.get(k) || '').trim();
-    const cur = String(l[k] ?? '');
-    if (k === 'rating' ? (v && (v !== l.rating || l.rating_set_by !== 'agent')) : (v && v !== cur)) req[k] = v;
-  }
-  if (Object.keys(req).length === 1) { $('#editMsg').textContent = '変更はありません'; return; }
-  const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true;
+  const f = new FormData(e.target), req = { id:o.id };
+  for (const [k, v] of f.entries()) if (String(v).trim() !== String(o[k] ?? '')) req[k] = String(v).trim();
+  if (Object.keys(req).length === 1) { $('#oppMsg').textContent = '変更はありません'; return; }
+  await commit(o, req, '案件を保存しました');
+}
+async function saveNote(e, o) {
+  e.preventDefault();
+  const note = String(new FormData(e.target).get('note') || '').trim(); if (!note) return;
+  await commit(o, { id:o.id, note }, 'メモを追記しました');
+}
+async function commit(o, req, msg) {
   if (MODE === 'demo') {
-    const lead = LEADS.find((x) => x.lead_key === l.lead_key);
-    Object.assign(lead, req, req.rating ? { rating_set_by:'agent' } : {}, { updated_at:new Date().toISOString().slice(0, 19) });
-    toast('保存しました（サンプルデータ）');
+    const x = DATA.opportunities.find((y) => y.id === o.id);
+    for (const [k, v] of Object.entries(req)) if (k !== 'id' && k !== 'note') x[k] = v;
+    if (req.rating) x.rating_set_by = 'agent';
+    if (req.note) x.notes = (x.notes ? x.notes + '\n\n' : '') + `【担当者メモ】${jstNow().slice(0, 10)}\n${req.note}`;
+    x.updated_at = jstNow();
   } else {
-    const r = await call('update_lead', req);
+    const r = await call('update_opportunity', req);
     if (r.status === 401) return gate();
-    if (!r.data || !r.data.ok) { btn.disabled = false; $('#editMsg').textContent = '保存できませんでした：' + ((r.data && (r.data.message || r.data.error)) || '通信エラー'); return; }
-    toast('CRM に保存しました');
+    if (!r.data || !r.data.ok) { toast('保存できませんでした：' + ((r.data && (r.data.message || r.data.error)) || '通信エラー')); return; }
     await load(true);
   }
-  renderAll(); openLead(l.lead_key);
+  toast(msg); renderAll(); openOpp(o.id);
 }
-function closeDrawer() { $('#drawer').hidden = true; $('#scrim').hidden = true; selected = null; renderRows(); }
+async function setTask(id, status) {
+  if (MODE === 'demo') {
+    DATA.tasks.find((x) => x.id === id).status = status;
+    DATA.opportunities.forEach((o) => { o.open_tasks = DATA.tasks.filter((t) => t.opp_id === o.id && t.status !== '完了').length; });
+  } else {
+    const r = await call('update_task', { id, status });
+    if (r.status === 401) return gate();
+    await load(true);
+  }
+  toast(status === '完了' ? 'タスクを完了にしました' : 'タスクを未着手に戻しました');
+  renderAll(); if (selected) openOpp(selected);
+}
+function closeDrawer() { $('#drawer').hidden = true; $('#scrim').hidden = true; selected = null; renderAll(); }
 
 /* ---------------- 起動・ログイン ---------------- */
+function renderAll() { renderBell(); renderTasks(); if (view === 'opps') renderOpps(); }
+function setView(v) {
+  view = v;
+  document.querySelectorAll('#nav [data-view]').forEach((b) => b.dataset.view === v ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
+  $('#vOpps').hidden = v !== 'opps'; $('#vTasks').hidden = v !== 'tasks';
+  $('#title').textContent = v === 'opps' ? '案件' : 'タスク';
+  $('#lead').textContent = LEAD[v];
+  renderAll();
+}
 function setMode(m) {
   MODE = m;
-  const el = $('#mode'); el.hidden = false;
-  el.className = 'mode ' + (m === 'live' ? 'live' : 'demo');
+  const el = $('#mode'); el.hidden = false; el.className = 'mode ' + m;
   el.querySelector('span').innerHTML = m === 'live' ? 'ライブ<span class="full">（CRM 接続中）</span>' : 'サンプル<span class="full">データ</span>';
-  $('#demoBanner').hidden = m === 'live';
-  $('#logout').hidden = m !== 'live';
-  $('#reload').hidden = false;
+  $('#demoBanner').hidden = m === 'live'; $('#logout').hidden = m !== 'live';
+  ['#reload', '#bell', '#nav'].forEach((s) => { $(s).hidden = false; });
 }
 function gate(msg = '') {
-  $('#app').hidden = true; $('#gate').hidden = false; closeDrawer();
-  $('#gateErr').textContent = msg; $('#mode').hidden = true; $('#logout').hidden = true; $('#reload').hidden = true;
-  setTimeout(() => $('#code').focus(), 50);
+  $('#app').hidden = true; $('#gate').hidden = false; $('#drawer').hidden = true; $('#scrim').hidden = true;
+  ['#mode', '#logout', '#reload', '#bell', '#nav', '#notif'].forEach((s) => { $(s).hidden = true; });
+  $('#gateErr').textContent = msg; setTimeout(() => $('#code').focus(), 50);
 }
 async function load(quiet) {
   $('#reload').classList.add('spin');
-  const r = await call('list_leads');
+  const r = await call('list_opportunities');
   $('#reload').classList.remove('spin');
-  if (r.status === 401) { setCode(''); return gate(getCode() ? '閲覧コードが違います' : ''); }
-  if (r.status === 200 && r.data && r.data.ok) {
-    setMode('live');
-    LEADS = r.data.leads || []; ANON = r.data.anonymous_viewers || 0;
-    $('#updated').textContent = '取得 ' + date(r.data.generated_at, true);
-  } else {
-    // 接続先が未設定（503）・ローカル（404）・通信不可 → サンプル
-    if (!quiet || MODE !== 'demo') { const d = demoData(); LEADS = d.leads; ANON = d.anonymous_viewers; }
-    setMode('demo'); $('#updated').textContent = '';
-    if (r.data && r.data.error && !['CRM_NOT_CONFIGURED'].includes(r.data.error) && r.status !== 404) {
-      console.warn('CRM:', r.status, r.data.error);
-    }
-  }
-  $('#gate').hidden = true; $('#app').hidden = false;
+  if (r.status === 401) { const had = !!getCode(); setCode(''); return gate(had ? '閲覧コードが違います' : ''); }
+  if (r.status === 200 && r.data && r.data.ok) { setMode('live'); DATA = r.data; $('#updated').textContent = '取得 ' + dt(r.data.generated_at, true); }
+  else { if (!quiet || MODE !== 'demo') DATA = demoData(); setMode('demo'); $('#updated').textContent = ''; }
+  $('#fStage').innerHTML = '<option value="">フェーズ：すべて</option>' + STAGES.map((s) => `<option ${s === F.stage ? 'selected' : ''}>${esc(s)}</option>`).join('');
+  $('#gate').hidden = true; $('#app').hidden = false; $('#lead').textContent = LEAD[view];
   renderAll();
 }
 
 $('#gateForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const code = $('#code').value.trim(); if (!code) return;
-  const r = await call('list_leads', {}, code);
+  const r = await call('list_opportunities', {}, code);
   if (r.status === 401) { $('#gateErr').textContent = '閲覧コードが違います'; return; }
   setCode(code); $('#code').value = ''; load();
 });
 $('#logout').addEventListener('click', () => { setCode(''); gate(); });
 $('#reload').addEventListener('click', () => load(true));
-$('#q').addEventListener('input', (e) => { filter.q = e.target.value; renderRows(); });
-$('#fMeet').addEventListener('change', (e) => { filter.meet = e.target.value; renderAll(); });
-$('#fTiming').addEventListener('change', (e) => { filter.timing = e.target.value; renderRows(); });
-$('#sort').addEventListener('change', renderRows);
-$('#kpis').addEventListener('click', (e) => {
-  const b = e.target.closest('button.kpi'); if (!b) return;
-  const k = b.dataset.k;
-  if (k === 'meet') { filter.meet = filter.meet === '__meet' ? '' : '__meet'; filter.rating = ''; $('#fMeet').value = ''; }
-  else { filter.rating = k && filter.rating !== k ? k : ''; if (filter.meet === '__meet') filter.meet = ''; }
-  renderAll();
+$('#bell').addEventListener('click', (e) => { e.stopPropagation(); $('#notif').hidden = !$('#notif').hidden; });
+$('#q').addEventListener('input', (e) => { F.q = e.target.value; renderOpps(); });
+$('#fStage').addEventListener('change', (e) => { F.stage = e.target.value; renderOpps(); });
+$('#fCat').addEventListener('change', (e) => { F.cat = e.target.value; renderOpps(); });
+$('#sort').addEventListener('change', renderOpps);
+$('#fTask').addEventListener('change', renderTasks);
+$('#kpis').addEventListener('click', (e) => { const b = e.target.closest('button.kpi'); if (!b) return; F.kpi = F.kpi === b.dataset.k ? '' : b.dataset.k; renderOpps(); });
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#markRead')) { e.stopPropagation(); markRead(); return; }
+  const nv = e.target.closest('#nav [data-view]'); if (nv) { setView(nv.dataset.view); return; }
+  const tk = e.target.closest('[data-task]'); if (tk) { setTask(tk.dataset.task, tk.dataset.status); return; }
+  const go = e.target.closest('[data-goto]'); if (go) { e.preventDefault(); openOpp(go.dataset.goto); return; }
+  if (e.target.closest('[data-close]') || e.target === $('#scrim')) { closeDrawer(); return; }
+  const row = e.target.closest('[data-opp]'); if (row && !e.target.closest('.drawer')) { openOpp(row.dataset.opp); return; }
+  if (!e.target.closest('#notif')) $('#notif').hidden = true;
 });
-$('#rows').addEventListener('click', (e) => { const tr = e.target.closest('tr[data-key]'); if (tr) openLead(tr.dataset.key); });
-$('#rows').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const tr = e.target.closest('tr[data-key]'); if (tr) openLead(tr.dataset.key); } });
-$('#scrim').addEventListener('click', closeDrawer);
-document.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeDrawer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#drawer').hidden) closeDrawer(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { if (!$('#drawer').hidden) closeDrawer(); $('#notif').hidden = true; }
+  if (e.key === 'Enter') { const row = e.target.closest && e.target.closest('tr[data-opp]'); if (row) openOpp(row.dataset.opp); }
+});
 let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2400); }
 
 load();
