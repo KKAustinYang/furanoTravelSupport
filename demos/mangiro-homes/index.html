@@ -651,7 +651,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
       </div>
-      <a class="crm-link" href="crm.html" title="担当者用 CRM"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="crm_short"></span></a>
+      <a class="crm-link" href="crm.html" target="_blank" rel="noopener" title="担当者用 CRM"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="crm_short"></span></a>
       <button class="btn btn-ink signin" type="button" data-toast="toast_signin" data-i18n="signin"></button>
       <button class="menu-btn" type="button" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
@@ -665,7 +665,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <a href="#" data-scroll="services" data-i18n="nav_loan"></a>
   <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
   <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
-  <a href="crm.html"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="staff_crm"></span></a>
+  <a href="crm.html" target="_blank" rel="noopener"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="staff_crm"></span></a>
   <button class="btn btn-ink" type="button" data-toast="toast_signin" data-i18n="signin"></button>
 </div>
 
@@ -864,7 +864,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
     <div class="foot-bottom">
       <span>© 2026 MANGIRO</span>
       <span data-i18n="license"></span>
-      <a href="crm.html" data-i18n="staff_crm" style="color:inherit"></a>
+      <a href="crm.html" target="_blank" rel="noopener" data-i18n="staff_crm" style="color:inherit"></a>
       <span class="spacer"></span>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -1400,6 +1400,17 @@ window.addEventListener('message', (e) => {
 });
 
 function openView(ch, req) {
+  // ホームから開くときは、全画面のチャットを新しいタブで開く（物件一覧はこのタブに残す）。
+  // ご要望（検索語・押した質問）は URL の req に載せて渡す。すでに全画面のタブの中なら、その場で切り替える
+  if (!viewOf()) {
+    const u = new URL(location.href);
+    u.hash = CHANNELS[ch].hash;
+    if (req) u.searchParams.set('req', JSON.stringify(req)); else u.searchParams.delete('req');
+    closeListing();
+    closeMenu();
+    window.open(u.href, '_blank', 'noopener');
+    return;
+  }
   req ? setReq(req.key, req.vars, req.raw) : setReq(null);
   // 有人チャットの iframe がまだ無いときだけ、ご要望を最初のメッセージとして自動送信する
   if (ch === 'chat') pendingFirst = req && !frames.chat ? reqText(req.key, req.vars, req.raw) : null;
@@ -1666,6 +1677,20 @@ window.addEventListener('popstate', () => { route(); syncLangParam(); });
    起動
    ============================================================ */
 applyLang(new URLSearchParams(location.search).get('lang') === 'ja' ? 'ja' : 'en', { push: false });
+// 新しいタブで開かれた全画面チャット：URL の req（ご要望）を受け取り、URL からは消す
+(() => {
+  const u = new URL(location.href);
+  const raw = u.searchParams.get('req');
+  if (!raw) return;
+  u.searchParams.delete('req');
+  history.replaceState(history.state, '', u);
+  const ch = viewOf();
+  if (!ch) return;
+  let req; try { req = JSON.parse(raw); } catch { return; }
+  if (!req || typeof req !== 'object') return;
+  setReq(req.key, req.vars, req.raw);
+  if (ch === 'chat') pendingFirst = reqText(req.key, req.vars, req.raw);
+})();
 route();
 updateHeroState();
 </script>
