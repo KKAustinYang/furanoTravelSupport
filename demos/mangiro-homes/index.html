@@ -102,7 +102,7 @@ button{background:none; border:0; cursor:pointer; padding:0}
 }
 .header-inner{height:100%; display:flex; align-items:center; gap:20px; max-width:none; padding-inline:clamp(16px,2vw,28px)}
 .brand{display:flex; align-items:center; gap:10px; flex:none}
-.brand-mark{width:30px; height:30px}
+.brand-mark{width:42px; height:21px; flex:none}
 .brand-text{display:flex; flex-direction:column; line-height:1}
 .brand-text b{font-size:19px; font-weight:700; letter-spacing:.22em; color:var(--text)}
 
@@ -142,6 +142,12 @@ body.at-hero .hsearch{opacity:0; transform:translateY(-6px); pointer-events:none
 .lang button{height:28px; padding:0 11px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--text-sub); transition:background .18s,color .18s}
 .lang button[aria-pressed="true"]{background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm)}
 .signin{height:42px; padding:0 18px; font-size:14px}
+/* 担当者用 CRM への入口。お客様向けの導線より控えめにする */
+.crm-link{display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--text-sub); font-size:13.5px; font-weight:600; white-space:nowrap; transition:border-color .15s,color .15s}
+.crm-link:hover{border-color:var(--accent); color:var(--accent)}
+.crm-link .ico{width:17px; height:17px}
+@media (max-width:1180px){ .crm-link span{display:none} .crm-link{width:40px; padding:0; justify-content:center} }
+@media (max-width:640px){ .crm-link{display:none} }
 @media (max-width:640px){ .signin{display:none} }
 .menu-btn{display:none; width:40px; height:40px; border-radius:999px; place-items:center}
 .menu-btn:hover{background:var(--muted)}
@@ -609,6 +615,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-case" viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3.5 12h17"/></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 3v-3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><path d="M8 10h8M8 13h5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6a1.7 1.7 0 0 0 1.7 1.7h2.3"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z"/></symbol>
@@ -621,12 +628,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="#" data-go="home" aria-label="MANGIRO">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="8" fill="#8C6E4A"/>
-        <path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/>
-      </svg>
+      <svg class="brand-mark" viewBox="181 411 882 438" aria-hidden="true"><g fill="#A88B54"><path d="M181 849 485 411 777 849H677L485 549 278 849Z"/><path d="M637 597 770 411 1063 849H960L770 549 684 667Z"/><path d="M559 705 606 777 558 849H461Z"/></g></svg>
       <span class="brand-text"><b>MANGIRO</b></span>
     </a>
 
@@ -649,6 +651,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
       </div>
+      <a class="crm-link" href="crm.html" title="担当者用 CRM"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="crm_short"></span></a>
       <button class="btn btn-ink signin" type="button" data-toast="toast_signin" data-i18n="signin"></button>
       <button class="menu-btn" type="button" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
@@ -662,6 +665,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <a href="#" data-scroll="services" data-i18n="nav_loan"></a>
   <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
   <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
+  <a href="crm.html"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="staff_crm"></span></a>
   <button class="btn btn-ink" type="button" data-toast="toast_signin" data-i18n="signin"></button>
 </div>
 
@@ -833,7 +837,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
     <div class="foot-top">
       <div class="foot-brand">
         <a class="brand" href="#" data-go="home" aria-label="MANGIRO">
-          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#8C6E4A"/><path d="M6.5 15 16 7.5 25.5 15" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.6v7.2h13v-7.2" fill="none" stroke="#FAF9F7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="18.4" width="4" height="5.4" rx="1" fill="#FAF9F7"/></svg>
+          <svg class="brand-mark" viewBox="181 411 882 438" aria-hidden="true"><g fill="#A88B54"><path d="M181 849 485 411 777 849H677L485 549 278 849Z"/><path d="M637 597 770 411 1063 849H960L770 549 684 667Z"/><path d="M559 705 606 777 558 849H461Z"/></g></svg>
           <span class="brand-text"><b>MANGIRO</b></span>
         </a>
         <p data-i18n="foot_desc"></p>
@@ -961,6 +965,7 @@ const I18N = {
     fc1:'Find a home', fc2:'Sell & finance', fc3:'Company',
     fl_new:'New listings', fl_sell:'Sell with MANGIRO', fl_about:'About MANGIRO', fl_careers:'Careers', fl_contact:'Contact', fl_privacy:'Privacy policy',
     staff_crm:'Staff CRM',
+    crm_short:'Agent CRM',
     license:'Real estate license: Governor of Tokyo (1) No. 000000 (sample)',
     disclaimer:'This is a demonstration site. All listings, prices and figures are fictional.',
     back:'Back', req_label:'Your request', copy:'Copy',
@@ -1045,6 +1050,7 @@ const I18N = {
     fc1:'物件を探す', fc2:'売却・資金計画', fc3:'会社情報',
     fl_new:'新着物件', fl_sell:'MANGIROで売却', fl_about:'MANGIROについて', fl_careers:'採用情報', fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
     staff_crm:'担当者用 CRM',
+    crm_short:'担当者 CRM',
     license:'宅地建物取引業免許 東京都知事(1)第000000号（サンプル）',
     disclaimer:'本サイトはデモ用のサンプルです。掲載物件・価格・数値はすべて架空のものです。',
     back:'戻る', req_label:'ご要望', copy:'コピー',
