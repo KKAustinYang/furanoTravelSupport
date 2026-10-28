@@ -30,7 +30,8 @@ const NAV = [
 const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0')
 
 export default function App() {
-  const [entered, setEntered] = useState(false)
+  // #app 付きの URL はランディングを飛ばして練習画面を直接開く
+  const [entered, setEntered] = useState(() => location.hash === '#app')
   const [page, setPage] = useState('dashboard')
   const [curScn, setCurScn] = useState(null)
   const [repRec, setRepRec] = useState(null)
@@ -42,7 +43,7 @@ export default function App() {
   const [curCat, setCurCat] = useState('')
   const [search, setSearch] = useState('')
 
-  if (!entered) return <Home onEnter={() => setEntered(true)} />
+  if (!entered) return <Home onEnter={() => { history.replaceState(null, '', '#app'); setEntered(true) }} />
 
   const go = p => { setPage(p); window.scrollTo(0, 0) }
   const openScn = scn => { setCurScn(scn); go('setup') }

@@ -1,11 +1,13 @@
 // ===== AI 応対トレーニング — デモデータ =====
 
-// 6 シナリオのうち、Audio Agent（GPTBots）を接続済みなのは中級の 2 本（佐藤・田中）だけ。
-// real:false のシナリオは一覧に「準備中」として出し、開けないようにする。
+// 全 6 シナリオに難易度別の Audio Agent（GPTBots）を接続済み。
+// 公開中のお客様は佐藤・田中の 2 名。soon:true のカードは一覧で「準備中」として開けないが、
+// その Agent は佐藤・田中の難易度（初級・上級）切り替えで使われる。
 export const scenarios = [
   // ── 業務A：アウトバウンド（定期案内）──
   { id:'out-e', cat:'アウトバウンド', lv:'初級', lvClass:'e', role:'オペレーター（定期獲得）',
-    time:'約5分', count:520, emo:'前向き', real:false, name:'定期コースのご案内 ・ 初級',
+    time:'約5分', count:520, emo:'前向き', real:true, soon:true, name:'定期コースのご案内 ・ 初級',
+    iframe:'https://jp.gptbots.ai/widget/eec6z0wziwbxgfltefrynq2/chat.html',
     quote:'あら、はい。ちょうど乾燥が気になっていて…。',
     desc:'お試しセット購入者へ、定期コースをご案内するアウトバウンド。案内フローを覚え、成約体験を積みます。',
     persona:{ name:'星野 ひなた', age:'20歳', job:'女子大生', img:'persona_hinata.png', mood:'前向き', type:'協力的' } },
@@ -18,14 +20,16 @@ export const scenarios = [
     persona:{ name:'佐藤 美和子', age:'45歳', job:'パート勤務', img:'persona_sato.png', mood:'様子見', type:'慎重派' } },
 
   { id:'out-h', cat:'アウトバウンド', lv:'上級', lvClass:'h', role:'オペレーター（定期獲得）',
-    time:'約7分', count:190, emo:'警戒', real:false, name:'定期コースのご案内 ・ 上級',
+    time:'約7分', count:190, emo:'警戒', real:true, soon:true, name:'定期コースのご案内 ・ 上級',
+    iframe:'https://jp.gptbots.ai/widget/eermrpxidatcz0zolnb1bpe/chat.html',
     quote:'勧誘の電話ですか？今ちょっと忙しいんですけど。',
     desc:'多忙で警戒の強いお客様に、薬機法に配慮しつつ、クロージングと離脱防止まで実践します。',
     persona:{ name:'白鷺 玲奈', age:'25歳', job:'雑誌編集者', img:'persona_reina.png', mood:'警戒', type:'多忙・クール' } },
 
   // ── 業務B：インバウンド（解約引き止め）── 田中 由紀
   { id:'in-e', cat:'インバウンド', lv:'初級', lvClass:'e', role:'オペレーター（解約対応）',
-    time:'約5分', count:150, emo:'申し訳なさ', real:false, name:'定期解約の引き止め ・ 初級',
+    time:'約5分', count:150, emo:'申し訳なさ', real:true, soon:true, name:'定期解約の引き止め ・ 初級',
+    iframe:'https://jp.gptbots.ai/widget/eeoxrwg4yv2xyjcnnqlskao/chat.html',
     quote:'定期便を解約したくて。使い切れずに溜まっちゃって…。',
     desc:'「解約したい」というお申し出に、傾聴と代替提案で引き止め成功を体験します。',
     persona:{ name:'綾瀬 詩織', age:'23歳', job:'イラストレーター', img:'persona_shiori.png', mood:'申し訳なさ', type:'物静か' } },
@@ -38,7 +42,8 @@ export const scenarios = [
     persona:{ name:'田中 由紀', age:'38歳', job:'共働き', img:'persona_tanaka.png', mood:'不満', type:'理詰め' } },
 
   { id:'in-h', cat:'インバウンド', lv:'上級', lvClass:'h', role:'オペレーター（解約対応）',
-    time:'約7分', count:210, emo:'苛立ち', real:false, name:'定期解約の引き止め ・ 上級',
+    time:'約7分', count:210, emo:'苛立ち', real:true, soon:true, name:'定期解約の引き止め ・ 上級',
+    iframe:'https://jp.gptbots.ai/widget/ee86b0hnosay1l8dlzzf6s1/chat.html',
     quote:'もう解約って言ってますよね？何度も同じ説明は困ります。',
     desc:'強い解約意思・感情・コンプライアンスまで。解約意思を尊重しつつ、円満に着地させます。',
     persona:{ name:'夏川 あかり', age:'19歳', job:'体育大生', img:'persona_akari.png', mood:'苛立ち', type:'率直・短気' } },
@@ -76,8 +81,8 @@ export const moments = [
 export const initialRecords = [
   { sc:'定期解約の引き止め ・ 中級', cat:'インバウンド', pe:'田中 由紀', df:'中級', dfc:'m', dsh:'07/01 14:22', dur:'05:12', score:82, g:'A', w:342, comp:'指摘 0 件', date:'2026/07/01 14:22' },
   { sc:'定期コースのご案内 ・ 中級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'中級', dfc:'m', dsh:'06/30 11:05', dur:'06:40', score:76, g:'B', w:388, comp:'指摘 1 件', date:'2026/06/30 11:05' },
-  { sc:'定期解約の引き止め ・ 中級', cat:'インバウンド', pe:'田中 由紀', df:'中級', dfc:'m', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
-  { sc:'定期コースのご案内 ・ 中級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'中級', dfc:'m', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
+  { sc:'定期解約の引き止め ・ 上級', cat:'インバウンド', pe:'田中 由紀', df:'上級', dfc:'h', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
+  { sc:'定期コースのご案内 ・ 初級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'初級', dfc:'e', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
 ]
 
 export const leaders = [

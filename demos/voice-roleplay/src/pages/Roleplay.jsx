@@ -34,19 +34,19 @@ export default function Roleplay({ openScn, curCat, setCurCat, search, setSearch
               {cards.map(s => {
                 const p = s.persona
                 return (
-                  <div className={'rp-card ' + b.theme + (s.real ? '' : ' soon')} key={s.id}
-                    onClick={s.real ? () => openScn(s) : undefined} aria-disabled={!s.real} title={s.real ? undefined : 'このシナリオは準備中です'}>
+                  <div className={'rp-card ' + b.theme + (s.soon ? ' soon' : '')} key={s.id}
+                    onClick={s.soon ? undefined : () => openScn(s)} aria-disabled={!!s.soon} title={s.soon ? 'このシナリオは準備中です' : undefined}>
                     <div className="rp-photo">
                       {p.img
                         ? <><img src={p.img} alt={p.name} /><div className="shade" /></>
                         : <><div className={'grad ' + b.theme}><span className="rp-init">{p.init}</span></div><div className="shade" /></>}
                       {p.type && <span className="rp-type">{p.type}</span>}
-                      {!s.real && <span className="rp-soon">準備中</span>}
+                      {s.soon && <span className="rp-soon">準備中</span>}
                       <div className="rp-nm"><b>{p.name}</b><span>{p.age} ・ {p.job}</span></div>
                     </div>
                     <div className="rp-body">
                       <div className="rp-quote"><span className="qm">❝</span><span>{s.quote}</span></div>
-                      <div className="rp-foot"><span className="rp-meta">◷ {s.time.replace('約', '')}{s.real ? ` ・ ${s.count}回` : ''}</span>{s.real ? <span className="rp-go">対応する ›</span> : <span className="rp-go off">近日公開</span>}</div>
+                      <div className="rp-foot"><span className="rp-meta">◷ {s.time.replace('約', '')}{s.soon ? '' : ` ・ ${s.count}回`}</span>{!s.soon ? <span className="rp-go">対応する ›</span> : <span className="rp-go off">近日公開</span>}</div>
                     </div>
                   </div>
                 )
