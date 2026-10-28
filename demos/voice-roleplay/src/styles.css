@@ -226,6 +226,13 @@ img{display:block}
 .rp-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:13px;border-top:1px solid var(--line2)}
 .rp-meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .rp-go{font-size:12.5px;font-weight:700}
+/* 準備中のシナリオ：Audio Agent 未接続。開けない */
+.rp-card.soon{cursor:not-allowed;box-shadow:none}
+.rp-card.soon:hover{transform:none;box-shadow:none}
+.rp-card.soon .rp-photo img{filter:grayscale(1) brightness(.92);opacity:.75}
+.rp-card.soon .rp-quote{opacity:.55}
+.rp-soon{position:absolute;top:14px;right:14px;z-index:3;padding:5px 12px;border-radius:999px;background:rgba(20,22,24,.78);color:#fff;font-size:12px;font-weight:700;letter-spacing:.08em;backdrop-filter:blur(6px)}
+.rp-card .rp-go.off{color:var(--muted)!important;font-weight:600}
 .rp-card.out .rp-go,.rp-card.out .qm{color:var(--accent)}
 .rp-card.in .rp-go,.rp-card.in .qm{color:var(--brand)}
 
@@ -314,7 +321,7 @@ img{display:block}
 .btn-end{background:var(--accent-soft);color:var(--accent);font-weight:700;padding:12px 18px;border-radius:12px;font-size:13px;white-space:nowrap}
 .btn-end:hover{filter:brightness(.97)}
 
-/* ===== Report (NTS 評価レポート — template port) ===== */
+/* ===== Report (評価レポート — template port) ===== */
 .report{max-width:940px;margin:0 auto}
 .report .cn{font-family:var(--serif);font-size:15px;font-weight:700}
 .std-ribbon{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 4px;font-size:11px;color:var(--ink2);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 14px}
@@ -537,7 +544,7 @@ img{display:block}
 
 @media(max-width:1080px){.hero,.grid2,.grid2c,.rep-grid,.setup-grid,.sw-cols{grid-template-columns:1fr}.rp-cards{grid-template-columns:1fr 1fr}}
 
-/* ===== Home / landing (日本テレシステム — corporate blue) ===== */
+/* ===== Home / landing (corporate blue) ===== */
 .tl{--c:#0666A9;--c2:#0A5EA3;--cb:#2f9bd8;--cd:#00559A;
   --navy:#082744;--navy2:#0b2f52;--navyln:rgba(255,255,255,.10);
   --tink:#12293D;--tink2:#3E566B;--tmut:#6B8298;

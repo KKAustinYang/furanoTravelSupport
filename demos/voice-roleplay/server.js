@@ -1,4 +1,4 @@
-// NTS 応対力トレーニング — 評価プロキシ
+// AI 応対トレーニング — 評価プロキシ
 // フロントから音声を受け取り、GPTBots 評価Agent を呼び出して JSON を返す。
 // API Key はここ（サーバー側）だけに置く。ブラウザには出さない。
 import 'dotenv/config'
@@ -41,7 +41,7 @@ app.post('/api/evaluate', async (req, res) => {
 
     // 1) 会話を作成
     const conv = await fetch(`${BASE}/v1/conversation`, {
-      method: 'POST', headers: H, body: JSON.stringify({ user_id: 'nts-eval' })
+      method: 'POST', headers: H, body: JSON.stringify({ user_id: 'roleplay-eval' })
     }).then(r => r.json())
     if (!conv.conversation_id) return res.status(502).json({ error: '会話作成に失敗', detail: conv })
 

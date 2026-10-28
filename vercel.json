@@ -11,5 +11,12 @@
     "api/proxy.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/d/nts-training/:path*",
+      "destination": "/d/voice-roleplay/:path*",
+      "permanent": false
+    }
+  ]
 }

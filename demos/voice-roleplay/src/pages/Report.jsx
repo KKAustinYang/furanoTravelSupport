@@ -29,7 +29,7 @@ const BANNER_IC = { ok: '✓', caution: '!', ng: '✕' }
 const gW = { S: '優秀', A: '良好', B: '標準', C: '要改善', D: '不合格' }
 
 // チェックリストからスコア類を確定的に再計算（LLM の算術ミス・不整合を吸収）。
-// テンプレート NTS_評価レポート の即時関数を移植。元データは破壊せずクローンして返す。
+// 評価レポートのテンプレートの即時関数を移植。元データは破壊せずクローンして返す。
 function normalize(src) {
   const ev = JSON.parse(JSON.stringify(src || {}))
   let ach = 0, tot = 0, catSum = 0
@@ -305,7 +305,7 @@ export default function Report({ rec, go, celebrate }) {
 
       {/* PDF（印刷）専用フッター — 画面では非表示 */}
       <div className="print-foot">
-        <span>株式会社日本テレシステム ・ 応対力トレーニング（AI 評価レポート）</span>
+        <span>AI 応対トレーニング（AI 評価レポート）</span>
         <span>Powered by GPTBots Audio</span>
       </div>
     </div>

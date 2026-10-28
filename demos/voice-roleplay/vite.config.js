@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   // Relative base so the built app works when hosted under a sub-path
-  // (embedded in the showcase at /nts-training/).
+  // (embedded in the showcase at /d/voice-roleplay/).
   base: './',
   plugins: [react()],
   server: {

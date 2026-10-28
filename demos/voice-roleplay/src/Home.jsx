@@ -33,7 +33,7 @@ export default function Home({ onEnter }) {
           <nav className="tl-nav">
             <div className="tl-brand">
               <div className="tl-logo"><Logo /></div>
-              <div className="tl-brand-t"><b>日本テレシステム</b><span>CONTACT CENTER TRAINING</span></div>
+              <div className="tl-brand-t"><b>AI 応対トレーニング</b><span>VOICE ROLEPLAY TRAINING</span></div>
             </div>
             <div className="tl-nav-links">
               <a href="#features">特長</a>
@@ -45,16 +45,16 @@ export default function Home({ onEnter }) {
 
           <div className="tl-hero-grid">
             <div className="tl-hero-l">
-              <div className="tl-eyebrow"><span className="tl-eyebrow-dot" />株式会社日本テレシステム ・ コンタクトセンター DX</div>
+              <div className="tl-eyebrow"><span className="tl-eyebrow-dot" />コンタクトセンター向け ・ 音声 AI ロールプレイ</div>
               <h1 className="tl-h1">電話応対を、<br /><span className="tl-h1-ac">AIで、磨く。</span></h1>
-              <p className="tl-lead">AIのお客様とリアルタイムで通話し、応対をその場でAIが評価。定期案内から解約対応まで——現場から生まれた、実践型オペレーター育成プラットフォームです。</p>
-              <div className="tl-tagline">つながる、ひろがる、ひびきあう<i>innovation&nbsp;for&nbsp;communication</i></div>
+              <p className="tl-lead">AIのお客様とリアルタイムで通話し、応対をその場でAIが評価。定期案内から解約対応まで、実践型でオペレーターを育てるトレーニングシステムです。</p>
+              <div className="tl-tagline">話して、振り返って、伸びていく<i>voice&nbsp;AI&nbsp;roleplay</i></div>
               <div className="tl-cta">
-                <button className="tl-btn-primary" onClick={onEnter}>応対力トレーニングを開く<span>→</span></button>
+                <button className="tl-btn-primary" onClick={onEnter}>トレーニングを開く<span>→</span></button>
                 <a className="tl-btn-ghost" href="#features">特長を見る</a>
               </div>
               <div className="tl-stats">
-                <div className="tl-stat"><b>6</b><span>実務シナリオ</span></div>
+                <div className="tl-stat"><b>2</b><span>公開中のシナリオ</span></div>
                 <div className="tl-stat"><b>6<i>項目</i></b><span>AI評価軸</span></div>
                 <div className="tl-stat"><b>+5.2<i>pt</i></b><span>定期成約率</span></div>
               </div>
@@ -94,9 +94,9 @@ export default function Home({ onEnter }) {
       {/* ===== BUSINESS STRIP ===== */}
       <div className="tl-strip">
         <div className="tl-wrap tl-strip-in">
-          <span className="tl-strip-label">日本テレシステムの現場から生まれた研修</span>
+          <span className="tl-strip-label">こんな応対業務の研修に</span>
           <div className="tl-strip-items">
-            <span>インバウンド</span><span>アウトバウンド</span><span>リサーチ</span><span>フルフィルメント</span><span>バックオフィス BPO</span>
+            <span>インバウンド</span><span>アウトバウンド</span><span>定期案内</span><span>解約対応</span><span>クレーム対応</span>
           </div>
         </div>
       </div>
@@ -175,10 +175,10 @@ export default function Home({ onEnter }) {
       <section className="tl-brandband">
         <div className="tl-bb-bg" aria-hidden="true" />
         <div className="tl-wrap tl-bb-in">
-          <div className="tl-bb-tag">つながる、ひろがる、ひびきあう</div>
-          <div className="tl-bb-sub">innovation for communication</div>
-          <p className="tl-bb-lead">人と企業、そして社会に、多様なつながりと広がりを。日本テレシステムはコンタクトセンター／BPO で培った現場知を、AI研修という新しいかたちで次世代のオペレーターへ届けます。</p>
-          <div className="tl-bb-meta"><span>Pマーク取得企業</span><span>AIストーム グループ</span><span>東京 ・ 埼玉 ・ 北海道</span></div>
+          <div className="tl-bb-tag">場数と振り返りを、AI で。</div>
+          <div className="tl-bb-sub">voice AI roleplay training</div>
+          <p className="tl-bb-lead">電話応対が上達するには、場数と振り返りが欠かせません。AI のお客様と何度でも練習し、AI の評価をもとに次の一本を良くする——その循環を、ひとつのシステムで回せます。</p>
+          <div className="tl-bb-meta"><span>リアルタイム音声対話</span><span>6 項目の自動評価</span><span>Powered by GPTBots Audio</span></div>
         </div>
       </section>
 
@@ -191,7 +191,7 @@ export default function Home({ onEnter }) {
               <h2>今すぐ、AI応対トレーニングを体験。</h2>
               <p>システムを開いて、ロールプレイから評価レポートまでの流れをご覧ください。</p>
             </div>
-            <button className="tl-btn-white" onClick={onEnter}>応対力トレーニングを開く<span>→</span></button>
+            <button className="tl-btn-white" onClick={onEnter}>トレーニングを開く<span>→</span></button>
           </div>
         </div>
       </div>
@@ -201,27 +201,27 @@ export default function Home({ onEnter }) {
         <div className="tl-wrap tl-foot-in">
           <div className="tl-foot-brand">
             <div className="tl-logo lg"><Logo /></div>
-            <div className="tl-fb-t">株式会社日本テレシステム</div>
-            <div className="tl-fb-s">応対力トレーニング ・ AIロールプレイ研修<br />大塚製薬 インナーシグナル コンタクトセンター向けデモ</div>
+            <div className="tl-fb-t">AI 応対トレーニング</div>
+            <div className="tl-fb-s">音声 AI ロールプレイ研修<br />コンタクトセンター向けデモ</div>
           </div>
           <div className="tl-foot-cols">
             <div className="tl-fcol">
-              <h5>SERVICE</h5>
-              <a>コンタクトセンター</a><a>インバウンド ／ アウトバウンド</a><a>リサーチ</a><a>BPO ・ フルフィルメント</a>
+              <h5>FEATURES</h5>
+              <a href="#features">リアルタイム音声ロールプレイ</a><a href="#features">AI による自動評価</a><a href="#features">ダッシュボード分析</a>
             </div>
             <div className="tl-fcol">
-              <h5>OFFICE</h5>
-              <a>東京本社</a><a>埼玉オフィス</a><a>北海道オフィス</a>
+              <h5>SCENARIOS</h5>
+              <a href="#personas">定期コースのご案内</a><a href="#personas">定期解約の引き止め</a>
             </div>
             <div className="tl-fcol">
-              <h5>GROUP</h5>
-              <a>AIストーム株式会社</a><a>プライバシーマーク取得</a><a>Powered by GPTBots Audio</a>
+              <h5>TECHNOLOGY</h5>
+              <a>GPTBots Audio Agent</a><a>LLM による評価レポート</a>
             </div>
           </div>
         </div>
         <div className="tl-wrap tl-foot-bar">
-          <span>© 2026 Nihon Telesystem, Inc.</span>
-          <span className="tl-foot-tag">innovation for communication</span>
+          <span>© 2026 AI Roleplay Training Demo</span>
+          <span className="tl-foot-tag">Powered by GPTBots Audio</span>
         </div>
       </footer>
     </div>

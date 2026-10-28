@@ -70,7 +70,7 @@ export default function App() {
   return (
     <div className="app">
       <aside className={'sidebar' + (collapsed ? ' collapsed' : '')}>
-        <div className="side-brand"><div className="logo"><Logo /></div><div><h1>応対力トレーニング</h1><p>AI ROLEPLAY</p></div></div>
+        <div className="side-brand"><div className="logo"><Logo /></div><div><h1>AI 応対トレーニング</h1><p>AI ROLEPLAY</p></div></div>
         <nav className="nav">
           <div className="nav-sec">MENU</div>
           {NAV.map(n => (

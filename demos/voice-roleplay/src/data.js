@@ -1,12 +1,11 @@
-// ===== NTS 応対力トレーニング — インナーシグナル デモデータ =====
+// ===== AI 応対トレーニング — デモデータ =====
 
-// 全 6 シナリオに Audio Agent（GPTBots）を接続済み。
-// 難易度・業務ごとに専用 Agent を割り当て。
+// 6 シナリオのうち、Audio Agent（GPTBots）を接続済みなのは中級の 2 本（佐藤・田中）だけ。
+// real:false のシナリオは一覧に「準備中」として出し、開けないようにする。
 export const scenarios = [
   // ── 業務A：アウトバウンド（定期案内）──
   { id:'out-e', cat:'アウトバウンド', lv:'初級', lvClass:'e', role:'オペレーター（定期獲得）',
-    time:'約5分', count:520, emo:'前向き', real:true, name:'定期コースのご案内 ・ 初級',
-    iframe:'https://jp.gptbots.ai/widget/eec6z0wziwbxgfltefrynq2/chat.html',
+    time:'約5分', count:520, emo:'前向き', real:false, name:'定期コースのご案内 ・ 初級',
     quote:'あら、はい。ちょうど乾燥が気になっていて…。',
     desc:'お試しセット購入者へ、定期コースをご案内するアウトバウンド。案内フローを覚え、成約体験を積みます。',
     persona:{ name:'星野 ひなた', age:'20歳', job:'女子大生', img:'persona_hinata.png', mood:'前向き', type:'協力的' } },
@@ -19,16 +18,14 @@ export const scenarios = [
     persona:{ name:'佐藤 美和子', age:'45歳', job:'パート勤務', img:'persona_sato.png', mood:'様子見', type:'慎重派' } },
 
   { id:'out-h', cat:'アウトバウンド', lv:'上級', lvClass:'h', role:'オペレーター（定期獲得）',
-    time:'約7分', count:190, emo:'警戒', real:true, name:'定期コースのご案内 ・ 上級',
-    iframe:'https://jp.gptbots.ai/widget/eermrpxidatcz0zolnb1bpe/chat.html',
+    time:'約7分', count:190, emo:'警戒', real:false, name:'定期コースのご案内 ・ 上級',
     quote:'勧誘の電話ですか？今ちょっと忙しいんですけど。',
     desc:'多忙で警戒の強いお客様に、薬機法に配慮しつつ、クロージングと離脱防止まで実践します。',
     persona:{ name:'白鷺 玲奈', age:'25歳', job:'雑誌編集者', img:'persona_reina.png', mood:'警戒', type:'多忙・クール' } },
 
   // ── 業務B：インバウンド（解約引き止め）── 田中 由紀
   { id:'in-e', cat:'インバウンド', lv:'初級', lvClass:'e', role:'オペレーター（解約対応）',
-    time:'約5分', count:150, emo:'申し訳なさ', real:true, name:'定期解約の引き止め ・ 初級',
-    iframe:'https://jp.gptbots.ai/widget/eeoxrwg4yv2xyjcnnqlskao/chat.html',
+    time:'約5分', count:150, emo:'申し訳なさ', real:false, name:'定期解約の引き止め ・ 初級',
     quote:'定期便を解約したくて。使い切れずに溜まっちゃって…。',
     desc:'「解約したい」というお申し出に、傾聴と代替提案で引き止め成功を体験します。',
     persona:{ name:'綾瀬 詩織', age:'23歳', job:'イラストレーター', img:'persona_shiori.png', mood:'申し訳なさ', type:'物静か' } },
@@ -41,8 +38,7 @@ export const scenarios = [
     persona:{ name:'田中 由紀', age:'38歳', job:'共働き', img:'persona_tanaka.png', mood:'不満', type:'理詰め' } },
 
   { id:'in-h', cat:'インバウンド', lv:'上級', lvClass:'h', role:'オペレーター（解約対応）',
-    time:'約7分', count:210, emo:'苛立ち', real:true, name:'定期解約の引き止め ・ 上級',
-    iframe:'https://jp.gptbots.ai/widget/ee86b0hnosay1l8dlzzf6s1/chat.html',
+    time:'約7分', count:210, emo:'苛立ち', real:false, name:'定期解約の引き止め ・ 上級',
     quote:'もう解約って言ってますよね？何度も同じ説明は困ります。',
     desc:'強い解約意思・感情・コンプライアンスまで。解約意思を尊重しつつ、円満に着地させます。',
     persona:{ name:'夏川 あかり', age:'19歳', job:'体育大生', img:'persona_akari.png', mood:'苛立ち', type:'率直・短気' } },
@@ -80,8 +76,8 @@ export const moments = [
 export const initialRecords = [
   { sc:'定期解約の引き止め ・ 中級', cat:'インバウンド', pe:'田中 由紀', df:'中級', dfc:'m', dsh:'07/01 14:22', dur:'05:12', score:82, g:'A', w:342, comp:'指摘 0 件', date:'2026/07/01 14:22' },
   { sc:'定期コースのご案内 ・ 中級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'中級', dfc:'m', dsh:'06/30 11:05', dur:'06:40', score:76, g:'B', w:388, comp:'指摘 1 件', date:'2026/06/30 11:05' },
-  { sc:'定期解約の引き止め ・ 上級', cat:'インバウンド', pe:'夏川 あかり', df:'上級', dfc:'h', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
-  { sc:'定期コースのご案内 ・ 初級', cat:'アウトバウンド', pe:'星野 ひなた', df:'初級', dfc:'e', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
+  { sc:'定期解約の引き止め ・ 中級', cat:'インバウンド', pe:'田中 由紀', df:'中級', dfc:'m', dsh:'06/29 16:40', dur:'05:55', score:69, g:'C', w:410, comp:'指摘 2 件', date:'2026/06/29 16:40' },
+  { sc:'定期コースのご案内 ・ 中級', cat:'アウトバウンド', pe:'佐藤 美和子', df:'中級', dfc:'m', dsh:'06/28 10:12', dur:'04:20', score:84, g:'A', w:265, comp:'指摘 0 件', date:'2026/06/28 10:12' },
 ]
 
 export const leaders = [
@@ -103,7 +99,7 @@ export const trendLabels = ['月','火','水','木','金','土','日']
 
 // モックのロールプレイ台詞（実機接続前のプレビュー用）
 // ===== 評価レポートのサンプル（「サンプルで表示」用 / LLM未接続時のフォールバック）=====
-// LLM（評価Agent）が返す JSON と同じ構造。テンプレート NTS_評価レポート_定期案内 準拠。
+// LLM（評価Agent）が返す JSON と同じ構造。評価レポートのテンプレート準拠。
 export const sampleEval = {
   scenario:'定期コースのご案内 ・ 中級', customer:'佐藤 美和子（45・パート勤務）', difficulty:'中級',
   duration:'06:12', outcome:'定期お申込み（成約）',
@@ -132,7 +128,7 @@ export const sampleEval = {
     ]},
   categories:[
     { name:'オープニング・第一印象', en:'OPENING', score:10, max:12, achieved:2, total:3, checks:[
-      { item:'社名・氏名を名乗り、あいさつをした', result:'pass', quote:'大塚製薬インナーシグナル お客様窓口の鈴木と申します。' },
+      { item:'社名・氏名を名乗り、あいさつをした', result:'pass', quote:'お客様窓口の鈴木と申します。' },
       { item:'冒頭で電話の用件（定期のご案内）を明示した', result:'part', note:'使用感の話が先になり、目的の明示が後回しに（特商法16条・要改善）。' },
       { item:'第一声が明るく、丁寧な印象', result:'pass', note:'明るく好印象の入り。' },
     ]},
@@ -168,7 +164,7 @@ export const sampleEval = {
     { k:'顧客体験 CX', v:'良好', d:'やや案内主体だが不快感なし' },
   ],
   strengths:[
-    { point:'明るい第一声で好印象をつくれた', quote:'大塚製薬インナーシグナル お客様窓口の鈴木と申します。' },
+    { point:'明るい第一声で好印象をつくれた', quote:'お客様窓口の鈴木と申します。' },
     { point:'「回数縛りなし・いつでも解約可」で不安を払拭できた', quote:'回数のお約束はなく、いつでも解約・お休みができます。' },
     { point:'押し付けず自然にクロージングし、成約に導けた', quote:'よろしければ、この機会にお試しになりませんか。' },
   ],
@@ -196,7 +192,7 @@ export const sampleEval = {
 
 export const transcripts = {
   'アウトバウンド':[
-    { who:'you', t:'お忙しいところ恐れ入ります。インナーシグナル お客様窓口の鈴木と申します。{NAME}様のお電話でよろしいでしょうか。' },
+    { who:'you', t:'お忙しいところ恐れ入ります。お客様窓口の鈴木と申します。{NAME}様のお電話でよろしいでしょうか。' },
     { who:'cust', t:'はい、佐藤ですが…。' },
     { who:'tip', kind:'good', t:'名乗りとお客様確認から。丁寧な導入です。' },
     { who:'you', t:'先日お試しいただいた「リジュブネイト ワン」、その後のお肌の調子はいかがでしょうか。' },
@@ -208,8 +204,8 @@ export const transcripts = {
     { who:'cust', t:'そう…なら、一度お願いしてみようかしら。' },
   ],
   'インバウンド':[
-    { who:'you', t:'お電話ありがとうございます。インナーシグナル お客様窓口の鈴木でございます。' },
-    { who:'cust', t:'もしもし、あの…インナーシグナルの定期を、解約したいんですけど。' },
+    { who:'you', t:'お電話ありがとうございます。お客様窓口の鈴木でございます。' },
+    { who:'cust', t:'もしもし、あの…化粧品の定期便を、解約したいんですけど。' },
     { who:'tip', kind:'good', t:'まず解約の意思を尊重する姿勢を。強い引き止めはNGです。' },
     { who:'you', t:'かしこまりました。差し支えなければ、解約のご理由をお伺いできますでしょうか。' },
     { who:'cust', t:'効果がまだよく分からなくて…。それに、少し高いかなと思って。' },

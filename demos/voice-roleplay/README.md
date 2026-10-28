@@ -1,13 +1,13 @@
-# NTS 応対力トレーニング — インナーシグナル AIロールプレイ研修（デモ）
+# AI 応対トレーニング — 音声 AI ロールプレイ研修（デモ）
 
-Vite + React で構築した、NTS（大塚製薬 インナーシグナル コールセンター）向けの
-応対力トレーニング・デモです。ホーム画面 → ダッシュボード → ロールプレイ → 対応（音声）→
+Vite + React で構築した、コンタクトセンター向けの汎用の
+応対力トレーニング・デモです（特定の企業名・商品名は入れていません）。ホーム画面 → ダッシュボード → ロールプレイ → 対応（音声）→
 評価レポート → 研修履歴 まで一通り体験できます。
 
 ## セットアップ
 
 ```bash
-cd nts-training
+cd demos/voice-roleplay
 npm install
 npm run dev
 ```
@@ -32,7 +32,7 @@ npm run dev
 - 田中 由紀（インバウンド 中級）: `https://stg.gptbots.ai/widget/eezohzlvrfoawvfryzarorp/chat.html`
 
 この 2 つのカードは「対応を始める」で本物の音声通話（iframe）が開きます。
-残り 4 名はプレースホルダで、モックの会話プレビューが表示されます。
+残り 4 名は Audio Agent 未接続のため、一覧に「準備中」と表示され、開けません（`data.js` の `real:false`）。
 
 ## 構成
 
@@ -40,7 +40,7 @@ npm run dev
 src/
   App.jsx          … 画面のルーティング・サイドバー・終了モーダル
   Home.jsx         … ランディング（システムに入る前の画面）
-  Logo.jsx         … NTS ロゴ
+  Logo.jsx         … ロゴ（音声の波形）
   data.js          … シナリオ・お客様・評価・記録などのデータ
   charts.jsx       … レーダー / 折れ線 / ドーナツ（SVG）
   styles.css       … 全スタイル（暖色エディトリアル）
