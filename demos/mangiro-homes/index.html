@@ -84,6 +84,10 @@ button{background:none; border:0; cursor:pointer; padding:0}
 .btn-accent:hover{background:var(--accent-dark)}
 .btn-line{border:1px solid var(--line); background:var(--surface)}
 .btn-line:hover{border-color:var(--text-sub)}
+.beta{
+  display:inline-flex; align-items:center; height:19px; padding:0 7px; border-radius:999px;
+  background:var(--ink); color:#fff; font-size:10.5px; font-weight:700; letter-spacing:.06em; line-height:1;
+}
 .spark{
   display:inline-grid; place-items:center; flex:none;
   width:28px; height:28px; border-radius:9px; color:#fff;
@@ -181,11 +185,21 @@ body.at-hero .hsearch{opacity:0; transform:translateY(-6px); pointer-events:none
 }
 html[lang="ja"] .hero h1{font-size:clamp(30px,3.9vw,48px); line-height:1.36; letter-spacing:.02em}
 
-.search-panel{margin-top:32px; width:min(620px,100%)}
+.search-panel{margin-top:40px; width:min(620px,100%)}
+.tabs{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{
+  height:44px; padding:0 18px; border-radius:10px 10px 0 0; flex:none;
+  background:rgba(255,255,255,.72); color:var(--text); font-size:14.5px; font-weight:500;
+  transition:background .18s;
+}
+.tabs button:hover{background:rgba(255,255,255,.9)}
+.tabs button[aria-selected="true"]{background:var(--surface); font-weight:700}
+
 .searchbox{position:relative}
 .search-field{
   display:flex; align-items:center; gap:8px; height:68px; padding:0 8px 0 24px;
-  background:var(--surface); border-radius:14px;
+  background:var(--surface); border-radius:0 12px 12px 12px;
   box-shadow:0 12px 36px rgba(0,0,0,.22); border:2px solid transparent; transition:border-color .18s;
 }
 .search-field:focus-within{border-color:var(--accent)}
@@ -198,6 +212,7 @@ html[lang="ja"] .hero h1{font-size:clamp(30px,3.9vw,48px); line-height:1.36; let
 .search-field .go:hover{background:var(--accent-dark); transform:scale(1.04)}
 .search-field .go svg{width:22px; height:22px}
 @media (max-width:640px){
+  .tabs button{height:40px; padding:0 13px; font-size:13.5px}
   .search-field{height:60px; padding-left:16px}
   .search-field input{font-size:16px}  /* 16px 未満だと iOS がフォーカス時に画面を拡大する */
   .search-field .go{width:46px; height:46px}
@@ -214,6 +229,10 @@ html[lang="ja"] .hero h1{font-size:clamp(30px,3.9vw,48px); line-height:1.36; let
 .sg-item:hover,.sg-item.is-active{background:var(--muted)}
 .sg-item + .sg-item{border-top:1px solid var(--line-soft)}
 .sg-item .ico{color:var(--text-sub)}
+.sg-head{padding:12px 20px 4px; font-size:12px; font-weight:600; color:var(--text-sub); letter-spacing:.04em; border-top:1px solid var(--line-soft)}
+.sg-pop{display:flex; flex-wrap:wrap; gap:8px; padding:6px 20px 16px}
+.sg-pop button{height:32px; padding:0 13px; border-radius:999px; border:1px solid var(--line); font-size:13px; background:var(--surface); transition:border-color .15s, background .15s}
+.sg-pop button:hover{border-color:var(--accent); background:var(--accent-soft)}
 .sg-ai-title{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; color:var(--accent)}
 .sg-ai-desc{font-size:14px; color:var(--text); margin-top:2px}
 .sg-q{font-weight:600}
@@ -644,19 +663,30 @@ html[lang="ja"] .m-price{letter-spacing:0}
       <h1 data-i18n-html="hero_title"></h1>
 
       <div class="search-panel">
+        <div class="tabs" role="tablist" aria-label="Search type">
+          <button role="tab" data-tab="buy" aria-selected="true" data-i18n="nav_buy"></button>
+          <button role="tab" data-tab="sell" aria-selected="false" data-i18n="nav_sell"></button>
+          <button role="tab" data-tab="loan" aria-selected="false" data-i18n="nav_loan"></button>
+          <button role="tab" data-tab="value" aria-selected="false" data-i18n="tab_value"></button>
+        </div>
         <form class="searchbox" id="searchbox" role="search" autocomplete="off">
           <div class="search-field">
-            <input id="q" type="search" data-i18n-ph="ph_buy" aria-label="Search" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false">
+            <input id="q" type="search" aria-label="Search" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false">
             <button class="go" type="submit" aria-label="Search"><svg class="ico"><use href="#i-search"/></svg></button>
           </div>
           <div class="suggest" id="suggest" role="listbox" hidden>
             <button type="button" class="sg-item" data-sg="ai" role="option">
               <span class="spark spark-flow"><svg><use href="#i-sparkq"/></svg></span>
               <span>
-                <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span></span>
+                <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span><span class="beta">BETA</span></span>
                 <span class="sg-ai-desc" id="sgAiDesc"></span>
               </span>
             </button>
+            <button type="button" class="sg-item" data-sg="loc" role="option">
+              <svg class="ico"><use href="#i-loc"/></svg><span data-i18n="sg_loc"></span>
+            </button>
+            <div class="sg-head" data-i18n="sg_popular"></div>
+            <div class="sg-pop" id="sgPop"></div>
           </div>
         </form>
         <div class="try" id="tryRow"></div>
@@ -854,7 +884,16 @@ const I18N = {
     nav_buy:'Buy', nav_sell:'Sell', nav_loan:'Mortgage', nav_areas:'Areas', nav_agent:'Talk to an agent', nav_ai:'AI Search',
     ph_header:'Area, station, budget',
     hero_title:'Find your next home<br>just by describing it.',
+    tab_value:'Home Value',
     ph_buy:'Area, station, budget, layout',
+    ph_sell:'Enter your address',
+    ph_loan:'Enter a home price or area',
+    ph_value:'Enter your address to ask about its value',
+    sg_loc:'Current location',
+    sg_popular:'Popular searches',
+    pop:['Edogawa-ku','Arakawa-ku','Near Kasai Sta.','Under ¥50M','Pet-friendly condos'],
+    toast_loc:'Location search isn’t available yet. Try AI Search.',
+    ask_tab_sell:'I’d like to talk to someone about selling my home at {q}', ask_tab_loan:'I have a mortgage question about {q}', ask_tab_value:'What is my home at {q} worth?',
     sg_ai_title:'Search smarter, powered by AI',
     sg_ai_desc:'Describe your dream home, we’ll find it.',
     sg_ai_q:'Ask AI: <span class="sg-q">“{q}”</span>',
@@ -924,7 +963,16 @@ const I18N = {
     nav_buy:'買う', nav_sell:'売る', nav_loan:'住宅ローン', nav_areas:'エリア', nav_agent:'担当者に相談', nav_ai:'AI検索',
     ph_header:'エリア・駅名・ご予算',
     hero_title:'話すだけで、<br>理想の住まいが見つかる',
+    tab_value:'売却査定',
     ph_buy:'エリア・駅名・ご予算・間取り',
+    ph_sell:'ご自宅の住所を入力',
+    ph_loan:'物件価格またはエリアを入力',
+    ph_value:'住所を入力して、価格について相談',
+    sg_loc:'現在地から探す',
+    sg_popular:'よく検索されている条件',
+    pop:['江戸川区','荒川区','葛西駅周辺','5,000万円以下','ペット可マンション'],
+    toast_loc:'現在地検索は準備中です。AI検索をお試しください。',
+    ask_tab_sell:'{q}の自宅の売却について相談したいです', ask_tab_loan:'{q}の住宅ローンについて相談したいです', ask_tab_value:'{q}の自宅を売ったらいくらになりますか？',
     sg_ai_title:'AIで、もっと賢く探す',
     sg_ai_desc:'理想の住まいを言葉で伝えるだけ。AIが探します。',
     sg_ai_q:'AIに聞く：<span class="sg-q">「{q}」</span>',
@@ -1157,6 +1205,7 @@ function renderListings() {
 function renderSuggest() {
   const q = $('#q').value.trim();
   $('#sgAiDesc').innerHTML = q ? t('sg_ai_q', { q: esc(q) }) : esc(t('sg_ai_desc'));
+  $('#sgPop').innerHTML = t('pop').map((p) => `<button type="button" data-pop="${esc(p)}">${esc(p)}</button>`).join('');
 }
 
 function renderWelcome() {
@@ -1168,6 +1217,13 @@ function renderTry() {
     ['try1', 'try2'].map((k) => `<button type="button" data-try="${k}"><svg class="ico"><use href="#i-spark"/></svg>${esc(t(k))}</button>`).join('');
 }
 
+let tab = 'buy';
+function setTab(next) {
+  tab = next;
+  $$('.tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  $('#q').placeholder = t('ph_' + tab);
+}
+
 function applyLang(next, { push = true } = {}) {
   lang = next === 'ja' ? 'ja' : 'en';
   document.documentElement.lang = lang;
@@ -1177,6 +1233,7 @@ function applyLang(next, { push = true } = {}) {
   $$('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
   $$('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', el.title); });
   $$('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  setTab(tab);
   renderListings();
   renderSuggest();
   renderTry();
@@ -1436,7 +1493,9 @@ function showSuggest(on) {
 // 検索はすべて AI 検索に渡す
 function searchToAI(raw) {
   const q = raw.trim();
-  openAI(q ? { raw: q } : null);
+  if (tab === 'buy') return openAI(q ? { raw: q } : null);
+  if (!q) return openAI({ key: tab === 'loan' ? 'ask_loan' : 'ask_sell' });
+  openAI({ key: 'ask_tab_' + tab, vars: { q } });
 }
 
 /* ============================================================
@@ -1475,8 +1534,11 @@ document.addEventListener('click', (e) => {
     if (isAI()) { location.hash = ''; setTimeout(go, 60); } else go();
     return;
   }
+  if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
+  if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
   if (el.matches('[data-start]')) return deliver({ key: el.dataset.start });
+  if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
   if (el.matches('[data-area]')) {
     const a = AREAS.find((x) => x.id === el.dataset.area);
