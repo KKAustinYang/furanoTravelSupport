@@ -472,19 +472,6 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 @keyframes breathe{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(201,164,106,.35)}50%{transform:scale(1.05); box-shadow:0 0 0 14px rgba(201,164,106,0)}}
 @media (max-width:900px){ .req > span{display:none} .req{padding:0 4px; background:none; border:0} }
 
-/* 会話が始まる前の案内。ウィジェットの「No messages yet」に重ね、入力欄は見せたままにする */
-.ai-welcome{
-  position:absolute; z-index:1; inset:56px 0 96px; overflow:auto; background:var(--surface); text-align:center;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:20px 16px;
-}
-.ai-welcome .spark{width:52px; height:52px; border-radius:16px}
-.ai-welcome .spark svg{width:26px; height:26px}
-.ai-welcome h2{font-size:clamp(21px,2.6vw,28px)}
-.ai-welcome > p{color:var(--text-sub); max-width:34em; font-size:15px}
-.w-chips{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:8px; max-width:640px}
-.w-chips button{min-height:42px; padding:8px 16px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:14px; text-align:left; transition:border-color .15s,background .15s}
-.w-chips button:hover{border-color:var(--accent); background:var(--accent-soft)}
-.ai-welcome .w-hint{font-size:13px; margin-top:6px}
 
 /* 自動送信したご要望への返事を待つ間の表示（返事まで 20 秒ほどかかる） */
 .ai-thinking{
@@ -492,7 +479,7 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
   display:inline-flex; align-items:center; gap:10px; padding:9px 16px; border-radius:999px;
   background:var(--accent-soft); color:var(--accent-dark); font-size:13.5px; white-space:nowrap; overflow:hidden;
 }
-@media (max-width:640px){ .ai-welcome{bottom:84px} .ai-thinking{bottom:96px; white-space:normal; border-radius:14px} }
+@media (max-width:640px){ .ai-thinking{bottom:96px; white-space:normal; border-radius:14px} }
 
 @media (max-width:640px){ .back span{display:none} .ai-title{font-size:16px} .req button{width:36px; height:36px; padding:0; justify-content:center} .req button span{display:none} .req button svg{width:18px; height:18px} }
 
@@ -793,13 +780,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <span class="spark"><svg><use href="#i-spark"/></svg></span>
         <span data-i18n="ai_loading"></span>
       </div>
-      <div class="ai-welcome" id="aiWelcome" hidden>
-        <span class="spark spark-flow"><svg><use href="#i-spark"/></svg></span>
-        <h2 data-i18n="w_title"></h2>
-        <p data-i18n="w_sub"></p>
-        <div class="w-chips" id="wChips"></div>
-        <p class="w-hint" data-i18n="w_hint"></p>
-      </div>
       <div class="ai-thinking" id="aiThinking" role="status" hidden><span class="typing"><i></i><i></i><i></i></span><span data-i18n="ai_thinking"></span></div>
       <!-- src は初回表示時に入れる（ホームの表示を遅くしないため）。一度読み込んだら会話を保つため外さない -->
     </div>
@@ -929,9 +909,6 @@ const I18N = {
     back:'Back', req_label:'Your request', copy:'Copy',
     ai_loading:'Connecting to MANGIRO AI…',
     ai_thinking:'MANGIRO AI is checking listings. This takes about 20 seconds.',
-    w_title:'What kind of home are you looking for?',
-    w_sub:'Tell me the area, budget and layout in your own words. I’ll search current listings and help you narrow them down.',
-    w_hint:'Pick one to start, or type your own below.',
     toast_copied:'Copied. Paste it into the chat to continue.',
     toast_soon:'This page is coming soon.',
     toast_saved:'Saved to your favorites.', toast_unsaved:'Removed from favorites.',
@@ -1008,9 +985,6 @@ const I18N = {
     back:'戻る', req_label:'ご要望', copy:'コピー',
     ai_loading:'MANGIRO AIに接続しています…',
     ai_thinking:'MANGIRO AIが物件を確認しています。20秒ほどお待ちください。',
-    w_title:'どんな住まいをお探しですか？',
-    w_sub:'エリアやご予算、間取りを、ふだんの言葉で教えてください。最新の掲載情報から探して、絞り込みをお手伝いします。',
-    w_hint:'下から選ぶか、入力欄にご希望を入力してください。',
     toast_copied:'コピーしました。チャット欄に貼り付けてお使いください。',
     toast_soon:'このページは準備中です。',
     toast_saved:'お気に入りに保存しました。', toast_unsaved:'お気に入りから外しました。',
@@ -1201,7 +1175,6 @@ function renderSuggest() {
 }
 
 function renderWelcome() {
-  $('#wChips').innerHTML = ['try1', 'try2', 'try3', 'ask_agent'].map((k) => `<button type="button" data-start="${k}">${esc(t(k))}</button>`).join('');
 }
 
 function renderTry() {
@@ -1294,7 +1267,6 @@ function setReq(key, vars, raw) {
   $('#reqText').textContent = text;
 }
 
-const hideWelcome = () => { $('#aiWelcome').hidden = true; };
 function setThinking(on) {
   $('#aiThinking').hidden = !on;
   clearTimeout(thinkingTimer);
@@ -1324,16 +1296,12 @@ function deliver(req) {
   if (text && !hasStarted()) {
     setReq(null);
     markStarted();
-    hideWelcome();
     buildFrame(text);
     setThinking(true);
     return;
   }
   req ? setReq(req.key, req.vars, req.raw) : setReq(null);
-  if (!frame) {
-    buildFrame();
-    $('#aiWelcome').hidden = hasStarted();
-  }
+  if (!frame) buildFrame();
 }
 
 function sendLiveDeskLocale() {
@@ -1346,9 +1314,9 @@ window.addEventListener('message', (e) => {
   if (m.event === 'loaded') sendLiveDeskLocale();
   if (m.event === 'onEvent' && m.eventIdentifier === 'livedesk:on-message') setThinking(false);
 });
-// 入力欄をクリックするとフォーカスが iframe に移る：自分で入力を始めたので案内を閉じる
+// 入力欄をクリックするとフォーカスが iframe に移る：自分で入力を始めたので、以後のご要望は自動送信しない
 window.addEventListener('blur', () => {
-  if (frame && document.activeElement === frame) { hideWelcome(); markStarted(); }
+  if (frame && document.activeElement === frame) markStarted();
 });
 
 function openAI(req) {
@@ -1529,7 +1497,6 @@ document.addEventListener('click', (e) => {
   if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
   if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
-  if (el.matches('[data-start]')) return deliver({ key: el.dataset.start });
   if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
   if (el.matches('[data-area]')) {
