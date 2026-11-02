@@ -145,12 +145,6 @@ body.at-hero .hsearch{opacity:0; transform:translateY(-6px); pointer-events:none
 }
 .lang button{height:28px; padding:0 11px; border-radius:999px; font-size:12.5px; font-weight:600; color:var(--text-sub); transition:background .18s,color .18s}
 .lang button[aria-pressed="true"]{background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm)}
-/* 担当者用 CRM への入口。お客様向けの導線より控えめにする */
-.crm-link{display:inline-flex; align-items:center; gap:7px; height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--text-sub); font-size:13.5px; font-weight:600; white-space:nowrap; transition:border-color .15s,color .15s}
-.crm-link:hover{border-color:var(--accent); color:var(--accent)}
-.crm-link .ico{width:17px; height:17px}
-@media (max-width:1180px){ .crm-link span{display:none} .crm-link{width:40px; padding:0; justify-content:center} }
-@media (max-width:640px){ .crm-link{display:none} }
 .menu-btn{display:none; width:40px; height:40px; border-radius:999px; place-items:center}
 .menu-btn:hover{background:var(--muted)}
 @media (max-width:1000px){ .menu-btn{display:grid} }
@@ -640,7 +634,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
       </div>
-      <a class="crm-link" href="crm.html" target="_blank" rel="noopener" title="担当者用 CRM"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="crm_short"></span></a>
       <button class="menu-btn" type="button" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menu"><svg class="ico"><use href="#i-menu"/></svg></button>
     </div>
   </div>
@@ -653,7 +646,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
   <a href="#/ai" data-ai data-ask="ask_agent" data-i18n="nav_agent"></a>
   <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
-  <a href="crm.html" target="_blank" rel="noopener"><svg class="ico"><use href="#i-case"/></svg><span data-i18n="staff_crm"></span></a>
 </div>
 
 <!-- ============================================================ ホーム -->
