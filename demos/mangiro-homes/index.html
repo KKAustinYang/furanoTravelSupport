@@ -217,10 +217,6 @@ html[lang="ja"] .hero h1{font-size:clamp(30px,3.9vw,48px); line-height:1.36; let
 .sg-ai-title{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:600; color:var(--accent)}
 .sg-ai-desc{font-size:14px; color:var(--text); margin-top:2px}
 .sg-q{font-weight:600}
-.sg-head{padding:12px 20px 4px; font-size:12px; font-weight:600; color:var(--text-sub); letter-spacing:.04em; border-top:1px solid var(--line-soft)}
-.sg-pop{display:flex; flex-wrap:wrap; gap:8px; padding:6px 20px 16px}
-.sg-pop button{height:32px; padding:0 13px; border-radius:999px; border:1px solid var(--line); font-size:13px; background:var(--surface); transition:border-color .15s, background .15s}
-.sg-pop button:hover{border-color:var(--accent); background:var(--accent-soft)}
 
 .try{margin-top:16px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; color:#fff}
 .try > span{font-size:13px; opacity:.9}
@@ -566,9 +562,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
 .sg-item[data-sg="ai"]{background:linear-gradient(90deg,rgba(201,164,106,.16),rgba(201,164,106,.04) 70%,rgba(201,164,106,0))}
 .sg-item[data-sg="ai"]:hover,.sg-item[data-sg="ai"].is-active{background:linear-gradient(90deg,rgba(201,164,106,.26),rgba(201,164,106,.08) 70%,rgba(201,164,106,0))}
 .sg-ai-title .ai-shine{font-weight:700}
-.sg-chat-ico{width:28px; height:28px; flex:none; border-radius:9px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent)}
-.sg-chat-ico .ico{width:17px; height:17px; color:var(--accent)}
-.sg-chat-title{display:block; font-weight:600}
 .mainnav a.ai-link .ai-shine{font-weight:700}
 
 @media (prefers-reduced-motion:reduce){
@@ -597,6 +590,8 @@ html[lang="ja"] .m-price{letter-spacing:0}
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6a1.7 1.7 0 0 0 1.7 1.7h2.3"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.8 12.6 11.4 5h7.1a.5.5 0 0 1 .5.5v7.1l-7.6 7.6a1.4 1.4 0 0 1-2 0l-5.6-5.6a1.4 1.4 0 0 1 0-2Z"/><circle cx="15.3" cy="8.7" r="1.3"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5M5 10v7.5M9.5 10v7.5M14.5 10v7.5M19 10v7.5M3.5 20h17"/></symbol>
 </svg>
 
 <!-- ============================================================ ヘッダー -->
@@ -614,7 +609,9 @@ html[lang="ja"] .m-price{letter-spacing:0}
 
     <nav class="mainnav" aria-label="Main">
       <a href="#" data-go-search data-i18n="nav_buy"></a>
-      <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
+      <a href="#/ai" data-ai data-ask="ask_sell" data-i18n="nav_sell"></a>
+      <a href="#/ai" class="opt" data-ai data-ask="ask_loan" data-i18n="nav_loan"></a>
+      <a href="#" class="opt" data-scroll="areas" data-i18n="nav_areas"></a>
       <a href="#/ai" data-ai data-ask="ask_agent" data-i18n="nav_agent"></a>
       <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
     </nav>
@@ -632,6 +629,8 @@ html[lang="ja"] .m-price{letter-spacing:0}
 
 <div class="mobile-menu" id="mobileMenu" hidden>
   <a href="#" data-go-search data-i18n="nav_buy"></a>
+  <a href="#/ai" data-ai data-ask="ask_sell" data-i18n="nav_sell"></a>
+  <a href="#/ai" data-ai data-ask="ask_loan" data-i18n="nav_loan"></a>
   <a href="#" data-scroll="areas" data-i18n="nav_areas"></a>
   <a href="#/ai" data-ai data-ask="ask_agent" data-i18n="nav_agent"></a>
   <a href="#/ai" class="ai-link" data-ai><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></a>
@@ -658,12 +657,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
                 <span class="sg-ai-desc" id="sgAiDesc"></span>
               </span>
             </button>
-            <button type="button" class="sg-item" data-ai data-ask="ask_agent" role="option">
-              <span class="sg-chat-ico"><svg class="ico"><use href="#i-chat"/></svg></span>
-              <span><span class="sg-chat-title" data-i18n="sg_chat_title"></span><span class="sg-ai-desc" data-i18n="sg_chat_desc"></span></span>
-            </button>
-            <div class="sg-head" data-i18n="sg_popular"></div>
-            <div class="sg-pop" id="sgPop"></div>
           </div>
         </form>
         <div class="try" id="tryRow"></div>
@@ -745,14 +738,14 @@ html[lang="ja"] .m-price{letter-spacing:0}
           <a href="#/ai" class="sec-link" data-ai><span data-i18n="svc1_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
         </div>
         <div class="svc">
-          <span class="svc-ico"><svg class="ico"><use href="#i-key"/></svg></span>
+          <span class="svc-ico"><svg class="ico"><use href="#i-tag"/></svg></span>
           <h3 data-i18n="svc2_t"></h3><p data-i18n="svc2_d"></p>
-          <a href="#/ai" class="sec-link" data-ai><span data-i18n="svc2_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+          <a href="#/ai" class="sec-link" data-ai data-ask="ask_sell"><span data-i18n="svc2_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
         </div>
         <div class="svc">
-          <span class="svc-ico"><svg class="ico"><use href="#i-chat"/></svg></span>
+          <span class="svc-ico"><svg class="ico"><use href="#i-bank"/></svg></span>
           <h3 data-i18n="svc3_t"></h3><p data-i18n="svc3_d"></p>
-          <a href="#/ai" class="sec-link" data-ai data-ask="ask_agent"><span data-i18n="svc3_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
+          <a href="#/ai" class="sec-link" data-ai data-ask="ask_loan"><span data-i18n="svc3_l"></span><svg class="ico"><use href="#i-right"/></svg></a>
         </div>
       </div>
 
@@ -808,6 +801,8 @@ html[lang="ja"] .m-price{letter-spacing:0}
         <li><a href="#" data-scroll="areas" data-i18n="nav_areas"></a></li>
       </ul></div>
       <div class="foot-col"><h4 data-i18n="fc3"></h4><ul>
+        <li><a href="#/ai" data-ai data-ask="ask_sell" data-i18n="nav_sell"></a></li>
+        <li><a href="#/ai" data-ai data-ask="ask_loan" data-i18n="nav_loan"></a></li>
         <li><a href="#/ai" data-ai data-ask="ask_agent" data-i18n="fl_contact"></a></li>
         <li><a href="#" data-toast="toast_soon" data-i18n="fl_privacy"></a></li>
       </ul></div>
@@ -856,15 +851,13 @@ const isAI = (hash = location.hash) => hash === AI_HASH;
 const I18N = {
   en: {
     doc_title:'MANGIRO — AI-powered home search', doc_title_ai:'AI Search | MANGIRO',
-    nav_buy:'Buy', nav_areas:'Areas', nav_agent:'Talk to an agent', nav_ai:'AI Search',
+    nav_buy:'Buy', nav_sell:'Sell', nav_loan:'Mortgage', nav_areas:'Areas', nav_agent:'Talk to an agent', nav_ai:'AI Search',
     ph_header:'Area, station, budget',
     hero_title:'Find your next home<br>just by describing it.',
     ph_buy:'Area, station, budget, layout',
     sg_ai_title:'Search smarter, powered by AI',
     sg_ai_desc:'Describe your dream home, we’ll find it.',
     sg_ai_q:'Ask AI: <span class="sg-q">“{q}”</span>',
-    sg_popular:'Popular searches',
-    pop:['Edogawa-ku','Shibuya-ku','Near Kasai Sta.','Under ¥50M','Pet-friendly condos'],
     try_label:'Try asking',
     try1:'2LDK in Edogawa under ¥50M',
     try2:'Near a station in Arakawa, good for kids',
@@ -873,7 +866,7 @@ const I18N = {
     feat_sub:'Sample listings that show how homes appear on MANGIRO. For current listings, use AI Search.',
     ai_eyebrow:'MANGIRO AI Search',
     ai_title:'Search the way you’d<br>talk to an agent.',
-    ai_body:'No filters to fiddle with. Tell our AI the area, your budget, the layout or the walk to the station, in plain words. It searches current listings, tells you how many match, and helps you narrow them down.',
+    ai_body:'No filters to fiddle with. Tell our AI the area, your budget, the layout or the walk to the station, in plain words. It searches current listings, shows you the homes that match, and helps you narrow them down.',
     ai_p1:'Understands everyday language, in English or Japanese',
     ai_p2:'Suggests the next filter, so you always know how to narrow your search',
     ai_p3:'Available 24/7, and can arrange an online meeting with an agent',
@@ -890,11 +883,11 @@ const I18N = {
     area_title:'Explore by area',
     area_sub:'Pick an area and AI Search will look through current listings.',
     area_go:'Search with AI',
-    svc_title:'From the first search to meeting an agent',
-    svc_sub:'How MANGIRO helps you buy.',
-    svc1_t:'Search in your own words', svc1_d:'Tell the AI what you’re looking for. It shows how many homes match and suggests how to narrow them down.', svc1_l:'Start searching',
-    svc2_t:'See the details that matter', svc2_d:'Register your contact details to see maintenance fees, total units, structure and handover timing, plus access, market prices and school districts nearby.', svc2_l:'Find a home',
-    svc3_t:'Talk to an agent online', svc3_d:'When you’re ready, ask for an online meeting. Your agent prepares with what you’ve already shared, so you won’t have to start over.', svc3_l:'Talk to an agent',
+    svc_title:'Buy, sell and finance with MANGIRO',
+    svc_sub:'Start with AI, and talk to a consultant whenever you’re ready.',
+    svc1_t:'Search in your own words', svc1_d:'Tell the AI what you’re looking for. It shows homes that match and suggests how to narrow them down.', svc1_l:'Start searching',
+    svc2_t:'Thinking of selling?', svc2_d:'Tell us about your home and a MANGIRO consultant will follow up with you.', svc2_l:'Talk about selling',
+    svc3_t:'Mortgage questions', svc3_d:'Loans depend on your situation and the lender. A consultant can advise you individually in a 30-minute video call.', svc3_l:'Ask about mortgages',
     foot_desc:'MANGIRO is an AI-powered home search service covering Tokyo’s 23 wards and Yokohama.',
     fc1:'Find a home', fc3:'Support',
     fl_contact:'Contact', fl_privacy:'Privacy policy',
@@ -908,12 +901,13 @@ const I18N = {
     w_title:'What kind of home are you looking for?',
     w_sub:'Tell me the area, budget and layout in your own words. I’ll search current listings and help you narrow them down.',
     w_hint:'Pick one to start, or type your own below.',
-    sg_chat_title:'Talk to a MANGIRO agent', sg_chat_desc:'Ask for an online meeting with an agent.',
     toast_copied:'Copied. Paste it into the chat to continue.',
     toast_soon:'This page is coming soon.',
     toast_saved:'Saved to your favorites.', toast_unsaved:'Removed from favorites.',
     toast_link:'Link copied.',
     ask_agent:'I’d like to talk to a MANGIRO agent about buying',
+    ask_sell:'I’d like to talk to someone about selling my home',
+    ask_loan:'How much can I borrow for a home around ¥80M?',
     ask_area:'Show me homes in {a}',
     ask_similar:'I’m looking for a {layout} {ty} in {ward}, around {p}',
     ask_tour:'I’d like to talk to an agent about buying a home in {ward}',
@@ -927,15 +921,13 @@ const I18N = {
   },
   ja: {
     doc_title:'MANGIRO ｜ AIで探す住まい', doc_title_ai:'AI検索 ｜ MANGIRO',
-    nav_buy:'買う', nav_areas:'エリア', nav_agent:'担当者に相談', nav_ai:'AI検索',
+    nav_buy:'買う', nav_sell:'売る', nav_loan:'住宅ローン', nav_areas:'エリア', nav_agent:'担当者に相談', nav_ai:'AI検索',
     ph_header:'エリア・駅名・ご予算',
     hero_title:'話すだけで、<br>理想の住まいが見つかる',
     ph_buy:'エリア・駅名・ご予算・間取り',
     sg_ai_title:'AIで、もっと賢く探す',
     sg_ai_desc:'理想の住まいを言葉で伝えるだけ。AIが探します。',
     sg_ai_q:'AIに聞く：<span class="sg-q">「{q}」</span>',
-    sg_popular:'よく検索されている条件',
-    pop:['江戸川区','渋谷区','葛西駅周辺','5,000万円以下','ペット可マンション'],
     try_label:'こんな聞き方も',
     try1:'江戸川区で5,000万円以内の2LDK',
     try2:'荒川区の駅近で、子育てしやすい物件',
@@ -944,7 +936,7 @@ const I18N = {
     feat_sub:'MANGIROでの物件の見え方をご紹介するサンプルです。最新の物件はAI検索でご確認ください。',
     ai_eyebrow:'MANGIRO AI検索',
     ai_title:'担当者に話すように、<br>住まいを探せる',
-    ai_body:'細かな条件を一つずつ選ぶ必要はありません。エリアやご予算、間取り、駅からの距離を、ふだんの言葉で伝えてください。AIが最新の掲載情報から探して件数をお伝えし、絞り込みをお手伝いします。',
+    ai_body:'細かな条件を一つずつ選ぶ必要はありません。エリアやご予算、間取り、駅からの距離を、ふだんの言葉で伝えてください。AIが最新の掲載情報から合う物件をご紹介し、絞り込みをお手伝いします。',
     ai_p1:'ふだんの言葉で伝わる。日本語でも英語でも',
     ai_p2:'次に絞り込む条件をAIがご提案',
     ai_p3:'24時間対応。担当者とのオンライン面談もご案内',
@@ -961,11 +953,11 @@ const I18N = {
     area_title:'エリアから探す',
     area_sub:'エリアを選ぶと、AI検索が最新の掲載情報からお探しします。',
     area_go:'AIで探す',
-    svc_title:'最初の検索から、担当者との面談まで',
-    svc_sub:'MANGIROでの住まい探しの流れです。',
-    svc1_t:'ふだんの言葉で探す', svc1_d:'ご希望をAIに伝えるだけ。条件に合う件数をお伝えし、絞り込み方もご提案します。', svc1_l:'検索をはじめる',
-    svc2_t:'気になる物件をくわしく確認', svc2_d:'連絡先をご登録いただくと、修繕積立金・総戸数・構造・引渡時期のほか、アクセス・相場・学区などの周辺情報もご覧いただけます。', svc2_l:'物件を探す',
-    svc3_t:'担当者にオンラインで相談', svc3_d:'ご希望のタイミングでオンライン面談をお申し付けください。お伝えいただいた内容をもとに担当者が準備します。', svc3_l:'担当者に相談する',
+    svc_title:'買う・売る・資金計画。住まいのことは MANGIRO へ',
+    svc_sub:'まずはAIに。必要なときはいつでも担当者にご相談いただけます。',
+    svc1_t:'ふだんの言葉で探す', svc1_d:'ご希望をAIに伝えるだけ。条件に合う物件をご紹介し、絞り込み方もご提案します。', svc1_l:'検索をはじめる',
+    svc2_t:'売却をお考えの方へ', svc2_d:'ご自宅についてお聞かせください。MANGIROの担当者がご相談を承ります。', svc2_l:'売却について相談する',
+    svc3_t:'住宅ローンのご相談', svc3_d:'ローンはお客様のご状況や金融機関によって異なります。30分のビデオ通話で担当者が個別にご案内します。', svc3_l:'住宅ローンについて聞く',
     foot_desc:'MANGIROは、東京23区と横浜市の住まい探しをAIでサポートする不動産ポータルです。',
     fc1:'物件を探す', fc3:'サポート',
     fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
@@ -979,12 +971,13 @@ const I18N = {
     w_title:'どんな住まいをお探しですか？',
     w_sub:'エリアやご予算、間取りを、ふだんの言葉で教えてください。最新の掲載情報から探して、絞り込みをお手伝いします。',
     w_hint:'下から選ぶか、入力欄にご希望を入力してください。',
-    sg_chat_title:'MANGIROの担当者に相談', sg_chat_desc:'担当者とのオンライン面談をご案内します。',
     toast_copied:'コピーしました。チャット欄に貼り付けてお使いください。',
     toast_soon:'このページは準備中です。',
     toast_saved:'お気に入りに保存しました。', toast_unsaved:'お気に入りから外しました。',
     toast_link:'リンクをコピーしました。',
     ask_agent:'購入について担当者に相談したいです',
+    ask_sell:'自宅の売却について相談したいです',
+    ask_loan:'8,000万円前後の物件だと、いくらまで借りられますか？',
     ask_area:'{a}の物件を見せてください',
     ask_similar:'{ward}で{p}前後の{layout}の{ty}を探しています',
     ask_tour:'{ward}での物件購入について担当者に相談したいです',
@@ -1164,7 +1157,6 @@ function renderListings() {
 function renderSuggest() {
   const q = $('#q').value.trim();
   $('#sgAiDesc').innerHTML = q ? t('sg_ai_q', { q: esc(q) }) : esc(t('sg_ai_desc'));
-  $('#sgPop').innerHTML = t('pop').map((p) => `<button type="button" data-pop="${esc(p)}">${esc(p)}</button>`).join('');
 }
 
 function renderWelcome() {
@@ -1485,7 +1477,6 @@ document.addEventListener('click', (e) => {
   }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
   if (el.matches('[data-start]')) return deliver({ key: el.dataset.start });
-  if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
   if (el.matches('[data-area]')) {
     const a = AREAS.find((x) => x.id === el.dataset.area);
