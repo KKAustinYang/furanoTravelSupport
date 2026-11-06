@@ -447,6 +447,14 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 .back:hover{background:var(--muted)}
 .ai-title{position:absolute; left:calc(50% + 30px); transform:translateX(-50%); display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; white-space:nowrap}
 .ai-title .ico{width:18px; height:18px; color:var(--accent)}
+/* テスト用 AI エージェント（#/ai-test）。本番の AI 検索と取り違えないよう、題名と色で分ける */
+.test-badge{display:inline-flex; align-items:center; height:20px; padding:0 7px; border-radius:6px; background:#D9480F; color:#fff; font-size:11px; font-weight:700; letter-spacing:.06em}
+.test-only{display:none}
+body.is-ai-test .ai-title .test-only{display:inline-flex}
+body.is-ai-test .ai-title [data-i18n="nav_ai"]{display:none}
+body.is-ai-test .ai-view::after{height:3px; background:#D9480F}
+.test-link{display:inline-flex; align-items:center; gap:7px; color:inherit}
+.test-link:hover{color:var(--accent)}
 .ai-actions{flex:0 1 auto; display:flex; align-items:center; justify-content:flex-end; gap:6px; min-width:0; max-width:calc(50% - 90px)}
 .req{
   display:inline-flex; align-items:center; gap:10px; min-width:0; max-width:100%;
@@ -766,7 +774,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
 <section class="ai-view" id="aiView" hidden aria-labelledby="aiTitle">
   <div class="ai-bar">
     <a href="#" class="back" id="aiBack"><svg class="ico"><use href="#i-left"/></svg><span data-i18n="back"></span></a>
-    <h1 class="ai-title" id="aiTitle"><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span></h1>
+    <h1 class="ai-title" id="aiTitle"><svg class="ico twinkle"><use href="#i-spark"/></svg><span class="ai-shine" data-i18n="nav_ai"></span><span class="ai-shine test-only" data-i18n="test_title"></span><span class="test-badge test-only">TEST</span></h1>
     <div class="ai-actions">
       <div class="req" id="req" hidden>
         <span><b data-i18n="req_label"></b><span id="reqText"></span></span>
@@ -813,6 +821,7 @@ html[lang="ja"] .m-price{letter-spacing:0}
       <span>© 2026 MANGIRO</span>
       <span data-i18n="license"></span>
       <a href="crm.html" target="_blank" rel="noopener" data-i18n="staff_crm" style="color:inherit"></a>
+      <a href="#/ai-test" target="_blank" rel="noopener" class="test-link"><span class="test-badge">TEST</span><span data-i18n="test_link"></span></a>
       <span class="spacer"></span>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -842,17 +851,26 @@ html[lang="ja"] .m-price{letter-spacing:0}
    - 言語は URL では変わらない。読み込み完了の "loaded" を受けてから postMessage の set-locale で合わせる
    ============================================================ */
 const LIVEDESK_ORIGIN = 'https://livedesk.engagelab.com';
-const LIVEDESK_SRC = LIVEDESK_ORIGIN + '/console/livedesk/widget/?website_token=KyYNaBb3YkGgi2tAnKg5RPfw&action=autoStart';
+// AI 検索の窓口は 2 つ。本番（お客様の本番組織の Website 通道）と、動作確認用のテスト AI エージェント。
+// 本番の埋め込みコードは mode=standalone だが、それだと autoStart も postMessage（loaded / on-message）も
+// 効かず、「Start Conversation」画面から始まってご要望の自動送信もできない。ここでは action=autoStart で読み込む
+const LIVEDESK_CHANNELS = {
+  prod: { hash: '#/ai',      token: 'u2gAknGrBiKujmPcbiUvh6N8' },
+  test: { hash: '#/ai-test', token: 'KyYNaBb3YkGgi2tAnKg5RPfw' },
+};
+const livedeskSrc = (ch) => LIVEDESK_ORIGIN + '/console/livedesk/widget/?website_token=' + LIVEDESK_CHANNELS[ch].token + '&action=autoStart';
 const LIVEDESK_PREFIX = 'livedesk-widget:';
-const AI_HASH = '#/ai';
-const isAI = (hash = location.hash) => hash === AI_HASH;
+const AI_HASH = LIVEDESK_CHANNELS.prod.hash;
+const aiChannel = (hash = location.hash) => Object.keys(LIVEDESK_CHANNELS).find((k) => LIVEDESK_CHANNELS[k].hash === hash) || null;
+const isAI = (hash = location.hash) => !!aiChannel(hash);
+const aiTitleKey = () => aiChannel() === 'test' ? 'doc_title_test' : 'doc_title_ai';
 
 /* ============================================================
    文言（EN / JA）
    ============================================================ */
 const I18N = {
   en: {
-    doc_title:'MANGIRO — AI-powered home search', doc_title_ai:'AI Search | MANGIRO',
+    doc_title:'MANGIRO — AI-powered home search', doc_title_ai:'AI Search | MANGIRO', doc_title_test:'[TEST] Test AI agent | MANGIRO',
     nav_buy:'Buy', nav_sell:'Sell', nav_loan:'Mortgage', nav_areas:'Areas', nav_agent:'Talk to an agent', nav_ai:'AI Search',
     ph_header:'Area, station, budget',
     hero_title:'Find your next home<br>just by describing it.',
@@ -903,6 +921,7 @@ const I18N = {
     fc1:'Find a home', fc3:'Support',
     fl_contact:'Contact', fl_privacy:'Privacy policy',
     staff_crm:'Staff CRM',
+    test_title:'Test AI agent', test_link:'Test AI agent (internal)',
     crm_short:'Agent CRM',
     license:'Real estate license: Governor of Tokyo (1) No. 000000 (sample)',
     disclaimer:'Pre-release environment for acceptance testing. Listings shown on this page are samples. AI Search results are based on current listing data.',
@@ -928,7 +947,7 @@ const I18N = {
     close:'Close', save:'Save', share:'Share'
   },
   ja: {
-    doc_title:'MANGIRO ｜ AIで探す住まい', doc_title_ai:'AI検索 ｜ MANGIRO',
+    doc_title:'MANGIRO ｜ AIで探す住まい', doc_title_ai:'AI検索 ｜ MANGIRO', doc_title_test:'【テスト】テスト用AIエージェント ｜ MANGIRO',
     nav_buy:'買う', nav_sell:'売る', nav_loan:'住宅ローン', nav_areas:'エリア', nav_agent:'担当者に相談', nav_ai:'AI検索',
     ph_header:'エリア・駅名・ご予算',
     hero_title:'話すだけで、<br>理想の住まいが見つかる',
@@ -979,6 +998,7 @@ const I18N = {
     fc1:'物件を探す', fc3:'サポート',
     fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
     staff_crm:'担当者用 CRM',
+    test_title:'テスト用AIエージェント', test_link:'テスト用AIエージェント（社内）',
     crm_short:'担当者 CRM',
     license:'宅地建物取引業免許 東京都知事(1)第000000号（サンプル）',
     disclaimer:'本サイトは受け入れ確認用の環境です。このページの掲載物件はサンプルです。AI検索の結果は最新の掲載情報にもとづきます。',
@@ -1192,7 +1212,7 @@ function setTab(next) {
 function applyLang(next, { push = true } = {}) {
   lang = next === 'ja' ? 'ja' : 'en';
   document.documentElement.lang = lang;
-  document.title = t(isAI() ? 'doc_title_ai' : 'doc_title');
+  document.title = t(isAI() ? aiTitleKey() : 'doc_title');
   $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   $$('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   $$('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
@@ -1249,14 +1269,15 @@ function scrollPage(dir) {
 let currentReq = null;        // { key, vars, raw } — 言語切替で文言を作り直せるよう key で持つ
 let returnScroll = 0;
 let pendingReq = null;        // ビューを開いたときに送るご要望
-let frame = null, frameLoaded = false, thinkingTimer, revealTimer;
+let frame = null, frameChannel = null, frameLoaded = false, thinkingTimer, revealTimer;
 const REVEAL_DELAY = 1200;
 function revealFrame() { clearTimeout(revealTimer); frameLoaded = true; $('#aiLoading').classList.add('is-done'); }
 
 // 会話を始めたことがあるか。ウィジェットの会話はこのブラウザに残るので、親ページ側でも覚えておく
-const STARTED_KEY = 'mangiro_ai_started';
-const hasStarted = () => { try { return !!localStorage.getItem(STARTED_KEY); } catch { return false; } };
-const markStarted = () => { try { localStorage.setItem(STARTED_KEY, '1'); } catch {} };
+// 窓口ごとに会話が別なので、窓口ごとに覚える
+const startedKey = () => 'mangiro_ai_started:' + LIVEDESK_CHANNELS[aiChannel() || 'prod'].token;
+const hasStarted = () => { try { return !!localStorage.getItem(startedKey()); } catch { return false; } };
+const markStarted = () => { try { localStorage.setItem(startedKey(), '1'); } catch {} };
 
 const reqText = (key, vars, raw) => {
   const resolved = vars && Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, typeof v === 'object' ? v[lang] : v]));
@@ -1288,7 +1309,8 @@ function buildFrame(first) {
   // その画面を見せないよう、loaded から少し待ってからローディングを外す（実測で切り替えまで 0.2 秒前後）
   clearTimeout(revealTimer);
   revealTimer = setTimeout(revealFrame, 10000);   // loaded が来ない環境でも、ローディングを出しっぱなしにしない
-  f.src = LIVEDESK_SRC + (first ? '&first_message=' + encodeURIComponent(first) : '');
+  frameChannel = aiChannel() || 'prod';
+  f.src = livedeskSrc(frameChannel) + (first ? '&first_message=' + encodeURIComponent(first) : '');
   frame = f;
   $('#aiFrame').appendChild(f);
 }
@@ -1304,7 +1326,7 @@ function deliver(req) {
     return;
   }
   req ? setReq(req.key, req.vars, req.raw) : setReq(null);
-  if (!frame) buildFrame();
+  if (!frame || frameChannel !== aiChannel()) buildFrame();
 }
 
 function sendLiveDeskLocale() {
@@ -1328,11 +1350,12 @@ window.addEventListener('blur', () => {
 
 function openAI(req) {
   // ホームから開くときは、全画面のチャットを新しいタブで開く（物件一覧はこのタブに残す）。
-  // ご要望（検索語・押した質問）は URL の req に載せて渡す。すでに全画面のタブの中なら、その場で切り替える
+  // ご要望（検索語・押した質問）は URL の req に載せて渡す。すでに全画面のタブの中なら、その場で切り替える。
+  // テスト用 AI エージェントのタブからは、本番の AI 検索を新しいタブで開く（テストの会話に混ぜない）
   closeListing();
   closeMenu();
   showSuggest(false);
-  if (!isAI()) {
+  if (aiChannel() !== 'prod') {
     const u = new URL(location.href);
     u.searchParams.delete('home');
     u.hash = AI_HASH;
@@ -1345,13 +1368,14 @@ function openAI(req) {
 
 let routedView;
 function route() {
-  const on = isAI();
-  if (on === routedView) return;   // hashchange と popstate の両方が来ても一度だけ処理する
-  routedView = on;
+  const view = aiChannel(), on = !!view;
+  if (view === routedView) return;   // hashchange と popstate の両方が来ても一度だけ処理する
+  routedView = view;
   document.body.classList.toggle('is-ai', on);
+  document.body.classList.toggle('is-ai-test', view === 'test');
   $('#aiView').hidden = !on;
-  document.title = t(on ? 'doc_title_ai' : 'doc_title');
-  $$('.mainnav .ai-link').forEach((a) => on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  document.title = t(on ? aiTitleKey() : 'doc_title');
+  $$('.mainnav .ai-link').forEach((a) => view === 'prod' ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   if (on) {
     deliver(pendingReq);
     pendingReq = null;
