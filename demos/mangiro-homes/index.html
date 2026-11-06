@@ -570,6 +570,10 @@ html[lang="ja"] .m-price{letter-spacing:0}
 .sg-item[data-sg="ai"]{background:linear-gradient(90deg,rgba(201,164,106,.16),rgba(201,164,106,.04) 70%,rgba(201,164,106,0))}
 .sg-item[data-sg="ai"]:hover,.sg-item[data-sg="ai"].is-active{background:linear-gradient(90deg,rgba(201,164,106,.26),rgba(201,164,106,.08) 70%,rgba(201,164,106,0))}
 .sg-ai-title .ai-shine{font-weight:700}
+/* テスト用 AI エージェントへの入口。本番の AI 検索と見分けがつくよう、オレンジで控えめに */
+.sg-item[data-sg="test"] .spark-test{display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:11px; background:#FFF1EA; color:#D9480F}
+.sg-item[data-sg="test"] .spark-test svg{width:18px; height:18px}
+.sg-test-title{color:#B23C0C}
 .mainnav a.ai-link .ai-shine{font-weight:700}
 
 @media (prefers-reduced-motion:reduce){
@@ -667,6 +671,13 @@ html[lang="ja"] .m-price{letter-spacing:0}
               <span>
                 <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span><span class="beta">BETA</span></span>
                 <span class="sg-ai-desc" id="sgAiDesc"></span>
+              </span>
+            </button>
+            <button type="button" class="sg-item" data-sg="test" role="option">
+              <span class="spark spark-test"><svg><use href="#i-spark"/></svg></span>
+              <span>
+                <span class="sg-ai-title sg-test-title"><span data-i18n="test_title"></span><span class="test-badge">TEST</span></span>
+                <span class="sg-ai-desc" id="sgTestDesc"></span>
               </span>
             </button>
             <button type="button" class="sg-item" data-sg="loc" role="option">
@@ -887,6 +898,8 @@ const I18N = {
     sg_ai_title:'Search smarter, powered by AI',
     sg_ai_desc:'Describe your dream home, we’ll find it.',
     sg_ai_q:'Ask AI: <span class="sg-q">“{q}”</span>',
+    sg_test_desc:'Internal check — ask the test agent instead.',
+    sg_test_q:'Ask the test agent: <span class="sg-q">“{q}”</span>',
     try_label:'Try asking',
     try1:'2LDK in Edogawa under ¥50M',
     try2:'Near a station in Arakawa, good for kids',
@@ -964,6 +977,8 @@ const I18N = {
     sg_ai_title:'AIで、もっと賢く探す',
     sg_ai_desc:'理想の住まいを言葉で伝えるだけ。AIが探します。',
     sg_ai_q:'AIに聞く：<span class="sg-q">「{q}」</span>',
+    sg_test_desc:'社内確認用。テスト用エージェントに聞きます。',
+    sg_test_q:'テスト用エージェントに聞く：<span class="sg-q">「{q}」</span>',
     try_label:'こんな聞き方も',
     try1:'江戸川区で5,000万円以内の2LDK',
     try2:'荒川区の駅近で、子育てしやすい物件',
@@ -1191,6 +1206,7 @@ function renderListings() {
 function renderSuggest() {
   const q = $('#q').value.trim();
   $('#sgAiDesc').innerHTML = q ? t('sg_ai_q', { q: esc(q) }) : esc(t('sg_ai_desc'));
+  $('#sgTestDesc').innerHTML = q ? t('sg_test_q', { q: esc(q) }) : esc(t('sg_test_desc'));
   $('#sgPop').innerHTML = t('pop').map((p) => `<button type="button" data-pop="${esc(p)}">${esc(p)}</button>`).join('');
 }
 
@@ -1348,17 +1364,17 @@ window.addEventListener('blur', () => {
   if (frame && document.activeElement === frame) markStarted();
 });
 
-function openAI(req) {
+function openAI(req, ch = 'prod') {
   // ホームから開くときは、全画面のチャットを新しいタブで開く（物件一覧はこのタブに残す）。
   // ご要望（検索語・押した質問）は URL の req に載せて渡す。すでに全画面のタブの中なら、その場で切り替える。
-  // テスト用 AI エージェントのタブからは、本番の AI 検索を新しいタブで開く（テストの会話に混ぜない）
+  // 開きたい窓口（本番 / テスト）と今のタブの窓口が違えば、その窓口を新しいタブで開く（会話を混ぜない）
   closeListing();
   closeMenu();
   showSuggest(false);
-  if (aiChannel() !== 'prod') {
+  if (aiChannel() !== ch) {
     const u = new URL(location.href);
     u.searchParams.delete('home');
-    u.hash = AI_HASH;
+    u.hash = LIVEDESK_CHANNELS[ch].hash;
     if (req) u.searchParams.set('req', JSON.stringify(req)); else u.searchParams.delete('req');
     window.open(u.href, '_blank', 'noopener');
     return;
@@ -1482,11 +1498,11 @@ function showSuggest(on) {
   if (on) renderSuggest();
 }
 // 検索はすべて AI 検索に渡す
-function searchToAI(raw) {
+function searchToAI(raw, ch = 'prod') {
   const q = raw.trim();
-  if (tab === 'buy') return openAI(q ? { raw: q } : null);
-  if (!q) return openAI({ key: tab === 'loan' ? 'ask_loan' : 'ask_sell' });
-  openAI({ key: 'ask_tab_' + tab, vars: { q } });
+  if (tab === 'buy') return openAI(q ? { raw: q } : null, ch);
+  if (!q) return openAI({ key: tab === 'loan' ? 'ask_loan' : 'ask_sell' }, ch);
+  openAI({ key: 'ask_tab_' + tab, vars: { q } }, ch);
 }
 
 /* ============================================================
@@ -1527,6 +1543,7 @@ document.addEventListener('click', (e) => {
   }
   if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
+  if (el.matches('[data-sg="test"]')) return searchToAI($('#q').value, 'test');
   if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
   if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
