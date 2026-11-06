@@ -1249,7 +1249,9 @@ function scrollPage(dir) {
 let currentReq = null;        // { key, vars, raw } — 言語切替で文言を作り直せるよう key で持つ
 let returnScroll = 0;
 let pendingReq = null;        // ビューを開いたときに送るご要望
-let frame = null, frameLoaded = false, thinkingTimer;
+let frame = null, frameLoaded = false, thinkingTimer, revealTimer;
+const REVEAL_DELAY = 1200;
+function revealFrame() { clearTimeout(revealTimer); frameLoaded = true; $('#aiLoading').classList.add('is-done'); }
 
 // 会話を始めたことがあるか。ウィジェットの会話はこのブラウザに残るので、親ページ側でも覚えておく
 const STARTED_KEY = 'mangiro_ai_started';
@@ -1282,9 +1284,10 @@ function buildFrame(first) {
   f.title = t('nav_ai');
   f.allow = 'camera; microphone';
   f.style.top = '0'; f.style.height = '100%';
-  const done = () => { frameLoaded = true; $('#aiLoading').classList.add('is-done'); };
-  f.addEventListener('load', done);
-  setTimeout(done, 8000);     // 読み込みイベントが来ない環境でも、ローディングを出しっぱなしにしない
+  // ウィジェットは loaded を送ったあと、一瞬だけ自前の「Start Conversation」画面を描いてからチャットに切り替わる。
+  // その画面を見せないよう、loaded から少し待ってからローディングを外す（実測で切り替えまで 0.2 秒前後）
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(revealFrame, 10000);   // loaded が来ない環境でも、ローディングを出しっぱなしにしない
   f.src = LIVEDESK_SRC + (first ? '&first_message=' + encodeURIComponent(first) : '');
   frame = f;
   $('#aiFrame').appendChild(f);
@@ -1311,7 +1314,11 @@ function sendLiveDeskLocale() {
 window.addEventListener('message', (e) => {
   if (e.origin !== LIVEDESK_ORIGIN || typeof e.data !== 'string' || !e.data.startsWith(LIVEDESK_PREFIX)) return;
   let m; try { m = JSON.parse(e.data.slice(LIVEDESK_PREFIX.length)); } catch { return; }
-  if (m.event === 'loaded') sendLiveDeskLocale();
+  if (m.event === 'loaded') {
+    sendLiveDeskLocale();
+    clearTimeout(revealTimer);
+    revealTimer = setTimeout(revealFrame, REVEAL_DELAY);
+  }
   if (m.event === 'onEvent' && m.eventIdentifier === 'livedesk:on-message') setThinking(false);
 });
 // 入力欄をクリックするとフォーカスが iframe に移る：自分で入力を始めたので、以後のご要望は自動送信しない
