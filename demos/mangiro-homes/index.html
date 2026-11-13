@@ -453,8 +453,6 @@ body.is-ai #home,body.is-ai .site-footer,body.is-ai .disclaimer{display:none}
 body.is-ai-test .ai-title .test-only{display:inline-flex}
 body.is-ai-test .ai-title [data-i18n="nav_ai"]{display:none}
 body.is-ai-test .ai-view::after{height:3px; background:#D9480F}
-.test-link{display:inline-flex; align-items:center; gap:7px; color:inherit}
-.test-link:hover{color:var(--accent)}
 .ai-actions{flex:0 1 auto; display:flex; align-items:center; justify-content:flex-end; gap:6px; min-width:0; max-width:calc(50% - 90px)}
 .req{
   display:inline-flex; align-items:center; gap:10px; min-width:0; max-width:100%;
@@ -570,10 +568,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
 .sg-item[data-sg="ai"]{background:linear-gradient(90deg,rgba(201,164,106,.16),rgba(201,164,106,.04) 70%,rgba(201,164,106,0))}
 .sg-item[data-sg="ai"]:hover,.sg-item[data-sg="ai"].is-active{background:linear-gradient(90deg,rgba(201,164,106,.26),rgba(201,164,106,.08) 70%,rgba(201,164,106,0))}
 .sg-ai-title .ai-shine{font-weight:700}
-/* テスト用 AI エージェントへの入口。本番の AI 検索と見分けがつくよう、オレンジで控えめに */
-.sg-item[data-sg="test"] .spark-test{display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:11px; background:#FFF1EA; color:#D9480F}
-.sg-item[data-sg="test"] .spark-test svg{width:18px; height:18px}
-.sg-test-title{color:#B23C0C}
 .mainnav a.ai-link .ai-shine{font-weight:700}
 
 @media (prefers-reduced-motion:reduce){
@@ -671,13 +665,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
               <span>
                 <span class="sg-ai-title"><span class="ai-shine" data-i18n="sg_ai_title"></span><span class="beta">BETA</span></span>
                 <span class="sg-ai-desc" id="sgAiDesc"></span>
-              </span>
-            </button>
-            <button type="button" class="sg-item" data-sg="test" role="option">
-              <span class="spark spark-test"><svg><use href="#i-spark"/></svg></span>
-              <span>
-                <span class="sg-ai-title sg-test-title"><span data-i18n="test_title"></span><span class="test-badge">TEST</span></span>
-                <span class="sg-ai-desc" id="sgTestDesc"></span>
               </span>
             </button>
             <button type="button" class="sg-item" data-sg="loc" role="option">
@@ -832,7 +819,6 @@ html[lang="ja"] .m-price{letter-spacing:0}
       <span>© 2026 MANGIRO</span>
       <span data-i18n="license"></span>
       <a href="crm.html" target="_blank" rel="noopener" data-i18n="staff_crm" style="color:inherit"></a>
-      <a href="#/ai-test" target="_blank" rel="noopener" class="test-link"><span class="test-badge">TEST</span><span data-i18n="test_link"></span></a>
       <span class="spacer"></span>
       <div class="lang" role="group" aria-label="Language">
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
@@ -898,8 +884,6 @@ const I18N = {
     sg_ai_title:'Search smarter, powered by AI',
     sg_ai_desc:'Describe your dream home, we’ll find it.',
     sg_ai_q:'Ask AI: <span class="sg-q">“{q}”</span>',
-    sg_test_desc:'Internal check — ask the test agent instead.',
-    sg_test_q:'Ask the test agent: <span class="sg-q">“{q}”</span>',
     try_label:'Try asking',
     try1:'2LDK in Edogawa under ¥50M',
     try2:'Near a station in Arakawa, good for kids',
@@ -934,7 +918,7 @@ const I18N = {
     fc1:'Find a home', fc3:'Support',
     fl_contact:'Contact', fl_privacy:'Privacy policy',
     staff_crm:'Staff CRM',
-    test_title:'Test AI agent', test_link:'Test AI agent (internal)',
+    test_title:'Test AI agent',
     crm_short:'Agent CRM',
     license:'Real estate license: Governor of Tokyo (1) No. 000000 (sample)',
     disclaimer:'Pre-release environment for acceptance testing. Listings shown on this page are samples. AI Search results are based on current listing data.',
@@ -977,8 +961,6 @@ const I18N = {
     sg_ai_title:'AIで、もっと賢く探す',
     sg_ai_desc:'理想の住まいを言葉で伝えるだけ。AIが探します。',
     sg_ai_q:'AIに聞く：<span class="sg-q">「{q}」</span>',
-    sg_test_desc:'社内確認用。テスト用エージェントに聞きます。',
-    sg_test_q:'テスト用エージェントに聞く：<span class="sg-q">「{q}」</span>',
     try_label:'こんな聞き方も',
     try1:'江戸川区で5,000万円以内の2LDK',
     try2:'荒川区の駅近で、子育てしやすい物件',
@@ -1013,7 +995,7 @@ const I18N = {
     fc1:'物件を探す', fc3:'サポート',
     fl_contact:'お問い合わせ', fl_privacy:'プライバシーポリシー',
     staff_crm:'担当者用 CRM',
-    test_title:'テスト用AIエージェント', test_link:'テスト用AIエージェント（社内）',
+    test_title:'テスト用AIエージェント',
     crm_short:'担当者 CRM',
     license:'宅地建物取引業免許 東京都知事(1)第000000号（サンプル）',
     disclaimer:'本サイトは受け入れ確認用の環境です。このページの掲載物件はサンプルです。AI検索の結果は最新の掲載情報にもとづきます。',
@@ -1206,7 +1188,6 @@ function renderListings() {
 function renderSuggest() {
   const q = $('#q').value.trim();
   $('#sgAiDesc').innerHTML = q ? t('sg_ai_q', { q: esc(q) }) : esc(t('sg_ai_desc'));
-  $('#sgTestDesc').innerHTML = q ? t('sg_test_q', { q: esc(q) }) : esc(t('sg_test_desc'));
   $('#sgPop').innerHTML = t('pop').map((p) => `<button type="button" data-pop="${esc(p)}">${esc(p)}</button>`).join('');
 }
 
@@ -1543,7 +1524,6 @@ document.addEventListener('click', (e) => {
   }
   if (el.matches('[data-tab]')) { setTab(el.dataset.tab); return $('#q').focus(); }
   if (el.matches('[data-sg="ai"]')) return searchToAI($('#q').value);
-  if (el.matches('[data-sg="test"]')) return searchToAI($('#q').value, 'test');
   if (el.matches('[data-sg="loc"]')) { showSuggest(false); return toast('toast_loc'); }
   if (el.matches('[data-pop]')) return openAI({ raw: el.dataset.pop });
   if (el.matches('[data-try]')) return openAI({ key: el.dataset.try });
